@@ -17,7 +17,40 @@ from app.domain.saju.schemas import (
     SajuPreviewResult,
     TimeCorrectionSummary,
 )
+from app.domain.saju.services.birth_time_policy import resolve_birth_time_policy
 from app.domain.saju.time_correction import TimeCorrectionResult
+
+
+def _summarize_visible_pillars(
+    saju_calculation: SajuCalculationResult,
+    visible_pillar_keys: List[str],
+) -> str:
+    return " / ".join(saju_calculation.pillars[key].gan_zhi for key in visible_pillar_keys)
+
+
+def _build_visible_element_counts(
+    saju_calculation: SajuCalculationResult,
+    visible_pillar_keys: List[str],
+) -> Dict[str, int]:
+    counts = {
+        "wood": 0,
+        "fire": 0,
+        "earth": 0,
+        "metal": 0,
+        "water": 0,
+    }
+    key_by_char = {
+        "木": "wood",
+        "火": "fire",
+        "土": "earth",
+        "金": "metal",
+        "水": "water",
+    }
+    for pillar_key in visible_pillar_keys:
+        for char in saju_calculation.pillars[pillar_key].five_elements:
+            if char in key_by_char:
+                counts[key_by_char[char]] += 1
+    return counts
 
 
 def search_regions(*, query: str, limit: int) -> List[Dict[str, str]]:
@@ -69,11 +102,20 @@ def build_mock_preview_response(
     trace_id: str,
     debug_requested: bool,
 ) -> SajuPreviewResponse:
-    hour_pillar_enabled = not payload.is_birth_time_estimated
+    birth_time_policy = resolve_birth_time_policy(payload)
+    hour_pillar_enabled = birth_time_policy.hour_pillar_enabled
+    visible_pillar_summary = _summarize_visible_pillars(
+        saju_calculation=saju_calculation,
+        visible_pillar_keys=birth_time_policy.visible_pillar_keys,
+    )
+    visible_element_counts = _build_visible_element_counts(
+        saju_calculation=saju_calculation,
+        visible_pillar_keys=birth_time_policy.visible_pillar_keys,
+    )
     limitations: List[str] = []
     if payload.is_birth_time_estimated:
         limitations.append(
-            "Birth time is estimated. Hour-pillar-dependent sections will stay limited until the real time is known."
+            "Birth time is estimated, so the pipeline calculates with 00:00 internally and hides hour-pillar-dependent output until the real time is known."
         )
 
     evidence_sections = {
@@ -82,11 +124,16 @@ def build_mock_preview_response(
             status="ready",
             summary=(
                 "Element balance from the engine: "
-                f"wood {saju_calculation.element_counts['wood']}, "
-                f"fire {saju_calculation.element_counts['fire']}, "
-                f"earth {saju_calculation.element_counts['earth']}, "
-                f"metal {saju_calculation.element_counts['metal']}, "
-                f"water {saju_calculation.element_counts['water']}."
+                f"wood {visible_element_counts['wood']}, "
+                f"fire {visible_element_counts['fire']}, "
+                f"earth {visible_element_counts['earth']}, "
+                f"metal {visible_element_counts['metal']}, "
+                f"water {visible_element_counts['water']}."
+                + (
+                    " Hour-pillar contribution is hidden because the birth time is estimated."
+                    if payload.is_birth_time_estimated
+                    else ""
+                )
             ),
         ),
         "ten_gods": EvidenceSection(
@@ -96,8 +143,12 @@ def build_mock_preview_response(
                 "Stem-level Ten Gods from the engine: "
                 f"year {saju_calculation.ten_god_stems['year']}, "
                 f"month {saju_calculation.ten_god_stems['month']}, "
-                f"day {saju_calculation.ten_god_stems['day']}, "
-                f"time {saju_calculation.ten_god_stems['time']}."
+                f"day {saju_calculation.ten_god_stems['day']}"
+                + (
+                    ". Time-pillar Ten Gods are hidden because the birth time is estimated."
+                    if payload.is_birth_time_estimated
+                    else f", time {saju_calculation.ten_god_stems['time']}."
+                )
             ),
         ),
         "luck_cycles": EvidenceSection(
@@ -120,10 +171,8 @@ def build_mock_preview_response(
     result = SajuPreviewResult(
         overview=(
             f"This preview uses a real saju calculation core for {region.city}, "
-            f"with pillars {saju_calculation.pillars['year'].gan_zhi} / "
-            f"{saju_calculation.pillars['month'].gan_zhi} / "
-            f"{saju_calculation.pillars['day'].gan_zhi} / "
-            f"{saju_calculation.pillars['time'].gan_zhi}. "
+            f"with visible pillars {visible_pillar_summary}. "
+            f"{'The hour pillar is hidden because the birth time is estimated. ' if payload.is_birth_time_estimated else ''}"
             "The analysis engine and LLM phrasing are still mock layers."
         ),
         strengths=[
@@ -139,6 +188,7 @@ def build_mock_preview_response(
         wealth="Wealth analysis will stay conservative and evidence-based rather than exaggerated, even after the scoring engine is added.",
         action_advice="Use this sprint to validate region lookup, time correction, lunar/solar normalization, real engine output, and the trace flow before analysis work starts.",
         limitations=limitations,
+        disabled_sections=birth_time_policy.disabled_sections,
         evidence_sections=evidence_sections,
         hour_pillar_enabled=hour_pillar_enabled,
     )
@@ -182,11 +232,12 @@ def build_mock_preview_response(
                     stage="saju_calculation",
                     status="passed",
                     note=(
-                        f"Calculated pillars "
-                        f"{saju_calculation.pillars['year'].gan_zhi} / "
-                        f"{saju_calculation.pillars['month'].gan_zhi} / "
-                        f"{saju_calculation.pillars['day'].gan_zhi} / "
-                        f"{saju_calculation.pillars['time'].gan_zhi}"
+                        f"Calculated visible pillars {visible_pillar_summary}"
+                        + (
+                            " with the time pillar hidden by policy."
+                            if payload.is_birth_time_estimated
+                            else ""
+                        )
                     ),
                 ),
                 DebugCheckpoint(
@@ -204,6 +255,8 @@ def build_mock_preview_response(
                 "calendar_type": payload.calendar_type,
                 "birth_date": payload.birth_date.isoformat(),
                 "birth_time": payload.birth_time,
+                "effective_birth_time": birth_time_policy.effective_birth_time,
+                "is_birth_time_estimated": str(payload.is_birth_time_estimated).lower(),
                 "is_lunar_leap_month": str(payload.is_lunar_leap_month).lower(),
                 "gender": payload.gender,
                 "region_id": payload.region_id,

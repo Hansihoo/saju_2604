@@ -85,6 +85,7 @@ class SajuPreviewResult(BaseModel):
     wealth: str
     action_advice: str
     limitations: List[str]
+    disabled_sections: List[str]
     evidence_sections: Dict[str, EvidenceSection]
     hour_pillar_enabled: bool
 
