@@ -143,7 +143,7 @@ export default function App() {
             </div>
             <div className="stat-card">
               <span>Must prove</span>
-              <strong>region -> tzid -> normalized local/UTC time</strong>
+              <strong>{"region -> tzid -> normalized local/UTC time"}</strong>
             </div>
             <div className="stat-card accent">
               <span>Next big step</span>

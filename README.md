@@ -1,70 +1,111 @@
 # suju-insight
 
-사주 정보를 더 쉽고 현대적으로 전달하는 웹 서비스의 첫 부트스트랩입니다. 현재 버전은 다음을 포함합니다.
+Saju web service workspace with a React frontend and a FastAPI backend.
 
-- `apps/web`: React + Vite 기반 랜딩/입력 미리보기 화면
-- `apps/api`: FastAPI 기반 헬스체크 및 서비스 메타데이터 API
-- `docs/planning`: MVP 방향과 다음 작업 정리
-
-## 구조
+## Structure
 
 ```text
 apps/
-  api/
-  web/
+  api/   FastAPI backend
+  web/   React + Vite frontend
 docs/
   planning/
   delivery/
-Template/
+scripts/
+  dev.ps1
+  test-api.ps1
 ```
 
-## 실행 전제
+## Requirements
 
 - Node.js 20+
 - pnpm 9+
-- Python 3.8+ 권장
-- `uv` 또는 `pip`
+- Python 3.8+
 
-## 웹 실행
+## One-command local development
 
-```bash
-pnpm install
+From the repository root:
+
+```powershell
+pnpm dev
+```
+
+This opens two PowerShell windows:
+
+- API: `http://127.0.0.1:8000`
+- API docs: `http://127.0.0.1:8000/docs`
+- Web: `http://127.0.0.1:5173`
+
+You can also start only one side:
+
+```powershell
+pnpm dev:api
 pnpm dev:web
 ```
 
-기본 주소는 `http://localhost:5173` 입니다. 웹 앱은 `/api` 요청을 로컬 API 서버로 프록시합니다.
+If you only want the original direct Vite command:
 
-## API 실행
+```powershell
+pnpm dev:web:direct
+```
 
-```bash
+## API setup
+
+The backend launcher uses `apps/api/.venv/Scripts/python.exe` when it exists, otherwise it falls back to `python`.
+
+Recommended first-time setup:
+
+```powershell
 cd apps/api
 python -m venv .venv
 .venv\Scripts\activate
 pip install -e .
-uvicorn app.main:app --reload
 ```
 
-기본 주소는 `http://localhost:8000` 입니다.
+## Backend verification
 
-## 환경 변수
+From the repository root:
 
-웹:
+```powershell
+pnpm test:api
+```
 
-```bash
+This runs:
+
+- `python -m compileall app`
+- `python -m unittest discover -s tests -p "test_*.py"`
+
+## Environment
+
+Frontend:
+
+```powershell
 VITE_API_BASE_URL=/api
 ```
 
-API:
+Backend:
 
-```bash
+```powershell
 SAJU_APP_NAME=suju-insight
 SAJU_API_VERSION=0.1.0
 SAJU_CORS_ORIGINS=http://localhost:5173
 ```
 
-## 다음 단계 제안
+## Current status
 
-1. 실제 사주 입력 폼 필드와 검증 규칙 정의
-2. 해석 결과 도메인 모델과 API 스키마 설계
-3. 회원/비회원 조회 정책과 개인정보 처리 범위 확정
-4. PostgreSQL 스키마 및 배포 환경 연결
+Implemented backend pipeline:
+
+- region search
+- time correction
+- solar/lunar normalization
+- `lunar-python` engine adapter
+- estimated birth-time policy
+- deterministic baseline analysis
+- debug trace and stage logging
+
+Not finished yet:
+
+- LLM phrasing layer
+- final result UI polish
+- persistent storage
+- deployment automation

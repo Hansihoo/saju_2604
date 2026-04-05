@@ -3,9 +3,12 @@
   "private": true,
   "packageManager": "pnpm@9.0.0",
   "scripts": {
-    "dev:web": "pnpm --filter web dev",
+    "dev": "powershell -ExecutionPolicy Bypass -File ./scripts/dev.ps1",
+    "dev:api": "powershell -ExecutionPolicy Bypass -File ./scripts/dev.ps1 -FrontendOnly",
+    "dev:web": "powershell -ExecutionPolicy Bypass -File ./scripts/dev.ps1 -BackendOnly",
+    "dev:web:direct": "pnpm --filter web dev",
     "build:web": "pnpm --filter web build",
-    "preview:web": "pnpm --filter web preview"
+    "preview:web": "pnpm --filter web preview",
+    "test:api": "powershell -ExecutionPolicy Bypass -File ./scripts/test-api.ps1"
   }
 }
-
