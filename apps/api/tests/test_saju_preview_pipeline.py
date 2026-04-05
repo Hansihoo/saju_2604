@@ -31,6 +31,9 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         self.assertEqual(response.result.evidence_sections["ten_gods"].status, "ready")
         self.assertEqual(response.debug_trace.checkpoints[4].stage, "saju_calculation")
         self.assertEqual(response.debug_trace.checkpoints[4].status, "passed")
+        self.assertEqual(response.debug_trace.checkpoints[5].stage, "analysis_engine")
+        self.assertEqual(response.debug_trace.checkpoints[5].status, "passed")
+        self.assertIn("Internal grade", response.debug_trace.checkpoints[5].note)
         self.assertIn("甲辰", response.debug_trace.checkpoints[4].note)
 
     def test_estimated_birth_time_hides_hour_pillar_outputs(self) -> None:
@@ -56,6 +59,7 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         self.assertFalse(response.result.hour_pillar_enabled)
         self.assertIn("time_pillar", response.result.disabled_sections)
         self.assertEqual(response.result.evidence_sections["luck_cycles"].status, "disabled")
+        self.assertEqual(response.pipeline_status.analysis_engine, "passed")
         self.assertIn("hidden by policy", response.debug_trace.checkpoints[4].note)
 
 

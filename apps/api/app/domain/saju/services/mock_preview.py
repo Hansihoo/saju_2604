@@ -2,6 +2,7 @@ from typing import Dict, List
 
 from fastapi import HTTPException
 
+from app.domain.saju.analysis import AnalysisResult
 from app.domain.saju.calendar_normalization import CalendarNormalizationResult
 from app.domain.saju.engine import SajuCalculationResult
 from app.domain.saju.mock_data import REGION_OPTIONS
@@ -26,31 +27,6 @@ def _summarize_visible_pillars(
     visible_pillar_keys: List[str],
 ) -> str:
     return " / ".join(saju_calculation.pillars[key].gan_zhi for key in visible_pillar_keys)
-
-
-def _build_visible_element_counts(
-    saju_calculation: SajuCalculationResult,
-    visible_pillar_keys: List[str],
-) -> Dict[str, int]:
-    counts = {
-        "wood": 0,
-        "fire": 0,
-        "earth": 0,
-        "metal": 0,
-        "water": 0,
-    }
-    key_by_char = {
-        "木": "wood",
-        "火": "fire",
-        "土": "earth",
-        "金": "metal",
-        "水": "water",
-    }
-    for pillar_key in visible_pillar_keys:
-        for char in saju_calculation.pillars[pillar_key].five_elements:
-            if char in key_by_char:
-                counts[key_by_char[char]] += 1
-    return counts
 
 
 def search_regions(*, query: str, limit: int) -> List[Dict[str, str]]:
@@ -99,16 +75,13 @@ def build_mock_preview_response(
     time_correction: TimeCorrectionResult,
     calendar_normalization: CalendarNormalizationResult,
     saju_calculation: SajuCalculationResult,
+    analysis_result: AnalysisResult,
     trace_id: str,
     debug_requested: bool,
 ) -> SajuPreviewResponse:
     birth_time_policy = resolve_birth_time_policy(payload)
     hour_pillar_enabled = birth_time_policy.hour_pillar_enabled
     visible_pillar_summary = _summarize_visible_pillars(
-        saju_calculation=saju_calculation,
-        visible_pillar_keys=birth_time_policy.visible_pillar_keys,
-    )
-    visible_element_counts = _build_visible_element_counts(
         saju_calculation=saju_calculation,
         visible_pillar_keys=birth_time_policy.visible_pillar_keys,
     )
@@ -124,11 +97,11 @@ def build_mock_preview_response(
             status="ready",
             summary=(
                 "Element balance from the engine: "
-                f"wood {visible_element_counts['wood']}, "
-                f"fire {visible_element_counts['fire']}, "
-                f"earth {visible_element_counts['earth']}, "
-                f"metal {visible_element_counts['metal']}, "
-                f"water {visible_element_counts['water']}."
+                f"wood {analysis_result.visible_element_counts['wood']}, "
+                f"fire {analysis_result.visible_element_counts['fire']}, "
+                f"earth {analysis_result.visible_element_counts['earth']}, "
+                f"metal {analysis_result.visible_element_counts['metal']}, "
+                f"water {analysis_result.visible_element_counts['water']}."
                 + (
                     " Hour-pillar contribution is hidden because the birth time is estimated."
                     if payload.is_birth_time_estimated
@@ -176,17 +149,17 @@ def build_mock_preview_response(
             "The analysis engine and LLM phrasing are still mock layers."
         ),
         strengths=[
-            "The current flow preserves calendar type, leap-month intent, region selection, normalized time context, and real saju pillar output in one contract.",
-            "The engine adapter now returns stable raw data that the later analysis engine can reuse without re-parsing the library response.",
+            "The current flow preserves calendar type, leap-month intent, region selection, normalized time context, real saju pillar output, and deterministic baseline analysis in one contract.",
+            analysis_result.strengths[0],
         ],
         cautions=[
-            "This response now uses a real saju calculation engine, but the interpretation text is still a placeholder layer.",
-            "Score, grade, and LLM explanation phases are still scheduled for later work.",
+            "This response now uses a real saju calculation engine and a deterministic baseline analysis, but the final narrative layer is still provisional.",
+            analysis_result.cautions[0],
         ],
-        love="Relationship guidance will be generated after the analysis engine reads the real pillar and Ten Gods output.",
-        career="Career fit will be based on code-driven scoring from the normalized engine result, then translated into natural language.",
-        wealth="Wealth analysis will stay conservative and evidence-based rather than exaggerated, even after the scoring engine is added.",
-        action_advice="Use this sprint to validate region lookup, time correction, lunar/solar normalization, real engine output, and the trace flow before analysis work starts.",
+        love=f"Baseline attraction profile score: {analysis_result.charm_score}/100. Narrative refinement will come after the LLM layer is connected.",
+        career=f"Baseline career fit score: {analysis_result.career_score}/100, derived from the current visible element profile.",
+        wealth=f"Baseline wealth score: {analysis_result.wealth_score}/100. This stays conservative and rule-based at this stage.",
+        action_advice=analysis_result.action_advice,
         limitations=limitations,
         disabled_sections=birth_time_policy.disabled_sections,
         evidence_sections=evidence_sections,
@@ -242,8 +215,12 @@ def build_mock_preview_response(
                 ),
                 DebugCheckpoint(
                     stage="analysis_engine",
-                    status="skipped",
-                    note="The analysis engine is scheduled for a later sprint.",
+                    status="passed",
+                    note=(
+                        f"Internal grade {analysis_result.internal_grade}, "
+                        f"balance {analysis_result.balance_score}, "
+                        f"missing elements {', '.join(analysis_result.missing_elements) or 'none'}"
+                    ),
                 ),
                 DebugCheckpoint(
                     stage="llm_formatting",
@@ -274,6 +251,7 @@ def build_mock_preview_response(
             time_correction="passed",
             calendar_normalization="passed",
             saju_calculation="passed",
+            analysis_engine="passed",
         ),
         region=region,
         time_correction=TimeCorrectionSummary(
