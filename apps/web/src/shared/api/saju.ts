@@ -80,6 +80,7 @@ export type SajuPreviewResponse = {
     wealth: string;
     action_advice: string;
     limitations: string[];
+    disabled_sections: string[];
     evidence_sections: Record<string, EvidenceSection>;
     hour_pillar_enabled: boolean;
   };

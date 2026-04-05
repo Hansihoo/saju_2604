@@ -9,6 +9,9 @@ __pycache__/
 .ruff_cache/
 *.egg-info/
 *.pyc
+*.stdout.log
+*.stderr.log
+package-lock.json
 .env
 .env.local
 .DS_Store
