@@ -1,8 +1,8 @@
 import { FormEvent, useEffect, useState } from "react";
 
 import {
-  SajuPreviewResponse,
   RegionSuggestion,
+  SajuPreviewResponse,
   createSajuPreview,
   searchRegionSuggestions,
 } from "./shared/api/saju";
@@ -125,27 +125,27 @@ export default function App() {
       <main className="layout">
         <section className="hero-card">
           <div className="hero-copy">
-            <p className="eyebrow">STEP 1 BUILD</p>
-            <h1>Contracts, trace, and mock preview are now the first milestone.</h1>
+            <p className="eyebrow">STEP 2 BUILD</p>
+            <h1>Time correction is now part of the preview pipeline.</h1>
             <p className="hero-text">
-              This sprint does not calculate a real saju result yet. It verifies the
-              full request contract, region-selection flow, trace structure, and result
-              layout before the real engine is connected.
+              This sprint still uses mock reading content, but the request now resolves a
+              region, normalizes the local birth time, and exposes the corrected time
+              context through the contract and debug trace.
             </p>
           </div>
 
           <div className="hero-stats">
             <div className="stat-card">
               <span>Current goal</span>
-              <strong>Mock preview pipeline</strong>
+              <strong>Time correction + diagnostics</strong>
             </div>
             <div className="stat-card">
               <span>Must prove</span>
-              <strong>trace_id + pipeline_status + region selection</strong>
+              <strong>region -> tzid -> normalized local/UTC time</strong>
             </div>
             <div className="stat-card accent">
               <span>Next big step</span>
-              <strong>time correction + lunar normalization</strong>
+              <strong>calendar normalization + real saju engine</strong>
             </div>
           </div>
         </section>
@@ -241,7 +241,7 @@ export default function App() {
               </label>
 
               <button className="primary-button" type="submit" disabled={loading}>
-                {loading ? "Building preview..." : "Request mock preview"}
+                {loading ? "Normalizing preview..." : "Request mock preview"}
               </button>
             </form>
 
@@ -292,6 +292,21 @@ export default function App() {
                   <span className="chip">
                     hour pillar: {result.result.hour_pillar_enabled ? "enabled" : "limited"}
                   </span>
+                </div>
+
+                <div className="time-card">
+                  <h3>Time correction</h3>
+                  <p>Local input: {result.time_correction.source_local_datetime}</p>
+                  <p>Normalized local: {result.time_correction.normalized_local_datetime}</p>
+                  <p>Normalized UTC: {result.time_correction.normalized_utc_datetime}</p>
+                  <div className="chip-row">
+                    <span className="chip">tzid: {result.time_correction.tzid}</span>
+                    <span className="chip">offset: {result.time_correction.offset_minutes} min</span>
+                    <span className="chip">
+                      ambiguous: {result.time_correction.ambiguous ? "yes" : "no"}
+                    </span>
+                    <span className="chip">fold: {result.time_correction.fold}</span>
+                  </div>
                 </div>
 
                 <div className="detail-columns">
@@ -346,7 +361,7 @@ export default function App() {
               </>
             ) : (
               <p className="muted-copy">
-                Submit the form to verify the contract, region selection, and trace flow.
+                Submit the form to verify the contract, region selection, and time correction flow.
               </p>
             )}
           </article>

@@ -12,7 +12,9 @@ from app.domain.saju.schemas import (
     SajuPreviewRequest,
     SajuPreviewResponse,
     SajuPreviewResult,
+    TimeCorrectionSummary,
 )
+from app.domain.saju.time_correction import TimeCorrectionResult
 
 
 def search_regions(*, query: str, limit: int) -> List[Dict[str, str]]:
@@ -47,6 +49,7 @@ def find_region_by_id(region_id: str) -> RegionSuggestion:
     raise HTTPException(
         status_code=400,
         detail={
+            "stage": "region_resolution",
             "error_code": "REGION_NOT_SELECTED",
             "message": "A valid region must be selected from the suggestion list.",
         },
@@ -57,6 +60,7 @@ def build_mock_preview_response(
     *,
     payload: SajuPreviewRequest,
     region: RegionSuggestion,
+    time_correction: TimeCorrectionResult,
     trace_id: str,
     debug_requested: bool,
 ) -> SajuPreviewResponse:
@@ -92,20 +96,20 @@ def build_mock_preview_response(
     result = SajuPreviewResult(
         overview=(
             f"This preview uses mock reading data for {region.city}. "
-            "It verifies the input contract, trace flow, and result layout before the real engine is connected."
+            "It verifies the input contract, trace flow, time correction, and result layout before the real engine is connected."
         ),
         strengths=[
-            "The current flow already preserves calendar type, birth time, gender, and region selection in one contract.",
+            "The current flow preserves calendar type, birth time, gender, region selection, and normalized time context in one contract.",
             "The response shape is stable enough to connect the real engine without rewriting the UI later.",
         ],
         cautions=[
             "This response is a mock preview, not a real saju calculation.",
-            "Time correction, calendar normalization, and the calculation engine are still scheduled for later phases.",
+            "Calendar normalization and the calculation engine are still scheduled for later phases.",
         ],
         love="Relationship guidance will be generated after the analysis engine is connected.",
         career="Career fit will be based on code-driven scoring, then translated into natural language.",
         wealth="Wealth analysis will stay conservative and evidence-based rather than exaggerated.",
-        action_advice="Use this sprint to validate the contract, region selection flow, and debug trace before real calculation work starts.",
+        action_advice="Use this sprint to validate region selection, time correction, and the trace flow before real calculation work starts.",
         limitations=limitations,
         evidence_sections=evidence_sections,
         hour_pillar_enabled=hour_pillar_enabled,
@@ -132,8 +136,11 @@ def build_mock_preview_response(
                 ),
                 DebugCheckpoint(
                     stage="time_correction",
-                    status="skipped",
-                    note="Skipped in mock preview mode.",
+                    status="passed",
+                    note=(
+                        f"Normalized {time_correction.source_local_datetime} "
+                        f"to {time_correction.normalized_utc_datetime}"
+                    ),
                 ),
                 DebugCheckpoint(
                     stage="calendar_normalization",
@@ -163,13 +170,24 @@ def build_mock_preview_response(
                 "gender": payload.gender,
                 "region_id": payload.region_id,
                 "tzid": region.tzid,
+                "normalized_local_datetime": time_correction.normalized_local_datetime,
+                "normalized_utc_datetime": time_correction.normalized_utc_datetime,
             },
         )
 
     return SajuPreviewResponse(
         trace_id=trace_id,
-        pipeline_status=PipelineStatus(),
+        pipeline_status=PipelineStatus(time_correction="passed"),
         region=region,
+        time_correction=TimeCorrectionSummary(
+            tzid=time_correction.tzid,
+            source_local_datetime=time_correction.source_local_datetime,
+            normalized_local_datetime=time_correction.normalized_local_datetime,
+            normalized_utc_datetime=time_correction.normalized_utc_datetime,
+            offset_minutes=time_correction.offset_minutes,
+            ambiguous=time_correction.ambiguous,
+            fold=time_correction.fold,
+        ),
         result=result,
         debug_trace=debug_trace,
     )

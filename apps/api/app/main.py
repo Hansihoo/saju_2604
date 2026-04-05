@@ -1,11 +1,15 @@
 from time import perf_counter
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.routes import router
 from app.config import settings
 from app.diagnostics import configure_logging, create_trace_id, log_stage, parse_debug_header
+from app.domain.saju.time_correction import TimeCorrectionError
 
 app = FastAPI(
     title=settings.app_name,
@@ -22,6 +26,48 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(RequestValidationError)
+async def handle_validation_error(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=422,
+        content={
+            "trace_id": request.state.trace_id,
+            "stage": "input_validation",
+            "error_code": "INPUT_SCHEMA_ERROR",
+            "message": "Request validation failed.",
+            "details": exc.errors(),
+        },
+    )
+
+
+@app.exception_handler(TimeCorrectionError)
+async def handle_time_correction_error(request: Request, exc: TimeCorrectionError):
+    return JSONResponse(
+        status_code=400,
+        content={
+            "trace_id": request.state.trace_id,
+            "stage": "time_correction",
+            "error_code": exc.error_code,
+            "message": exc.message,
+            "meta": exc.meta if request.state.debug_requested else {},
+        },
+    )
+
+
+@app.exception_handler(StarletteHTTPException)
+async def handle_http_exception(request: Request, exc: StarletteHTTPException):
+    detail = exc.detail if isinstance(exc.detail, dict) else {"message": str(exc.detail)}
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "trace_id": request.state.trace_id,
+            "stage": detail.get("stage", "request"),
+            "error_code": detail.get("error_code", "HTTP_ERROR"),
+            "message": detail.get("message", "The request failed."),
+        },
+    )
 
 
 @app.middleware("http")

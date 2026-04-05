@@ -236,6 +236,7 @@ button {
 .status-panel,
 .notice-card,
 .reading-card,
+.time-card,
 .debug-panel {
   border-radius: 20px;
   border: 1px solid rgba(255, 243, 229, 0.12);
@@ -243,7 +244,8 @@ button {
 }
 
 .status-panel,
-.notice-card {
+.notice-card,
+.time-card {
   padding: 18px;
 }
 

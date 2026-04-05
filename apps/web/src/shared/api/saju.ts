@@ -38,11 +38,22 @@ export type EvidenceSection = {
   summary: string;
 };
 
+export type TimeCorrectionSummary = {
+  tzid: string;
+  source_local_datetime: string;
+  normalized_local_datetime: string;
+  normalized_utc_datetime: string;
+  offset_minutes: number;
+  ambiguous: boolean;
+  fold: number;
+};
+
 export type SajuPreviewResponse = {
   trace_id: string;
   response_mode: "mock";
   pipeline_status: PipelineStatus;
   region: RegionSuggestion;
+  time_correction: TimeCorrectionSummary;
   result: {
     overview: string;
     strengths: string[];
@@ -72,8 +83,13 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
 async function parseJsonResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    const body = await response.text();
-    throw new Error(body || `Request failed with ${response.status}`);
+    const rawBody = await response.text();
+    try {
+      const parsed = JSON.parse(rawBody) as { message?: string; error_code?: string };
+      throw new Error(parsed.message ?? parsed.error_code ?? `Request failed with ${response.status}`);
+    } catch (_error) {
+      throw new Error(rawBody || `Request failed with ${response.status}`);
+    }
   }
 
   return (await response.json()) as T;

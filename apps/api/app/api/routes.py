@@ -4,6 +4,7 @@ from typing import Any, Dict
 from fastapi import APIRouter, Query, Request
 
 from app.config import settings
+from app.diagnostics import log_stage
 from app.domain.saju.schemas import (
     RegionSearchResponse,
     RegionSuggestion,
@@ -15,6 +16,7 @@ from app.domain.saju.services.mock_preview import (
     find_region_by_id,
     search_regions,
 )
+from app.domain.saju.time_correction import TimeCorrectionError, normalize_birth_datetime
 
 router = APIRouter()
 
@@ -34,7 +36,7 @@ def read_health() -> Dict[str, Any]:
         "service": settings.app_name,
         "version": settings.api_version,
         "message": "suju-insight API bootstrap is ready.",
-        "focus": ["contracts", "trace", "mock-preview"],
+        "focus": ["contracts", "trace", "time-correction", "mock-preview"],
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -59,10 +61,48 @@ def create_saju_preview(
     request: Request,
 ) -> SajuPreviewResponse:
     region = find_region_by_id(payload.region_id)
+    log_stage(
+        service=settings.app_name,
+        trace_id=request.state.trace_id,
+        stage="region_resolution",
+        event="resolved",
+        meta={"region_id": region.id, "tzid": region.tzid},
+    )
+
+    try:
+        time_correction = normalize_birth_datetime(
+            birth_date=payload.birth_date,
+            birth_time=payload.birth_time,
+            tzid=region.tzid,
+        )
+    except TimeCorrectionError as exc:
+        log_stage(
+            service=settings.app_name,
+            trace_id=request.state.trace_id,
+            stage="time_correction",
+            event="failed",
+            error_code=exc.error_code,
+            meta=exc.meta,
+        )
+        raise
+
+    log_stage(
+        service=settings.app_name,
+        trace_id=request.state.trace_id,
+        stage="time_correction",
+        event="normalized",
+        meta={
+            "normalized_utc_datetime": time_correction.normalized_utc_datetime,
+            "ambiguous": time_correction.ambiguous,
+            "fold": time_correction.fold,
+        },
+    )
+
     debug_requested = request.state.debug_requested or payload.debug
     return build_mock_preview_response(
         payload=payload,
         region=region,
+        time_correction=time_correction,
         trace_id=request.state.trace_id,
         debug_requested=debug_requested,
     )
