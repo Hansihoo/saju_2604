@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, constr
 
 
 PipelineState = Literal["passed", "failed", "skipped", "disabled"]
-BirthTimeStr = constr(regex=r"^\d{2}:\d{2}$")
+BirthTimeStr = constr(pattern=r"^\d{2}:\d{2}$")
 
 
 class RegionSuggestion(BaseModel):

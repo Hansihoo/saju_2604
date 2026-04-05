@@ -1,0 +1,152 @@
+from datetime import datetime
+from typing import Dict, List
+
+from lunar_python import Solar
+
+from app.domain.saju.engine import Gender, LuckCycle, PillarData, SajuCalculationResult
+
+
+ELEMENT_KEY_BY_CHAR = {
+    "木": "wood",
+    "火": "fire",
+    "土": "earth",
+    "金": "metal",
+    "水": "water",
+}
+
+
+class SajuCalculationError(ValueError):
+    def __init__(self, *, error_code: str, message: str, meta: Dict[str, str]) -> None:
+        super().__init__(message)
+        self.error_code = error_code
+        self.message = message
+        self.meta = meta
+
+
+class LunarPythonSajuEngine:
+    def calculate(
+        self,
+        *,
+        normalized_solar_datetime: str,
+        gender: Gender,
+    ) -> SajuCalculationResult:
+        try:
+            dt = datetime.strptime(normalized_solar_datetime, "%Y-%m-%d %H:%M:%S")
+        except ValueError as exc:
+            raise SajuCalculationError(
+                error_code="INVALID_NORMALIZED_SOLAR_DATETIME",
+                message="The normalized solar datetime must use YYYY-MM-DD HH:MM:SS format.",
+                meta={"normalized_solar_datetime": normalized_solar_datetime},
+            ) from exc
+
+        try:
+            solar = Solar.fromYmdHms(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
+            lunar = solar.getLunar()
+            eight_char = lunar.getEightChar()
+            yun = eight_char.getYun(1 if gender == "male" else 0)
+        except Exception as exc:
+            raise SajuCalculationError(
+                error_code="SAJU_ENGINE_CALCULATION_ERROR",
+                message="The saju engine could not calculate the normalized input.",
+                meta={
+                    "normalized_solar_datetime": normalized_solar_datetime,
+                    "gender": gender,
+                },
+            ) from exc
+
+        pillars = {
+            "year": self._build_pillar(
+                gan_zhi=eight_char.getYear(),
+                stem=eight_char.getYearGan(),
+                branch=eight_char.getYearZhi(),
+                five_elements=eight_char.getYearWuXing(),
+                stem_ten_god=eight_char.getYearShiShenGan(),
+                branch_ten_gods=eight_char.getYearShiShenZhi(),
+                hidden_stems=eight_char.getYearHideGan(),
+            ),
+            "month": self._build_pillar(
+                gan_zhi=eight_char.getMonth(),
+                stem=eight_char.getMonthGan(),
+                branch=eight_char.getMonthZhi(),
+                five_elements=eight_char.getMonthWuXing(),
+                stem_ten_god=eight_char.getMonthShiShenGan(),
+                branch_ten_gods=eight_char.getMonthShiShenZhi(),
+                hidden_stems=eight_char.getMonthHideGan(),
+            ),
+            "day": self._build_pillar(
+                gan_zhi=eight_char.getDay(),
+                stem=eight_char.getDayGan(),
+                branch=eight_char.getDayZhi(),
+                five_elements=eight_char.getDayWuXing(),
+                stem_ten_god=eight_char.getDayShiShenGan(),
+                branch_ten_gods=eight_char.getDayShiShenZhi(),
+                hidden_stems=eight_char.getDayHideGan(),
+            ),
+            "time": self._build_pillar(
+                gan_zhi=eight_char.getTime(),
+                stem=eight_char.getTimeGan(),
+                branch=eight_char.getTimeZhi(),
+                five_elements=eight_char.getTimeWuXing(),
+                stem_ten_god=eight_char.getTimeShiShenGan(),
+                branch_ten_gods=eight_char.getTimeShiShenZhi(),
+                hidden_stems=eight_char.getTimeHideGan(),
+            ),
+        }
+
+        return SajuCalculationResult(
+            pillars=pillars,
+            element_counts=self._count_elements(pillars),
+            ten_god_stems={
+                "year": pillars["year"].stem_ten_god,
+                "month": pillars["month"].stem_ten_god,
+                "day": pillars["day"].stem_ten_god,
+                "time": pillars["time"].stem_ten_god,
+            },
+            luck_cycles=[
+                LuckCycle(
+                    index=cycle.getIndex(),
+                    gan_zhi=cycle.getGanZhi(),
+                    start_year=cycle.getStartYear(),
+                    end_year=cycle.getEndYear(),
+                    start_age=cycle.getStartAge(),
+                    end_age=cycle.getEndAge(),
+                )
+                for cycle in yun.getDaYun()
+            ],
+            meta={
+                "normalized_solar_datetime": normalized_solar_datetime,
+                "gender": gender,
+                "day_master": pillars["day"].stem,
+                "luck_cycle_start_date": yun.getStartSolar().toYmd(),
+                "luck_cycle_direction": "forward" if yun.isForward() else "backward",
+            },
+        )
+
+    def _build_pillar(
+        self,
+        *,
+        gan_zhi: str,
+        stem: str,
+        branch: str,
+        five_elements: str,
+        stem_ten_god: str,
+        branch_ten_gods: List[str],
+        hidden_stems: List[str],
+    ) -> PillarData:
+        return PillarData(
+            gan_zhi=gan_zhi,
+            stem=stem,
+            branch=branch,
+            five_elements=five_elements,
+            stem_ten_god=stem_ten_god,
+            branch_ten_gods=list(branch_ten_gods),
+            hidden_stems=list(hidden_stems),
+        )
+
+    def _count_elements(self, pillars: Dict[str, PillarData]) -> Dict[str, int]:
+        counts = {key: 0 for key in ELEMENT_KEY_BY_CHAR.values()}
+        for pillar in pillars.values():
+            for char in pillar.five_elements:
+                if char in ELEMENT_KEY_BY_CHAR:
+                    counts[ELEMENT_KEY_BY_CHAR[char]] += 1
+        return counts

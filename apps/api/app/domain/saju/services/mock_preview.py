@@ -3,6 +3,7 @@ from typing import Dict, List
 from fastapi import HTTPException
 
 from app.domain.saju.calendar_normalization import CalendarNormalizationResult
+from app.domain.saju.engine import SajuCalculationResult
 from app.domain.saju.mock_data import REGION_OPTIONS
 from app.domain.saju.schemas import (
     CalendarNormalizationSummary,
@@ -64,6 +65,7 @@ def build_mock_preview_response(
     region: RegionSuggestion,
     time_correction: TimeCorrectionResult,
     calendar_normalization: CalendarNormalizationResult,
+    saju_calculation: SajuCalculationResult,
     trace_id: str,
     debug_requested: bool,
 ) -> SajuPreviewResponse:
@@ -77,42 +79,65 @@ def build_mock_preview_response(
     evidence_sections = {
         "elements": EvidenceSection(
             title="Five Elements",
-            status="coming_soon",
-            summary="The element balance will be unlocked after the real calculation engine is connected.",
+            status="ready",
+            summary=(
+                "Element balance from the engine: "
+                f"wood {saju_calculation.element_counts['wood']}, "
+                f"fire {saju_calculation.element_counts['fire']}, "
+                f"earth {saju_calculation.element_counts['earth']}, "
+                f"metal {saju_calculation.element_counts['metal']}, "
+                f"water {saju_calculation.element_counts['water']}."
+            ),
         ),
         "ten_gods": EvidenceSection(
             title="Ten Gods",
-            status="coming_soon",
-            summary="This section is reserved for normalized Ten Gods output from the engine adapter.",
+            status="ready",
+            summary=(
+                "Stem-level Ten Gods from the engine: "
+                f"year {saju_calculation.ten_god_stems['year']}, "
+                f"month {saju_calculation.ten_god_stems['month']}, "
+                f"day {saju_calculation.ten_god_stems['day']}, "
+                f"time {saju_calculation.ten_god_stems['time']}."
+            ),
         ),
         "luck_cycles": EvidenceSection(
             title="Luck Cycles",
-            status="disabled" if not hour_pillar_enabled else "coming_soon",
+            status="disabled" if not hour_pillar_enabled else "ready",
             summary=(
                 "Luck-cycle details are hidden because the birth time is estimated."
                 if not hour_pillar_enabled
-                else "This section will show decade luck-cycle details after engine integration."
+                else (
+                    "First active decade cycle: "
+                    f"{saju_calculation.luck_cycles[1].gan_zhi} "
+                    f"({saju_calculation.luck_cycles[1].start_year}-{saju_calculation.luck_cycles[1].end_year})."
+                    if len(saju_calculation.luck_cycles) > 1
+                    else "Luck-cycle data is available but shorter than expected."
+                )
             ),
         ),
     }
 
     result = SajuPreviewResult(
         overview=(
-            f"This preview uses mock reading data for {region.city}. "
-            "It verifies the input contract, region lookup, time correction, calendar normalization, and result layout before the real engine is connected."
+            f"This preview uses a real saju calculation core for {region.city}, "
+            f"with pillars {saju_calculation.pillars['year'].gan_zhi} / "
+            f"{saju_calculation.pillars['month'].gan_zhi} / "
+            f"{saju_calculation.pillars['day'].gan_zhi} / "
+            f"{saju_calculation.pillars['time'].gan_zhi}. "
+            "The analysis engine and LLM phrasing are still mock layers."
         ),
         strengths=[
-            "The current flow preserves calendar type, leap-month intent, region selection, and normalized time context in one contract.",
-            "The response shape is stable enough to connect the real engine without rewriting the UI later.",
+            "The current flow preserves calendar type, leap-month intent, region selection, normalized time context, and real saju pillar output in one contract.",
+            "The engine adapter now returns stable raw data that the later analysis engine can reuse without re-parsing the library response.",
         ],
         cautions=[
-            "This response is a mock preview, not a real saju calculation.",
-            "The actual saju engine and analysis engine are still scheduled for later phases.",
+            "This response now uses a real saju calculation engine, but the interpretation text is still a placeholder layer.",
+            "Score, grade, and LLM explanation phases are still scheduled for later work.",
         ],
-        love="Relationship guidance will be generated after the analysis engine is connected.",
-        career="Career fit will be based on code-driven scoring, then translated into natural language.",
-        wealth="Wealth analysis will stay conservative and evidence-based rather than exaggerated.",
-        action_advice="Use this sprint to validate region lookup, time correction, lunar/solar normalization, and the trace flow before real calculation work starts.",
+        love="Relationship guidance will be generated after the analysis engine reads the real pillar and Ten Gods output.",
+        career="Career fit will be based on code-driven scoring from the normalized engine result, then translated into natural language.",
+        wealth="Wealth analysis will stay conservative and evidence-based rather than exaggerated, even after the scoring engine is added.",
+        action_advice="Use this sprint to validate region lookup, time correction, lunar/solar normalization, real engine output, and the trace flow before analysis work starts.",
         limitations=limitations,
         evidence_sections=evidence_sections,
         hour_pillar_enabled=hour_pillar_enabled,
@@ -155,8 +180,14 @@ def build_mock_preview_response(
                 ),
                 DebugCheckpoint(
                     stage="saju_calculation",
-                    status="skipped",
-                    note="The real engine adapter is not connected in this sprint.",
+                    status="passed",
+                    note=(
+                        f"Calculated pillars "
+                        f"{saju_calculation.pillars['year'].gan_zhi} / "
+                        f"{saju_calculation.pillars['month'].gan_zhi} / "
+                        f"{saju_calculation.pillars['day'].gan_zhi} / "
+                        f"{saju_calculation.pillars['time'].gan_zhi}"
+                    ),
                 ),
                 DebugCheckpoint(
                     stage="analysis_engine",
@@ -189,6 +220,7 @@ def build_mock_preview_response(
         pipeline_status=PipelineStatus(
             time_correction="passed",
             calendar_normalization="passed",
+            saju_calculation="passed",
         ),
         region=region,
         time_correction=TimeCorrectionSummary(

@@ -7,8 +7,8 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+*.egg-info/
 *.pyc
 .env
 .env.local
 .DS_Store
-
