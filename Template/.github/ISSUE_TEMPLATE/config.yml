@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 템플릿 사용 가이드
+    url: https://github.com/{{GITHUB_OWNER}}/{{GITHUB_REPO}}/blob/main/docs/START_HERE.md
+    about: 새 프로젝트 시작 순서와 문서 구조를 먼저 확인합니다.
