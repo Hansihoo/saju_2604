@@ -1,5 +1,12 @@
 import { FormEvent, useEffect, useState } from "react";
 
+import {
+  SajuPreviewResponse,
+  RegionSuggestion,
+  createSajuPreview,
+  searchRegionSuggestions,
+} from "./shared/api/saju";
+
 type ApiHealth = {
   status: string;
   service: string;
@@ -10,135 +17,155 @@ type ApiHealth = {
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
-const highlights = [
-  {
-    title: "쉽게 읽히는 해석",
-    body: "복잡한 용어를 줄이고, 지금의 감정과 선택에 연결되는 설명으로 정리합니다."
-  },
-  {
-    title: "입력 부담 최소화",
-    body: "생년월일과 출생 시간 중심으로 시작하고, 필요한 정보만 단계적으로 요청합니다."
-  },
-  {
-    title: "모바일 우선 경험",
-    body: "상담 예약 전 탐색, 오늘의 흐름 확인, 핵심 결과 공유까지 휴대폰에서 자연스럽게 이어집니다."
-  }
-];
-
-const roadmap = [
-  "사주 기본 정보 입력",
-  "초기 성향 리포트 생성",
-  "오늘의 흐름 카드",
-  "해석 결과 저장 및 재조회"
-];
+const pipelineLabels: Record<string, string> = {
+  input_validation: "Input validation",
+  region_resolution: "Region resolution",
+  time_correction: "Time correction",
+  calendar_normalization: "Calendar normalization",
+  saju_calculation: "Saju calculation",
+  analysis_engine: "Analysis engine",
+  llm_formatting: "LLM formatting",
+};
 
 export default function App() {
-  const [name, setName] = useState("지민");
+  const [calendarType, setCalendarType] = useState<"solar" | "lunar">("solar");
   const [birthDate, setBirthDate] = useState("1994-10-13");
   const [birthTime, setBirthTime] = useState("08:30");
+  const [isBirthTimeEstimated, setIsBirthTimeEstimated] = useState(false);
+  const [gender, setGender] = useState<"male" | "female">("female");
+  const [regionQuery, setRegionQuery] = useState("Seoul");
+  const [selectedRegion, setSelectedRegion] = useState<RegionSuggestion | null>(null);
+  const [regionOptions, setRegionOptions] = useState<RegionSuggestion[]>([]);
+  const [debug, setDebug] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<SajuPreviewResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [apiHealth, setApiHealth] = useState<ApiHealth | null>(null);
-  const [apiError, setApiError] = useState<string | null>(null);
-  const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
     async function loadHealth() {
+      const response = await fetch(`${API_BASE_URL}/health`);
+      if (!response.ok) {
+        throw new Error(`Health request failed with ${response.status}`);
+      }
+      const data = (await response.json()) as ApiHealth;
+      setApiHealth(data);
+    }
+
+    void loadHealth().catch(() => {
+      setApiHealth(null);
+    });
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadRegions() {
       try {
-        const response = await fetch(`${API_BASE_URL}/health`);
-
-        if (!response.ok) {
-          throw new Error(`API responded with ${response.status}`);
+        const items = await searchRegionSuggestions(regionQuery);
+        if (cancelled) {
+          return;
         }
-
-        const data = (await response.json()) as ApiHealth;
-        setApiHealth(data);
-        setApiError(null);
-      } catch (error) {
-        setApiError("API 연결 전 상태입니다. 백엔드를 실행하면 준비 상태를 확인할 수 있어요.");
+        setRegionOptions(items);
+        if (!selectedRegion && items.length > 0) {
+          setSelectedRegion(items[0]);
+        }
+      } catch (_error) {
+        if (!cancelled) {
+          setRegionOptions([]);
+        }
       }
     }
 
-    void loadHealth();
-  }, []);
+    void loadRegions();
 
-  function handlePreviewSubmit(event: FormEvent<HTMLFormElement>) {
+    return () => {
+      cancelled = true;
+    };
+  }, [regionQuery, selectedRegion]);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSubmitted(true);
-  }
+    if (!selectedRegion) {
+      setError("Pick one region from the suggestion list before submitting.");
+      return;
+    }
 
-  const previewMessage = submitted
-    ? `${name}님은 차분한 관찰력과 빠른 결단이 함께 보이는 흐름으로 해석해볼 수 있어요. 지금 버전에서는 입력 경험을 먼저 다듬고, 다음 단계에서 실제 해석 엔진을 붙일 예정입니다.`
-    : "입력값을 바탕으로 어떤 톤의 해석을 보여줄지 미리 볼 수 있는 자리입니다.";
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await createSajuPreview(
+        {
+          calendar_type: calendarType,
+          birth_date: birthDate,
+          birth_time: birthTime,
+          is_birth_time_estimated: isBirthTimeEstimated,
+          gender,
+          region_id: selectedRegion.id,
+          debug,
+        },
+        debug,
+      );
+      setResult(data);
+    } catch (requestError) {
+      const message =
+        requestError instanceof Error
+          ? requestError.message
+          : "The preview request failed.";
+      setError(message);
+      setResult(null);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div className="page-shell">
       <main className="layout">
-        <section className="hero">
+        <section className="hero-card">
           <div className="hero-copy">
-            <p className="eyebrow">SAJU WEB MVP</p>
-            <h1>사주의 결을 읽고, 오늘의 선택에 연결하는 웹 서비스</h1>
+            <p className="eyebrow">STEP 1 BUILD</p>
+            <h1>Contracts, trace, and mock preview are now the first milestone.</h1>
             <p className="hero-text">
-              suju-insight는 전통적인 사주 정보를 더 부드럽고 선명한 디지털 경험으로
-              풀어내는 프로젝트입니다. 첫 버전은 입력 부담을 낮추고, 해석 결과가
-              어렵지 않게 읽히도록 만드는 데 집중합니다.
+              This sprint does not calculate a real saju result yet. It verifies the
+              full request contract, region-selection flow, trace structure, and result
+              layout before the real engine is connected.
             </p>
-
-            <div className="hero-actions">
-              <a className="primary-action" href="#preview">
-                입력 경험 보기
-              </a>
-              <a className="ghost-action" href="#status">
-                API 상태 확인
-              </a>
-            </div>
           </div>
 
-          <div className="hero-panel">
-            <div className="metric-card">
-              <span>현재 목표</span>
-              <strong>MVP 구조 확정</strong>
+          <div className="hero-stats">
+            <div className="stat-card">
+              <span>Current goal</span>
+              <strong>Mock preview pipeline</strong>
             </div>
-            <div className="metric-card">
-              <span>핵심 사용자 경험</span>
-              <strong>모바일에서 3분 내 첫 해석</strong>
+            <div className="stat-card">
+              <span>Must prove</span>
+              <strong>trace_id + pipeline_status + region selection</strong>
             </div>
-            <div className="metric-card accent">
-              <span>이번 스프린트</span>
-              <strong>랜딩 + 입력 미리보기 + API 뼈대</strong>
+            <div className="stat-card accent">
+              <span>Next big step</span>
+              <strong>time correction + lunar normalization</strong>
             </div>
           </div>
         </section>
 
-        <section className="section-grid">
-          {highlights.map((item) => (
-            <article className="feature-card" key={item.title}>
-              <h2>{item.title}</h2>
-              <p>{item.body}</p>
-            </article>
-          ))}
-        </section>
+        <section className="workspace-grid">
+          <article className="panel-card">
+            <p className="section-label">INPUT CONTRACT</p>
+            <h2>Mock preview request</h2>
 
-        <section className="workspace">
-          <article className="roadmap-card">
-            <p className="section-label">MVP ROADMAP</p>
-            <h2>사용자가 가장 먼저 느껴야 할 흐름</h2>
-            <ul>
-              {roadmap.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </article>
-
-          <article className="preview-card" id="preview">
-            <p className="section-label">INPUT PREVIEW</p>
-            <h2>사주 입력 경험 초안</h2>
-            <form className="preview-form" onSubmit={handlePreviewSubmit}>
+            <form className="preview-form" onSubmit={handleSubmit}>
               <label>
-                이름
-                <input value={name} onChange={(event) => setName(event.target.value)} />
+                Calendar type
+                <select value={calendarType} onChange={(event) => setCalendarType(event.target.value as "solar" | "lunar")}>
+                  <option value="solar">Solar</option>
+                  <option value="lunar">Lunar</option>
+                </select>
               </label>
 
               <label>
-                생년월일
+                Birth date
                 <input
                   type="date"
                   value={birthDate}
@@ -147,7 +174,7 @@ export default function App() {
               </label>
 
               <label>
-                출생 시간
+                Birth time
                 <input
                   type="time"
                   value={birthTime}
@@ -155,47 +182,241 @@ export default function App() {
                 />
               </label>
 
-              <button type="submit">해석 톤 미리보기</button>
+              <label className="checkbox-row">
+                <input
+                  type="checkbox"
+                  checked={isBirthTimeEstimated}
+                  onChange={(event) => setIsBirthTimeEstimated(event.target.checked)}
+                />
+                <span>Birth time is estimated</span>
+              </label>
+
+              <label>
+                Gender
+                <select value={gender} onChange={(event) => setGender(event.target.value as "male" | "female")}>
+                  <option value="female">Female</option>
+                  <option value="male">Male</option>
+                </select>
+              </label>
+
+              <label>
+                Region search
+                <input
+                  value={regionQuery}
+                  onChange={(event) => {
+                    setRegionQuery(event.target.value);
+                    setSelectedRegion(null);
+                  }}
+                  placeholder="Type a city name"
+                />
+              </label>
+
+              <div className="suggestion-list">
+                {regionOptions.map((item) => {
+                  const selected = selectedRegion?.id === item.id;
+                  return (
+                    <button
+                      className={`suggestion-item${selected ? " selected" : ""}`}
+                      type="button"
+                      key={item.id}
+                      onClick={() => {
+                        setSelectedRegion(item);
+                        setRegionQuery(item.display_name);
+                      }}
+                    >
+                      <strong>{item.display_name}</strong>
+                      <span>{item.tzid}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <label className="checkbox-row">
+                <input
+                  type="checkbox"
+                  checked={debug}
+                  onChange={(event) => setDebug(event.target.checked)}
+                />
+                <span>Include debug trace in the response</span>
+              </label>
+
+              <button className="primary-button" type="submit" disabled={loading}>
+                {loading ? "Building preview..." : "Request mock preview"}
+              </button>
             </form>
 
-            <div className="preview-result">
-              <p className="result-meta">
-                입력값: {birthDate} / {birthTime || "시간 미입력"}
-              </p>
-              <p>{previewMessage}</p>
-            </div>
+            {error ? <p className="error-message">{error}</p> : null}
+          </article>
+
+          <article className="panel-card">
+            <p className="section-label">API STATUS</p>
+            <h2>Backend readiness</h2>
+            {apiHealth ? (
+              <div className="status-panel">
+                <p>
+                  <strong>{apiHealth.service}</strong> {apiHealth.version}
+                </p>
+                <p>{apiHealth.message}</p>
+                <div className="pill-row">
+                  <span className="pill pill-success">{apiHealth.status}</span>
+                  {apiHealth.focus.map((item) => (
+                    <span className="pill" key={item}>
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="status-panel">
+                <p>The backend is not reachable yet.</p>
+              </div>
+            )}
           </article>
         </section>
 
-        <section className="status-card" id="status">
-          <div>
-            <p className="section-label">SERVICE STATUS</p>
-            <h2>백엔드 준비 상태</h2>
-          </div>
+        <section className="result-grid">
+          <article className="panel-card result-main">
+            <p className="section-label">PREVIEW RESULT</p>
+            <h2>{result ? "Mock preview response" : "No preview yet"}</h2>
 
-          {apiHealth ? (
-            <div className="status-success">
-              <p>
-                <strong>{apiHealth.service}</strong> {apiHealth.version}
-              </p>
-              <p>{apiHealth.message}</p>
-              <div className="pill-row">
-                <span className="pill pill-success">{apiHealth.status}</span>
-                {apiHealth.focus.map((item) => (
-                  <span className="pill" key={item}>
-                    {item}
+            {result ? (
+              <>
+                <p className="trace-line">
+                  trace_id: <code>{result.trace_id}</code>
+                </p>
+                <p>{result.result.overview}</p>
+
+                <div className="chip-row">
+                  <span className="chip">mode: {result.response_mode}</span>
+                  <span className="chip">region: {result.region.display_name}</span>
+                  <span className="chip">
+                    hour pillar: {result.result.hour_pillar_enabled ? "enabled" : "limited"}
                   </span>
+                </div>
+
+                <div className="detail-columns">
+                  <div>
+                    <h3>Strengths</h3>
+                    <ul>
+                      {result.result.strengths.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h3>Cautions</h3>
+                    <ul>
+                      {result.result.cautions.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="reading-grid">
+                  <article className="reading-card">
+                    <h3>Love</h3>
+                    <p>{result.result.love}</p>
+                  </article>
+                  <article className="reading-card">
+                    <h3>Career</h3>
+                    <p>{result.result.career}</p>
+                  </article>
+                  <article className="reading-card">
+                    <h3>Wealth</h3>
+                    <p>{result.result.wealth}</p>
+                  </article>
+                  <article className="reading-card">
+                    <h3>Action advice</h3>
+                    <p>{result.result.action_advice}</p>
+                  </article>
+                </div>
+
+                {result.result.limitations.length > 0 ? (
+                  <div className="notice-card">
+                    <h3>Limitations</h3>
+                    <ul>
+                      {result.result.limitations.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              <p className="muted-copy">
+                Submit the form to verify the contract, region selection, and trace flow.
+              </p>
+            )}
+          </article>
+
+          <article className="panel-card">
+            <p className="section-label">PIPELINE STATUS</p>
+            <h2>Stage visibility</h2>
+
+            {result ? (
+              <div className="stage-list">
+                {Object.entries(result.pipeline_status).map(([key, value]) => (
+                  <div className="stage-item" key={key}>
+                    <span>{pipelineLabels[key] ?? key}</span>
+                    <strong className={`stage-badge stage-${value}`}>{value}</strong>
+                  </div>
                 ))}
               </div>
-            </div>
-          ) : (
-            <div className="status-pending">
-              <p>{apiError ?? "API 상태를 확인하는 중입니다."}</p>
-            </div>
-          )}
+            ) : (
+              <p className="muted-copy">The stage map will appear here after the first request.</p>
+            )}
+
+            {result ? (
+              <div className="evidence-stack">
+                {Object.entries(result.result.evidence_sections).map(([key, value]) => (
+                  <details className="evidence-card" key={key}>
+                    <summary>
+                      <span>{value.title}</span>
+                      <strong className={`stage-badge stage-${value.status}`}>{value.status}</strong>
+                    </summary>
+                    <p>{value.summary}</p>
+                  </details>
+                ))}
+              </div>
+            ) : null}
+          </article>
         </section>
+
+        {result?.debug_trace ? (
+          <section className="panel-card">
+            <p className="section-label">DEBUG TRACE</p>
+            <h2>Developer-only diagnostics</h2>
+
+            <div className="debug-grid">
+              <div>
+                <h3>Checkpoints</h3>
+                <div className="stage-list">
+                  {result.debug_trace.checkpoints.map((checkpoint) => (
+                    <div className="stage-item stage-item-block" key={checkpoint.stage}>
+                      <div>
+                        <span>{pipelineLabels[checkpoint.stage] ?? checkpoint.stage}</span>
+                        {checkpoint.note ? <p>{checkpoint.note}</p> : null}
+                      </div>
+                      <strong className={`stage-badge stage-${checkpoint.status}`}>
+                        {checkpoint.status}
+                      </strong>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <h3>Request echo</h3>
+                <pre className="debug-panel">
+                  {JSON.stringify(result.debug_trace.request_echo, null, 2)}
+                </pre>
+              </div>
+            </div>
+          </section>
+        ) : null}
       </main>
     </div>
   );
 }
-

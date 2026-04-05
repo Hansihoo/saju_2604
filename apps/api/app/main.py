@@ -1,41 +1,51 @@
-from datetime import datetime, timezone
-from typing import Any, Dict
+from time import perf_counter
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.routes import router
 from app.config import settings
+from app.diagnostics import configure_logging, create_trace_id, log_stage, parse_debug_header
 
 app = FastAPI(
     title=settings.app_name,
     version=settings.api_version,
-    summary="Saju web service backend bootstrap"
+    summary="Saju web service backend bootstrap",
 )
+
+configure_logging(settings.log_level)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
 
-@app.get("/")
-def read_root() -> Dict[str, str]:
-    return {
-        "service": settings.app_name,
-        "message": "suju-insight API is running"
-    }
+@app.middleware("http")
+async def trace_middleware(request: Request, call_next):
+    started_at = perf_counter()
+    trace_id = request.headers.get("X-Trace-Id") or create_trace_id()
+    request.state.trace_id = trace_id
+    request.state.debug_requested = settings.debug_enabled or parse_debug_header(
+        request.headers.get("X-Saju-Debug")
+    )
+
+    response = await call_next(request)
+    duration_ms = int((perf_counter() - started_at) * 1000)
+    response.headers["X-Trace-Id"] = trace_id
+
+    log_stage(
+        service=settings.app_name,
+        trace_id=trace_id,
+        stage="request",
+        event=f"{request.method} {request.url.path}",
+        duration_ms=duration_ms,
+        meta={"debug_requested": request.state.debug_requested},
+    )
+    return response
 
 
-@app.get("/health")
-def read_health() -> Dict[str, Any]:
-    return {
-        "status": "ok",
-        "service": settings.app_name,
-        "version": settings.api_version,
-        "message": "사주 해석 서비스의 첫 API 뼈대가 준비되었습니다.",
-        "focus": ["mvp-bootstrap", "healthcheck", "service-metadata"],
-        "timestamp": datetime.now(timezone.utc).isoformat()
-    }
+app.include_router(router)

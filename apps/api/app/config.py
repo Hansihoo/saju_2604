@@ -11,6 +11,8 @@ def _parse_cors_origins(raw_value: str) -> List[str]:
 class Settings:
     app_name: str = os.getenv("SAJU_APP_NAME", "suju-insight")
     api_version: str = os.getenv("SAJU_API_VERSION", "0.1.0")
+    log_level: str = os.getenv("SAJU_LOG_LEVEL", "INFO")
+    debug_enabled: bool = os.getenv("SAJU_DEBUG", "0") in {"1", "true", "TRUE", "yes", "YES"}
     cors_origins: Optional[List[str]] = None
 
     def __post_init__(self) -> None:

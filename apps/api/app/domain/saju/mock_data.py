@@ -1,0 +1,58 @@
+REGION_OPTIONS = [
+    {
+        "id": "kr-seoul",
+        "display_name": "Seoul, South Korea",
+        "country": "South Korea",
+        "city": "Seoul",
+        "tzid": "Asia/Seoul",
+    },
+    {
+        "id": "kr-busan",
+        "display_name": "Busan, South Korea",
+        "country": "South Korea",
+        "city": "Busan",
+        "tzid": "Asia/Seoul",
+    },
+    {
+        "id": "kr-incheon",
+        "display_name": "Incheon, South Korea",
+        "country": "South Korea",
+        "city": "Incheon",
+        "tzid": "Asia/Seoul",
+    },
+    {
+        "id": "kr-daegu",
+        "display_name": "Daegu, South Korea",
+        "country": "South Korea",
+        "city": "Daegu",
+        "tzid": "Asia/Seoul",
+    },
+    {
+        "id": "kr-daejeon",
+        "display_name": "Daejeon, South Korea",
+        "country": "South Korea",
+        "city": "Daejeon",
+        "tzid": "Asia/Seoul",
+    },
+    {
+        "id": "kr-gwangju",
+        "display_name": "Gwangju, South Korea",
+        "country": "South Korea",
+        "city": "Gwangju",
+        "tzid": "Asia/Seoul",
+    },
+    {
+        "id": "kr-ulsan",
+        "display_name": "Ulsan, South Korea",
+        "country": "South Korea",
+        "city": "Ulsan",
+        "tzid": "Asia/Seoul",
+    },
+    {
+        "id": "kr-jeju",
+        "display_name": "Jeju, South Korea",
+        "country": "South Korea",
+        "city": "Jeju",
+        "tzid": "Asia/Seoul",
+    },
+]
