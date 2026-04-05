@@ -32,6 +32,7 @@ export default function App() {
   const [birthDate, setBirthDate] = useState("1994-10-13");
   const [birthTime, setBirthTime] = useState("08:30");
   const [isBirthTimeEstimated, setIsBirthTimeEstimated] = useState(false);
+  const [isLunarLeapMonth, setIsLunarLeapMonth] = useState(false);
   const [gender, setGender] = useState<"male" | "female">("female");
   const [regionQuery, setRegionQuery] = useState("Seoul");
   const [selectedRegion, setSelectedRegion] = useState<RegionSuggestion | null>(null);
@@ -101,6 +102,7 @@ export default function App() {
           birth_date: birthDate,
           birth_time: birthTime,
           is_birth_time_estimated: isBirthTimeEstimated,
+          is_lunar_leap_month: isLunarLeapMonth,
           gender,
           region_id: selectedRegion.id,
           debug,
@@ -190,6 +192,17 @@ export default function App() {
                 />
                 <span>Birth time is estimated</span>
               </label>
+
+              {calendarType === "lunar" ? (
+                <label className="checkbox-row">
+                  <input
+                    type="checkbox"
+                    checked={isLunarLeapMonth}
+                    onChange={(event) => setIsLunarLeapMonth(event.target.checked)}
+                  />
+                  <span>This lunar month is a leap month</span>
+                </label>
+              ) : null}
 
               <label>
                 Gender
@@ -306,6 +319,28 @@ export default function App() {
                       ambiguous: {result.time_correction.ambiguous ? "yes" : "no"}
                     </span>
                     <span className="chip">fold: {result.time_correction.fold}</span>
+                  </div>
+                </div>
+
+                <div className="time-card">
+                  <h3>Calendar normalization</h3>
+                  <p>Calendar type: {result.calendar_normalization.calendar_type}</p>
+                  <p>
+                    Solar datetime: {result.calendar_normalization.normalized_solar_datetime}
+                  </p>
+                  <p>
+                    Lunar datetime: {result.calendar_normalization.normalized_lunar_datetime}
+                  </p>
+                  <div className="chip-row">
+                    <span className="chip">
+                      leap month: {result.calendar_normalization.is_lunar_leap_month ? "yes" : "no"}
+                    </span>
+                    <span className="chip">
+                      solar: {result.calendar_normalization.solar_year}-{String(result.calendar_normalization.solar_month).padStart(2, "0")}-{String(result.calendar_normalization.solar_day).padStart(2, "0")}
+                    </span>
+                    <span className="chip">
+                      lunar: {result.calendar_normalization.lunar_year}-{String(Math.abs(result.calendar_normalization.lunar_month)).padStart(2, "0")}-{String(result.calendar_normalization.lunar_day).padStart(2, "0")}
+                    </span>
                   </div>
                 </div>
 

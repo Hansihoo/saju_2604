@@ -8,6 +8,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.routes import router
 from app.config import settings
+from app.domain.saju.calendar_normalization import CalendarNormalizationError
 from app.diagnostics import configure_logging, create_trace_id, log_stage, parse_debug_header
 from app.domain.saju.time_correction import TimeCorrectionError
 
@@ -49,6 +50,20 @@ async def handle_time_correction_error(request: Request, exc: TimeCorrectionErro
         content={
             "trace_id": request.state.trace_id,
             "stage": "time_correction",
+            "error_code": exc.error_code,
+            "message": exc.message,
+            "meta": exc.meta if request.state.debug_requested else {},
+        },
+    )
+
+
+@app.exception_handler(CalendarNormalizationError)
+async def handle_calendar_normalization_error(request: Request, exc: CalendarNormalizationError):
+    return JSONResponse(
+        status_code=400,
+        content={
+            "trace_id": request.state.trace_id,
+            "stage": "calendar_normalization",
             "error_code": exc.error_code,
             "message": exc.message,
             "meta": exc.meta if request.state.debug_requested else {},

@@ -17,6 +17,7 @@ export type SajuPreviewRequest = {
   birth_date: string;
   birth_time: string;
   is_birth_time_estimated: boolean;
+  is_lunar_leap_month: boolean;
   gender: "male" | "female";
   region_id: string;
   debug: boolean;
@@ -54,6 +55,22 @@ export type SajuPreviewResponse = {
   pipeline_status: PipelineStatus;
   region: RegionSuggestion;
   time_correction: TimeCorrectionSummary;
+  calendar_normalization: {
+    calendar_type: "solar" | "lunar";
+    is_lunar_leap_month: boolean;
+    input_date: string;
+    input_time: string;
+    normalized_solar_datetime: string;
+    normalized_lunar_datetime: string;
+    solar_year: number;
+    solar_month: number;
+    solar_day: number;
+    solar_hour: number;
+    solar_minute: number;
+    lunar_year: number;
+    lunar_month: number;
+    lunar_day: number;
+  };
   result: {
     overview: string;
     strengths: string[];

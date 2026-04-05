@@ -2,8 +2,10 @@ from typing import Dict, List
 
 from fastapi import HTTPException
 
+from app.domain.saju.calendar_normalization import CalendarNormalizationResult
 from app.domain.saju.mock_data import REGION_OPTIONS
 from app.domain.saju.schemas import (
+    CalendarNormalizationSummary,
     DebugCheckpoint,
     DebugTrace,
     EvidenceSection,
@@ -61,6 +63,7 @@ def build_mock_preview_response(
     payload: SajuPreviewRequest,
     region: RegionSuggestion,
     time_correction: TimeCorrectionResult,
+    calendar_normalization: CalendarNormalizationResult,
     trace_id: str,
     debug_requested: bool,
 ) -> SajuPreviewResponse:
@@ -96,20 +99,20 @@ def build_mock_preview_response(
     result = SajuPreviewResult(
         overview=(
             f"This preview uses mock reading data for {region.city}. "
-            "It verifies the input contract, trace flow, time correction, and result layout before the real engine is connected."
+            "It verifies the input contract, region lookup, time correction, calendar normalization, and result layout before the real engine is connected."
         ),
         strengths=[
-            "The current flow preserves calendar type, birth time, gender, region selection, and normalized time context in one contract.",
+            "The current flow preserves calendar type, leap-month intent, region selection, and normalized time context in one contract.",
             "The response shape is stable enough to connect the real engine without rewriting the UI later.",
         ],
         cautions=[
             "This response is a mock preview, not a real saju calculation.",
-            "Calendar normalization and the calculation engine are still scheduled for later phases.",
+            "The actual saju engine and analysis engine are still scheduled for later phases.",
         ],
         love="Relationship guidance will be generated after the analysis engine is connected.",
         career="Career fit will be based on code-driven scoring, then translated into natural language.",
         wealth="Wealth analysis will stay conservative and evidence-based rather than exaggerated.",
-        action_advice="Use this sprint to validate region selection, time correction, and the trace flow before real calculation work starts.",
+        action_advice="Use this sprint to validate region lookup, time correction, lunar/solar normalization, and the trace flow before real calculation work starts.",
         limitations=limitations,
         evidence_sections=evidence_sections,
         hour_pillar_enabled=hour_pillar_enabled,
@@ -144,8 +147,11 @@ def build_mock_preview_response(
                 ),
                 DebugCheckpoint(
                     stage="calendar_normalization",
-                    status="skipped",
-                    note="Skipped in mock preview mode.",
+                    status="passed",
+                    note=(
+                        f"Solar {calendar_normalization.normalized_solar_datetime} / "
+                        f"Lunar {calendar_normalization.normalized_lunar_datetime}"
+                    ),
                 ),
                 DebugCheckpoint(
                     stage="saju_calculation",
@@ -167,17 +173,23 @@ def build_mock_preview_response(
                 "calendar_type": payload.calendar_type,
                 "birth_date": payload.birth_date.isoformat(),
                 "birth_time": payload.birth_time,
+                "is_lunar_leap_month": str(payload.is_lunar_leap_month).lower(),
                 "gender": payload.gender,
                 "region_id": payload.region_id,
                 "tzid": region.tzid,
                 "normalized_local_datetime": time_correction.normalized_local_datetime,
                 "normalized_utc_datetime": time_correction.normalized_utc_datetime,
+                "normalized_solar_datetime": calendar_normalization.normalized_solar_datetime,
+                "normalized_lunar_datetime": calendar_normalization.normalized_lunar_datetime,
             },
         )
 
     return SajuPreviewResponse(
         trace_id=trace_id,
-        pipeline_status=PipelineStatus(time_correction="passed"),
+        pipeline_status=PipelineStatus(
+            time_correction="passed",
+            calendar_normalization="passed",
+        ),
         region=region,
         time_correction=TimeCorrectionSummary(
             tzid=time_correction.tzid,
@@ -187,6 +199,22 @@ def build_mock_preview_response(
             offset_minutes=time_correction.offset_minutes,
             ambiguous=time_correction.ambiguous,
             fold=time_correction.fold,
+        ),
+        calendar_normalization=CalendarNormalizationSummary(
+            calendar_type=calendar_normalization.calendar_type,
+            is_lunar_leap_month=calendar_normalization.is_lunar_leap_month,
+            input_date=calendar_normalization.input_date,
+            input_time=calendar_normalization.input_time,
+            normalized_solar_datetime=calendar_normalization.normalized_solar_datetime,
+            normalized_lunar_datetime=calendar_normalization.normalized_lunar_datetime,
+            solar_year=calendar_normalization.solar_year,
+            solar_month=calendar_normalization.solar_month,
+            solar_day=calendar_normalization.solar_day,
+            solar_hour=calendar_normalization.solar_hour,
+            solar_minute=calendar_normalization.solar_minute,
+            lunar_year=calendar_normalization.lunar_year,
+            lunar_month=calendar_normalization.lunar_month,
+            lunar_day=calendar_normalization.lunar_day,
         ),
         result=result,
         debug_trace=debug_trace,

@@ -27,6 +27,7 @@ class SajuPreviewRequest(BaseModel):
     birth_date: date
     birth_time: BirthTimeStr = Field(default="00:00")
     is_birth_time_estimated: bool = False
+    is_lunar_leap_month: bool = False
     gender: Literal["male", "female"] = "male"
     region_id: str
     debug: bool = False
@@ -56,6 +57,23 @@ class TimeCorrectionSummary(BaseModel):
     offset_minutes: int
     ambiguous: bool
     fold: int
+
+
+class CalendarNormalizationSummary(BaseModel):
+    calendar_type: Literal["solar", "lunar"]
+    is_lunar_leap_month: bool
+    input_date: str
+    input_time: str
+    normalized_solar_datetime: str
+    normalized_lunar_datetime: str
+    solar_year: int
+    solar_month: int
+    solar_day: int
+    solar_hour: int
+    solar_minute: int
+    lunar_year: int
+    lunar_month: int
+    lunar_day: int
 
 
 class SajuPreviewResult(BaseModel):
@@ -91,5 +109,6 @@ class SajuPreviewResponse(BaseModel):
     pipeline_status: PipelineStatus
     region: RegionSuggestion
     time_correction: TimeCorrectionSummary
+    calendar_normalization: CalendarNormalizationSummary
     result: SajuPreviewResult
     debug_trace: Optional[DebugTrace] = None

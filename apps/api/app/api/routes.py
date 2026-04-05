@@ -5,6 +5,7 @@ from fastapi import APIRouter, Query, Request
 
 from app.config import settings
 from app.diagnostics import log_stage
+from app.domain.saju.calendar_normalization import CalendarNormalizationError, normalize_calendar
 from app.domain.saju.schemas import (
     RegionSearchResponse,
     RegionSuggestion,
@@ -36,7 +37,7 @@ def read_health() -> Dict[str, Any]:
         "service": settings.app_name,
         "version": settings.api_version,
         "message": "suju-insight API bootstrap is ready.",
-        "focus": ["contracts", "trace", "time-correction", "mock-preview"],
+        "focus": ["contracts", "trace", "time-correction", "calendar-normalization", "mock-preview"],
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -98,11 +99,41 @@ def create_saju_preview(
         },
     )
 
+    try:
+        calendar_normalization = normalize_calendar(
+            calendar_type=payload.calendar_type,
+            birth_date=payload.birth_date,
+            birth_time=payload.birth_time,
+            is_lunar_leap_month=payload.is_lunar_leap_month,
+        )
+    except CalendarNormalizationError as exc:
+        log_stage(
+            service=settings.app_name,
+            trace_id=request.state.trace_id,
+            stage="calendar_normalization",
+            event="failed",
+            error_code=exc.error_code,
+            meta=exc.meta,
+        )
+        raise
+
+    log_stage(
+        service=settings.app_name,
+        trace_id=request.state.trace_id,
+        stage="calendar_normalization",
+        event="normalized",
+        meta={
+            "normalized_solar_datetime": calendar_normalization.normalized_solar_datetime,
+            "normalized_lunar_datetime": calendar_normalization.normalized_lunar_datetime,
+        },
+    )
+
     debug_requested = request.state.debug_requested or payload.debug
     return build_mock_preview_response(
         payload=payload,
         region=region,
         time_correction=time_correction,
+        calendar_normalization=calendar_normalization,
         trace_id=request.state.trace_id,
         debug_requested=debug_requested,
     )
