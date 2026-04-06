@@ -1,101 +1,18 @@
-export type RegionSuggestion = {
-  id: string;
-  display_name: string;
-  country: string;
-  city: string;
-  tzid: string;
-};
+import {
+  ApiHealth,
+  RegionSearchResponse,
+  RegionSuggestion,
+  SajuPreviewRequest,
+  SajuPreviewResponse,
+} from "./contracts";
 
-export type RegionSearchResponse = {
-  trace_id: string;
-  items: RegionSuggestion[];
-  total: number;
-};
-
-export type SajuPreviewRequest = {
-  calendar_type: "solar" | "lunar";
-  birth_date: string;
-  birth_time: string;
-  is_birth_time_estimated: boolean;
-  is_lunar_leap_month: boolean;
-  gender: "male" | "female";
-  region_id: string;
-  debug: boolean;
-};
-
-export type PipelineStatus = {
-  input_validation: string;
-  region_resolution: string;
-  time_correction: string;
-  calendar_normalization: string;
-  saju_calculation: string;
-  analysis_engine: string;
-  llm_formatting: string;
-};
-
-export type EvidenceSection = {
-  title: string;
-  status: "ready" | "disabled" | "coming_soon";
-  summary: string;
-};
-
-export type TimeCorrectionSummary = {
-  tzid: string;
-  source_local_datetime: string;
-  normalized_local_datetime: string;
-  normalized_utc_datetime: string;
-  offset_minutes: number;
-  ambiguous: boolean;
-  fold: number;
-};
-
-export type SajuPreviewResponse = {
-  trace_id: string;
-  response_mode: "mock";
-  pipeline_status: PipelineStatus;
-  region: RegionSuggestion;
-  time_correction: TimeCorrectionSummary;
-  calendar_normalization: {
-    calendar_type: "solar" | "lunar";
-    is_lunar_leap_month: boolean;
-    input_date: string;
-    input_time: string;
-    normalized_solar_datetime: string;
-    normalized_lunar_datetime: string;
-    solar_year: number;
-    solar_month: number;
-    solar_day: number;
-    solar_hour: number;
-    solar_minute: number;
-    lunar_year: number;
-    lunar_month: number;
-    lunar_day: number;
-  };
-  result: {
-    overview: string;
-    strengths: string[];
-    cautions: string[];
-    love: string;
-    career: string;
-    wealth: string;
-    action_advice: string;
-    limitations: string[];
-    disabled_sections: string[];
-    evidence_sections: Record<string, EvidenceSection>;
-    hour_pillar_enabled: boolean;
-  };
-  debug_trace?: {
-    stage_order: string[];
-    failed_stage?: string | null;
-    checkpoints: Array<{
-      stage: string;
-      status: string;
-      note?: string | null;
-      error_code?: string | null;
-    }>;
-    request_echo: Record<string, string>;
-  } | null;
-};
+export type {
+  ApiHealth,
+  RegionSuggestion,
+  RegionSearchResponse,
+  SajuPreviewRequest,
+  SajuPreviewResponse,
+} from "./contracts";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
@@ -111,6 +28,11 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
   }
 
   return (await response.json()) as T;
+}
+
+export async function getApiHealth(): Promise<ApiHealth> {
+  const response = await fetch(`${API_BASE_URL}/health`);
+  return parseJsonResponse<ApiHealth>(response);
 }
 
 export async function searchRegionSuggestions(query: string): Promise<RegionSuggestion[]> {

@@ -1,54 +1,19 @@
 # Development Rules And Maintainability Guide 009
 
 ## 목적
-- 개발 전에 유지보수하기 좋은 구조를 고정한다.
-- Python과 React를 잘 몰라도 "어디에 무엇을 넣어야 하는지" 헷갈리지 않게 한다.
-- 이후 모든 구현은 이 문서를 기본 규칙으로 삼는다.
+- 이 문서는 사주 서비스의 코드 구조를 오래 유지보수 가능한 형태로 고정하기 위한 기준 문서다.
+- 구현이 늘어나도 어디에 어떤 책임을 둬야 하는지 빠르게 판단할 수 있도록 한다.
+- 특히 프론트, 백엔드, 계산 엔진, 디버그 흐름이 섞이지 않게 만드는 것이 목표다.
 
-## 이 문서의 역할
-- 기능 명세 문서가 아니다.
-- 코드를 어떻게 나눌지, 어떤 패턴을 피할지, 어떤 테스트와 로그를 기본으로 가져갈지에 대한 개발 규칙 문서다.
-- 나중에 프로젝트를 다시 시작해도 이 문서만 보면 구조와 기준을 빠르게 복원할 수 있어야 한다.
+## 핵심 원칙
+- 계산과 판단은 백엔드에서만 한다.
+- 프론트는 입력, 상태 표시, 결과 표현에 집중한다.
+- 외부 사주 엔진은 adapter 뒤에 숨긴다.
+- HTTP route는 얇게 유지하고, 실제 흐름은 orchestration service로 보낸다.
+- 한 파일이 여러 책임을 동시에 갖기 시작하면 분리한다.
+- 테스트와 trace는 기능만큼 중요하다.
 
-## 핵심 철학
-- 복잡한 로직은 한 곳에만 둔다.
-- 계산과 표현을 분리한다.
-- 프런트는 보여주고 입력받는 역할에 집중한다.
-- 백엔드는 검증, 계산, 분석, 추적의 중심이다.
-- 오픈소스는 직접 퍼뜨리지 말고 adapter 뒤에 숨긴다.
-- 디버그 가능한 코드가 유지보수 가능한 코드다.
-
-## 가장 중요한 규칙
-
-### 1. 계산 로직은 프런트에 두지 않는다
-- React는 입력 UI, 결과 표시, 단계적 공개 UX만 담당한다.
-- 사주 계산, 점수 계산, 등급 계산, 시간 보정은 모두 백엔드에서 한다.
-- 프런트에서 계산 규칙을 복제하면 나중에 서로 다른 결과가 나와 유지보수가 어려워진다.
-
-### 2. 라우트는 얇게 유지한다
-- FastAPI route 함수에는 비즈니스 로직을 많이 넣지 않는다.
-- route는 다음만 한다:
-  - 요청 받기
-  - schema 검증
-  - service 호출
-  - 응답 반환
-- 계산, 정책, 변환은 service/domain 계층으로 보낸다.
-
-### 3. 오픈소스 엔진은 adapter 뒤에 숨긴다
-- 서비스 코드 곳곳에서 `lunar-python`을 직접 import하지 않는다.
-- 오픈소스 변경이나 교체가 필요할 때 adapter만 수정할 수 있게 만든다.
-- 우리 프로젝트의 계산 인터페이스가 먼저고, 오픈소스는 그 구현체다.
-
-### 4. debug와 trace는 처음부터 넣는다
-- 나중에 붙이면 빠뜨리는 정보가 많다.
-- 각 요청은 `trace_id`를 가져야 한다.
-- 단계별 상태와 에러 코드는 구조화 로그로 남겨야 한다.
-
-### 5. 파일은 "한 가지 이유로만 변경"되게 나눈다
-- 한 파일이 여러 책임을 가지면 수정할 때 사이드 이펙트를 만들기 쉽다.
-- 입력 검증, 시간 보정, 엔진 호출, 점수 계산, LLM 표현은 파일을 분리한다.
-
-## 추천 폴더 구조
+## 현재 권장 구조
 
 ```text
 apps/
@@ -56,272 +21,174 @@ apps/
     app/
       api/
         routes.py
-        errors.py
       domain/
         saju/
-          schemas.py
-          time_correction.py
-          calendar_normalization.py
-          policies.py
-          analysis.py
           adapters/
             lunar_python_engine.py
-            sxtwl_verifier.py
           services/
+            analyze_saju.py
+            birth_time_policy.py
+            build_preview_response.py
             calculate_saju.py
-            build_reading.py
-      infrastructure/
-        settings.py
-        logging.py
-        region_repository.py
+            preview_orchestrator.py
+            region_catalog.py
+          analysis.py
+          calendar_normalization.py
+          engine.py
+          mock_data.py
+          schemas.py
+          time_correction.py
+      config.py
+      diagnostics.py
       main.py
+    tests/
   web/
     src/
-      app/
       features/
-        saju-input/
-        saju-result/
+        dev/
+          DeveloperPage.tsx
+        service/
+          ServicePage.tsx
+          components/
+            SajuForm.tsx
+            SajuResultView.tsx
+            ServiceHeader.tsx
       shared/
         api/
-        ui/
-        utils/
+          contracts.ts
+          saju.ts
+        copy.ts
+        navigation.ts
+      App.tsx
+      main.tsx
+      styles.css
 ```
 
-## 계층별 역할
+## 계층별 책임
 
-### `api/`
-- HTTP 요청과 응답 처리
-- route, request parsing, response mapping
-- 절대 계산 핵심 로직을 길게 넣지 않는다
+### `apps/api/app/api`
+- HTTP request/response 처리만 담당한다.
+- request parsing, response model 지정, orchestration service 호출만 둔다.
+- 시간 보정, 달력 정규화, 사주 계산, 분석 로직을 직접 넣지 않는다.
 
-### `domain/saju/`
-- 서비스의 핵심 규칙이 모이는 곳
-- 시간 보정
-- 달력 정규화
-- 사주 계산 결과 정규화
-- 분석 엔진
-- 정책 처리
+### `apps/api/app/domain/saju`
+- 사주 도메인 규칙의 중심이다.
+- 입력 정규화, 계산 결과 구조, 정책, 분석 규칙, 엔진 adapter를 둔다.
+
+### `services/preview_orchestrator.py`
+- preview 흐름의 유일한 조합 지점이다.
+- `지역 확인 -> 시간 보정 -> 달력 정규화 -> 사주 계산 -> 분석 -> 응답 조립`
+  순서를 가진다.
+- route에서 직접 여러 서비스를 이어 붙이지 않도록 막는 역할을 한다.
+
+### `services/region_catalog.py`
+- 지역 검색과 선택 검증을 담당한다.
+- UI 자동완성과 계산 입력 사이의 경계다.
+- 검색용 alias와 최종 region id 확인 책임을 가진다.
+
+### `services/build_preview_response.py`
+- 계산과 분석 결과를 API 응답 구조로 바꾼다.
+- 응답용 설명 텍스트, evidence section, debug checkpoint 조립을 맡는다.
+- 계산 자체를 수행하지 않는다.
 
 ### `adapters/`
-- 외부 엔진과의 연결 계층
-- `lunar-python`, `sxtwl` 같은 외부 의존성을 감싼다
+- 외부 오픈소스 엔진을 캡슐화한다.
+- 현재는 `lunar_python_engine.py`가 여기에 해당한다.
+- 나중에 엔진 교체가 필요해도 나머지 서비스 코드는 그대로 유지되는 것이 목표다.
 
-### `services/`
-- 여러 domain/adapters를 조합하는 orchestration 계층
-- "입력 -> 보정 -> 계산 -> 분석 -> 응답용 결과" 흐름을 구성한다
+### `apps/web/src/features`
+- 화면 기능 단위로 나눈다.
+- 사용자 화면과 개발자 화면을 분리한다.
+- 한 페이지 파일이 너무 커지면 `components/`로 쪼갠다.
 
-### `infrastructure/`
-- 설정
-- 로깅
-- 데이터소스 접근
-- 지역 데이터셋 로딩
+### `apps/web/src/shared`
+- 공통 API 클라이언트, 타입, 문구, 경로 유틸리티를 둔다.
+- UI 기능이 아닌 공통 자산만 둔다.
 
-### `web/features/`
-- 화면 기능 단위로 쪼갠다
-- 입력 기능과 결과 기능을 분리한다
+## 프론트 규칙
 
-### `web/shared/`
-- 공통 API 클라이언트
-- 공통 UI 컴포넌트
-- 공통 유틸리티
+### `App.tsx`는 루트 조립만 한다
+- 현재 모드 선택
+- locale 상태
+- 공통 health/result 상태
+- 페이지 전환
+- 페이지 내부 폼 로직과 렌더링 세부는 `features/` 아래로 보낸다.
 
-## Python 규칙
+### 페이지와 폼을 분리한다
+- `ServicePage.tsx`는 서비스 화면 컨테이너 역할을 한다.
+- `SajuForm.tsx`는 입력 폼 렌더링만 담당한다.
+- `SajuResultView.tsx`는 결과 표현만 담당한다.
+- `DeveloperPage.tsx`는 debug 결과만 표시한다.
 
-### 타입을 기본으로 쓴다
-- 함수 입력과 반환 타입을 가능한 한 명시한다.
-- `dict` 하나로 다 넘기지 말고 schema나 typed model을 쓴다.
+### API 계약은 한 곳에서 관리한다
+- 프론트 타입은 `shared/api/contracts.ts`에 둔다.
+- `shared/api/saju.ts`는 fetch와 에러 파싱만 담당한다.
+- 컴포넌트 안에서 직접 `fetch`를 반복하지 않는다.
 
-### schema를 먼저 만든다
-- FastAPI 요청/응답은 Pydantic 모델로 고정한다.
-- 내부 계산 결과도 가능하면 구조화된 모델로 관리한다.
+### 프론트에서 금지할 것
+- 사주 계산 규칙 구현
+- 점수/등급 재계산
+- route path 문자열과 API shape를 컴포넌트마다 각자 해석하는 방식
+- 사용자 화면과 개발자 화면의 상태/UI를 한 파일에 모두 몰아넣는 방식
 
-### pure function을 선호한다
-- 시간 보정, 점수 계산, 등급 계산처럼 규칙 기반 로직은 가능한 한 순수 함수로 만든다.
-- 순수 함수는 테스트하기 쉽고 디버그가 쉽다.
+## 백엔드 규칙
 
-### 예외를 통제한다
-- `raise Exception(...)` 같은 광범위한 예외 남용을 피한다.
-- 표준 에러 코드와 커스텀 예외 클래스를 둔다.
+### route는 얇게 유지한다
+- 현재 `/saju/preview`는 orchestration service를 호출하는 구조로 유지한다.
+- route 파일이 길어지기 시작하면 대부분 잘못된 신호다.
 
-### 설정은 코드에 박지 않는다
-- API 키, debug 여부, timeout, 로그 레벨은 설정 파일과 환경 변수로 분리한다.
+### 스키마는 먼저 고정한다
+- request/response 구조는 `schemas.py`에서 관리한다.
+- route와 service는 schema를 기준으로만 대화한다.
 
-### route에서 DB/엔진 직접 호출 금지
-- route -> service -> domain/adapter 흐름을 유지한다.
+### 계산 엔진은 service가 아니라 adapter다
+- `calculate_saju.py`는 adapter를 호출하는 얇은 진입점이어야 한다.
+- `lunar_python`를 다른 파일 여기저기서 직접 import하지 않는다.
 
-## React 규칙
+### 데이터셋과 정책은 분리한다
+- 지역 데이터는 `mock_data.py` 같은 데이터 파일에 둔다.
+- 검색과 검증은 `region_catalog.py`에 둔다.
+- 출생시간 미상 정책은 `birth_time_policy.py`에 둔다.
 
-### 컴포넌트를 크게 만들지 않는다
-- 페이지 하나에 모든 상태와 UI를 몰지 않는다.
-- 입력 폼, 지역 자동완성, 결과 요약, 상세 아코디언을 분리한다.
-
-### 프런트는 비즈니스 계산을 하지 않는다
-- 프런트는 서버가 준 값을 보기 좋게 정리하고 상태를 관리할 뿐이다.
-- 점수 계산, 등급 판정, 시주 제한 판단은 백엔드에서 한다.
-
-### API 호출 코드를 UI에 섞지 않는다
-- `fetch`를 페이지 컴포넌트 여기저기에 직접 쓰지 않는다.
-- `shared/api/`에 API 클라이언트를 두고 재사용한다.
-
-### 상태는 기능 단위로 관리한다
-- 입력 폼 상태와 결과 상태를 분리한다.
-- debug 패널 상태도 일반 사용자 UI 상태와 분리한다.
-
-### 화면 구조는 "요약 우선"을 유지한다
-- 기본 화면은 이해하기 쉬운 요약만 보여준다.
-- 오행, 십성, 대운은 펼쳐보기 구조로 둔다.
-
-## 이름 규칙
-
-### 코드 식별자
-- 파일명, 함수명, 변수명은 영어로 작성한다.
-- 문서 설명과 사용자 문구는 한국어로 작성한다.
-
-### 파일명
-- 역할이 드러나게 짓는다.
-- `utils.py` 같은 큰 잡동사니 파일은 가능한 피한다.
-- 예:
-  - `time_correction.py`
-  - `calendar_normalization.py`
-  - `analysis.py`
-  - `build_reading.py`
-
-### 에러 코드
-- 모두 대문자 스네이크 케이스
-- 예:
-  - `INVALID_TIMEZONE`
-  - `ENGINE_VALUE_ERROR`
-  - `LLM_OUTPUT_PARSE_ERROR`
-
-## 금지 패턴
-
-### 백엔드
-- route 함수에 50줄이 넘는 계산 로직 넣기
-- schema 없이 `dict`를 계속 넘기기
-- 오픈소스 엔진을 route나 UI 근처에서 직접 호출하기
-- 실패 시 조용한 fallback으로 틀린 값을 반환하기
-- 로깅 없이 복잡한 변환 수행하기
-
-### 프런트
-- 페이지 파일 하나에 입력/결과/에러/debug를 다 몰아넣기
-- 백엔드 계산 로직을 프런트에서 다시 구현하기
-- API 응답 shape를 컴포넌트마다 제각각 해석하기
-- 지역명을 자유 입력 그대로 제출하기
-
-## 유지보수하기 좋은 코드의 기준
-
-### 읽었을 때 흐름이 보인다
-- 파일명만 봐도 어디서 무엇을 하는지 감이 와야 한다.
-
-### 수정 범위가 예측 가능하다
-- 시간 보정 수정이면 `time_correction.py` 근처만 보면 된다.
-- 점수 규칙 수정이면 `analysis.py` 근처만 보면 된다.
-
-### 테스트가 빠르게 깨진다
-- 문제가 생기면 unit, integration, golden 중 어디에서 깨졌는지 바로 보여야 한다.
-
-### 로그로 재현이 가능하다
-- `trace_id` 하나로 요청 흐름을 재구성할 수 있어야 한다.
+### 백엔드에서 금지할 것
+- route에서 시간 보정, 계산, 응답 조립을 모두 처리하는 방식
+- 외부 엔진 직접 호출이 여러 파일에 흩어지는 구조
+- 조용한 fallback으로 잘못된 결과를 반환하는 방식
 
 ## 테스트 규칙
 
 ### unit test
-- 규칙 함수 중심
 - 시간 보정
-- 양력/음력 정규화
-- 시주 제한 정책
-- 점수/등급 계산
+- 달력 정규화
+- 출생시간 정책
+- 분석 규칙
+- 엔진 adapter
 
 ### integration test
-- 계층 연결 확인
-- 입력 -> 시간 보정 -> 계산 -> 분석 -> 응답
+- `/saju/preview` 전체 흐름
+- 지역 선택에서 계산 결과 응답까지의 연결
 
 ### golden test
-- 대표 샘플을 고정해 회귀 확인
 - 절기 경계
 - 자시 경계
-- 음력/윤달 샘플
-- 한국 대표 케이스
+- 음력/윤달 대표 케이스
+- 한국 주요 지역 샘플
 
-### e2e test
-- 실제 사용자 흐름 검증
-- 지역 자동완성
-- 정상 조회
-- 시간 미상 흐름
-- 상세 펼침
+### frontend verification
+- 타입 검사
+- 빌드 검증
+- 실제 dev 서버에서 입력/결과 흐름 확인
 
-### manual verification
-- 결과 문장 톤
-- 과장 여부
-- 제한 안내 문구
-- 모바일/데스크톱 시인성
+## 구조가 무너질 때 보이는 신호
+- `App.tsx`가 다시 모든 화면과 상태를 다 갖기 시작한다.
+- route 파일이 150줄 이상 흐름 로직으로 채워진다.
+- `mock`, `preview`, `result` 개념이 파일 이름과 실제 책임에서 어긋난다.
+- 같은 API 타입이 여러 곳에서 중복 정의된다.
+- 검색용 지역 데이터와 계산용 지역 메타데이터가 섞여 관리된다.
 
-## 로그와 디버그 규칙
-
-### 기본 로그
-- JSON 구조화 로그를 기본으로 한다.
-- 필수 필드:
-  - `trace_id`
-  - `stage`
-  - `event`
-  - `duration_ms`
-  - `error_code`
-
-### 단계 로그
-- 최소한 아래 단계 로그를 남긴다.
-  - `input_validation`
-  - `region_resolution`
-  - `time_correction`
-  - `calendar_normalization`
-  - `saju_calculation`
-  - `analysis_engine`
-  - `llm_formatting`
-
-### debug 옵션
-- `SAJU_DEBUG=1`
-- `SAJU_TRACE_PAYLOADS=1`
-- `SAJU_TRACE_LLM=1`
-- `SAJU_FAIL_FAST=1`
-- `SAJU_LOG_LEVEL=DEBUG`
-
-### 주의
-- 운영 환경에서 민감한 원본 입력을 그대로 로그에 남기지 않는다.
-- 필요 시 마스킹한다.
-
-## 구현 순서 규칙
-- 무조건 UI부터 화려하게 만들지 않는다.
-- 아래 순서를 지킨다:
-  1. 계약과 trace 구조
-  2. 지역 정규화
-  3. 시간 보정
-  4. 양력/음력 정규화
-  5. 사주 계산 adapter
-  6. 시주 제한 정책
-  7. 분석 엔진
-  8. LLM 표현
-  9. 결과 UI
-  10. CI와 회귀 검증
-
-## 코드 리뷰 기준
-- 이 로직이 있어야 할 위치에 있는가
-- 동일 규칙이 프런트와 백엔드에 중복되지 않는가
-- 테스트가 추가되었는가
-- trace/logging이 충분한가
-- 실패 시 조용히 넘어가지 않는가
-- 다음 사람이 읽어도 목적이 분명한가
-
-## 나중에 프로젝트를 다시 시작할 때 보는 순서
-1. 이 문서
-2. 엔진 선정 문서
-3. 세부 개발/진단 문서
-4. 기능 명세 문서
-5. 실제 코드
-
-## 관련 문서
-- `docs/planning/007-engine-selection-and-calculation-strategy.md`
-- `docs/planning/008-detailed-development-execution-and-diagnostics.md`
-
-## 이번 결정
-- 앞으로 구현은 이 문서의 구조 규칙을 기준으로 진행한다.
-- 유지보수성과 디버그 가능성을 기능 구현과 같은 우선순위로 둔다.
-- Python과 React를 잘 몰라도 파일 위치와 책임만 보면 수정 경로를 찾을 수 있게 만든다.
+## 다음 구조 작업 우선순위
+1. 프론트-백엔드 공통 계약을 `packages/contracts`로 올리는 작업 검토
+2. 지역 데이터셋을 정적 샘플에서 공식 데이터 기반 구조로 교체
+3. longitude 기반 지역 보정 모듈 추가
+4. LLM formatter를 별도 service로 분리
+5. frontend component test 추가

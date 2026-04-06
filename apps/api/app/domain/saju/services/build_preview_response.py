@@ -1,18 +1,14 @@
-from typing import Dict, List
-
-from fastapi import HTTPException
+from typing import List
 
 from app.domain.saju.analysis import AnalysisResult
 from app.domain.saju.calendar_normalization import CalendarNormalizationResult
 from app.domain.saju.engine import SajuCalculationResult
-from app.domain.saju.mock_data import REGION_OPTIONS
 from app.domain.saju.schemas import (
     CalendarNormalizationSummary,
     DebugCheckpoint,
     DebugTrace,
     EvidenceSection,
     PipelineStatus,
-    RegionSuggestion,
     SajuPreviewRequest,
     SajuPreviewResponse,
     SajuPreviewResult,
@@ -29,49 +25,10 @@ def _summarize_visible_pillars(
     return " / ".join(saju_calculation.pillars[key].gan_zhi for key in visible_pillar_keys)
 
 
-def search_regions(*, query: str, limit: int) -> List[Dict[str, str]]:
-    normalized = query.strip().lower()
-    if not normalized:
-        return REGION_OPTIONS[:limit]
-
-    starts_with: List[Dict[str, str]] = []
-    contains: List[Dict[str, str]] = []
-    for region in REGION_OPTIONS:
-        haystack = " ".join(
-            [
-                region["display_name"],
-                region["country"],
-                region["city"],
-                region["tzid"],
-            ]
-        ).lower()
-        if region["city"].lower().startswith(normalized) or region["display_name"].lower().startswith(normalized):
-            starts_with.append(region)
-        elif normalized in haystack:
-            contains.append(region)
-
-    return (starts_with + contains)[:limit]
-
-
-def find_region_by_id(region_id: str) -> RegionSuggestion:
-    for region in REGION_OPTIONS:
-        if region["id"] == region_id:
-            return RegionSuggestion(**region)
-
-    raise HTTPException(
-        status_code=400,
-        detail={
-            "stage": "region_resolution",
-            "error_code": "REGION_NOT_SELECTED",
-            "message": "A valid region must be selected from the suggestion list.",
-        },
-    )
-
-
-def build_mock_preview_response(
+def build_preview_response(
     *,
     payload: SajuPreviewRequest,
-    region: RegionSuggestion,
+    region,
     time_correction: TimeCorrectionResult,
     calendar_normalization: CalendarNormalizationResult,
     saju_calculation: SajuCalculationResult,
@@ -218,30 +175,22 @@ def build_mock_preview_response(
                     status="passed",
                     note=(
                         f"Internal grade {analysis_result.internal_grade}, "
-                        f"balance {analysis_result.balance_score}, "
-                        f"missing elements {', '.join(analysis_result.missing_elements) or 'none'}"
+                        f"balance {analysis_result.balance_score}/100"
                     ),
                 ),
                 DebugCheckpoint(
                     stage="llm_formatting",
                     status="skipped",
-                    note="The LLM formatter is scheduled for a later sprint.",
+                    note="The LLM formatter is still mocked in this phase.",
                 ),
             ],
             request_echo={
                 "calendar_type": payload.calendar_type,
                 "birth_date": payload.birth_date.isoformat(),
                 "birth_time": payload.birth_time,
-                "effective_birth_time": birth_time_policy.effective_birth_time,
-                "is_birth_time_estimated": str(payload.is_birth_time_estimated).lower(),
-                "is_lunar_leap_month": str(payload.is_lunar_leap_month).lower(),
                 "gender": payload.gender,
                 "region_id": payload.region_id,
-                "tzid": region.tzid,
-                "normalized_local_datetime": time_correction.normalized_local_datetime,
-                "normalized_utc_datetime": time_correction.normalized_utc_datetime,
-                "normalized_solar_datetime": calendar_normalization.normalized_solar_datetime,
-                "normalized_lunar_datetime": calendar_normalization.normalized_lunar_datetime,
+                "trace_id": trace_id,
             },
         )
 
@@ -252,6 +201,7 @@ def build_mock_preview_response(
             calendar_normalization="passed",
             saju_calculation="passed",
             analysis_engine="passed",
+            llm_formatting="skipped",
         ),
         region=region,
         time_correction=TimeCorrectionSummary(
