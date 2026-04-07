@@ -9,13 +9,15 @@ from app.domain.saju.schemas import (
     DebugTrace,
     EvidenceSection,
     PipelineStatus,
+    RegionalSolarCorrectionSummary,
     SajuPreviewRequest,
     SajuPreviewResponse,
     SajuPreviewResult,
     TimeCorrectionSummary,
 )
 from app.domain.saju.services.birth_time_policy import resolve_birth_time_policy
-from app.domain.saju.time_correction import TimeCorrectionResult
+from app.domain.saju.services.build_manse import build_manse_data
+from app.domain.saju.time_correction import RegionalSolarCorrectionResult, TimeCorrectionResult
 
 
 def _summarize_visible_pillars(
@@ -31,6 +33,7 @@ def build_preview_response(
     region,
     time_correction: TimeCorrectionResult,
     calendar_normalization: CalendarNormalizationResult,
+    regional_solar_correction: RegionalSolarCorrectionResult,
     saju_calculation: SajuCalculationResult,
     analysis_result: AnalysisResult,
     trace_id: str,
@@ -38,6 +41,11 @@ def build_preview_response(
 ) -> SajuPreviewResponse:
     birth_time_policy = resolve_birth_time_policy(payload)
     hour_pillar_enabled = birth_time_policy.hour_pillar_enabled
+    manse = build_manse_data(
+        saju_calculation=saju_calculation,
+        analysis_result=analysis_result,
+        birth_time_policy=birth_time_policy,
+    )
     visible_pillar_summary = _summarize_visible_pillars(
         saju_calculation=saju_calculation,
         visible_pillar_keys=birth_time_policy.visible_pillar_keys,
@@ -131,6 +139,7 @@ def build_preview_response(
                 "region_resolution",
                 "time_correction",
                 "calendar_normalization",
+                "regional_solar_correction",
                 "saju_calculation",
                 "analysis_engine",
                 "llm_formatting",
@@ -156,6 +165,15 @@ def build_preview_response(
                     note=(
                         f"Solar {calendar_normalization.normalized_solar_datetime} / "
                         f"Lunar {calendar_normalization.normalized_lunar_datetime}"
+                    ),
+                ),
+                DebugCheckpoint(
+                    stage="regional_solar_correction",
+                    status="passed",
+                    note=(
+                        f"Applied {regional_solar_correction.regional_time_offset_minutes} minutes "
+                        f"at longitude {regional_solar_correction.longitude} -> "
+                        f"{regional_solar_correction.corrected_solar_datetime}"
                     ),
                 ),
                 DebugCheckpoint(
@@ -199,6 +217,7 @@ def build_preview_response(
         pipeline_status=PipelineStatus(
             time_correction="passed",
             calendar_normalization="passed",
+            regional_solar_correction="passed",
             saju_calculation="passed",
             analysis_engine="passed",
             llm_formatting="skipped",
@@ -212,6 +231,13 @@ def build_preview_response(
             offset_minutes=time_correction.offset_minutes,
             ambiguous=time_correction.ambiguous,
             fold=time_correction.fold,
+        ),
+        regional_solar_correction=RegionalSolarCorrectionSummary(
+            source_solar_datetime=regional_solar_correction.source_solar_datetime,
+            corrected_solar_datetime=regional_solar_correction.corrected_solar_datetime,
+            longitude=regional_solar_correction.longitude,
+            regional_time_offset_minutes=regional_solar_correction.regional_time_offset_minutes,
+            correction_basis=regional_solar_correction.correction_basis,
         ),
         calendar_normalization=CalendarNormalizationSummary(
             calendar_type=calendar_normalization.calendar_type,
@@ -229,6 +255,7 @@ def build_preview_response(
             lunar_month=calendar_normalization.lunar_month,
             lunar_day=calendar_normalization.lunar_day,
         ),
+        manse=manse,
         result=result,
         debug_trace=debug_trace,
     )

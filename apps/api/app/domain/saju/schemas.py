@@ -12,8 +12,12 @@ class RegionSuggestion(BaseModel):
     id: str
     display_name: str
     country: str
+    province: str
     city: str
     tzid: str
+    longitude: float
+    regional_time_offset_minutes: float
+    correction_basis: str
 
 
 class RegionSearchResponse(BaseModel):
@@ -38,6 +42,7 @@ class PipelineStatus(BaseModel):
     region_resolution: PipelineState = "passed"
     time_correction: PipelineState = "skipped"
     calendar_normalization: PipelineState = "skipped"
+    regional_solar_correction: PipelineState = "skipped"
     saju_calculation: PipelineState = "skipped"
     analysis_engine: PipelineState = "skipped"
     llm_formatting: PipelineState = "skipped"
@@ -59,6 +64,14 @@ class TimeCorrectionSummary(BaseModel):
     fold: int
 
 
+class RegionalSolarCorrectionSummary(BaseModel):
+    source_solar_datetime: str
+    corrected_solar_datetime: str
+    longitude: float
+    regional_time_offset_minutes: float
+    correction_basis: str
+
+
 class CalendarNormalizationSummary(BaseModel):
     calendar_type: Literal["solar", "lunar"]
     is_lunar_leap_month: bool
@@ -74,6 +87,91 @@ class CalendarNormalizationSummary(BaseModel):
     lunar_year: int
     lunar_month: int
     lunar_day: int
+
+
+class MansePillar(BaseModel):
+    key: Literal["year", "month", "day", "time"]
+    label: str
+    enabled: bool
+    gan_zhi: Optional[str] = None
+    stem: Optional[str] = None
+    branch: Optional[str] = None
+    stem_element: Optional[str] = None
+    branch_element: Optional[str] = None
+    stem_ten_god: Optional[str] = None
+    branch_ten_god: Optional[str] = None
+    branch_ten_gods: List[str] = Field(default_factory=list)
+    hidden_stems: List[str] = Field(default_factory=list)
+    twelve_fortune: Optional[str] = None
+    twelve_shinsal: Optional[str] = None
+    na_yin: Optional[str] = None
+    xun: Optional[str] = None
+    xun_kong: Optional[str] = None
+
+
+class MansePillarSet(BaseModel):
+    year: MansePillar
+    month: MansePillar
+    day: MansePillar
+    time: MansePillar
+
+
+class ManseTableRow(BaseModel):
+    label: str
+    year: str
+    month: str
+    day: str
+    time: str
+
+
+class ManseLuckCycle(BaseModel):
+    index: int
+    gan_zhi: str
+    start_year: int
+    end_year: int
+    start_age: int
+    end_age: int
+
+
+class ManseSupplementaryPosition(BaseModel):
+    key: str
+    label: str
+    gan_zhi: str
+    na_yin: str
+
+
+class ManseSupplementaryPositionSet(BaseModel):
+    tai_yuan: ManseSupplementaryPosition
+    ming_gong: ManseSupplementaryPosition
+    shen_gong: ManseSupplementaryPosition
+    tai_xi: ManseSupplementaryPosition
+
+
+class ManseElementSummary(BaseModel):
+    wood: int
+    fire: int
+    earth: int
+    metal: int
+    water: int
+
+
+class ManseMeta(BaseModel):
+    schema_version: Literal["v1"] = "v1"
+    day_master: str
+    pillar_order: List[Literal["year", "month", "day", "time"]]
+    visible_pillar_keys: List[Literal["year", "month", "day", "time"]]
+    hour_pillar_enabled: bool
+
+
+class ManseData(BaseModel):
+    meta: ManseMeta
+    pillars: MansePillarSet
+    table_rows: List[ManseTableRow]
+    elements: ManseElementSummary
+    luck_cycles_enabled: bool
+    luck_cycles: List[ManseLuckCycle]
+    supplementary_positions: ManseSupplementaryPositionSet
+    notes: List[str]
 
 
 class SajuPreviewResult(BaseModel):
@@ -110,6 +208,8 @@ class SajuPreviewResponse(BaseModel):
     pipeline_status: PipelineStatus
     region: RegionSuggestion
     time_correction: TimeCorrectionSummary
+    regional_solar_correction: RegionalSolarCorrectionSummary
     calendar_normalization: CalendarNormalizationSummary
+    manse: ManseData
     result: SajuPreviewResult
     debug_trace: Optional[DebugTrace] = None

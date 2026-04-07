@@ -7,7 +7,11 @@ from app.domain.saju.services.birth_time_policy import resolve_birth_time_policy
 from app.domain.saju.services.build_preview_response import build_preview_response
 from app.domain.saju.services.calculate_saju import calculate_saju
 from app.domain.saju.services.region_catalog import find_region_by_id
-from app.domain.saju.time_correction import TimeCorrectionError, normalize_birth_datetime
+from app.domain.saju.time_correction import (
+    TimeCorrectionError,
+    apply_regional_solar_correction,
+    normalize_birth_datetime,
+)
 
 
 def create_saju_preview_response(
@@ -85,8 +89,39 @@ def create_saju_preview_response(
     )
 
     try:
+        regional_solar_correction = apply_regional_solar_correction(
+            normalized_solar_datetime=calendar_normalization.normalized_solar_datetime,
+            longitude=region.longitude,
+            regional_time_offset_minutes=region.regional_time_offset_minutes,
+            correction_basis=region.correction_basis,
+        )
+    except TimeCorrectionError as exc:
+        log_stage(
+            service=service_name,
+            trace_id=trace_id,
+            stage="regional_solar_correction",
+            event="failed",
+            error_code=exc.error_code,
+            meta=exc.meta,
+        )
+        raise
+
+    log_stage(
+        service=service_name,
+        trace_id=trace_id,
+        stage="regional_solar_correction",
+        event="corrected",
+        meta={
+            "source_solar_datetime": regional_solar_correction.source_solar_datetime,
+            "corrected_solar_datetime": regional_solar_correction.corrected_solar_datetime,
+            "longitude": regional_solar_correction.longitude,
+            "regional_time_offset_minutes": regional_solar_correction.regional_time_offset_minutes,
+        },
+    )
+
+    try:
         saju_calculation = calculate_saju(
-            calendar_normalization=calendar_normalization,
+            corrected_solar_datetime=regional_solar_correction.corrected_solar_datetime,
             gender=payload.gender,
         )
     except SajuCalculationError as exc:
@@ -135,6 +170,7 @@ def create_saju_preview_response(
         region=region,
         time_correction=time_correction,
         calendar_normalization=calendar_normalization,
+        regional_solar_correction=regional_solar_correction,
         saju_calculation=saju_calculation,
         analysis_result=analysis_result,
         trace_id=trace_id,

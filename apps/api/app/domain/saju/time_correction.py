@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import date, datetime, time, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from typing import Any, Dict, Optional, Tuple
 
 try:
@@ -9,11 +9,19 @@ except ImportError:  # pragma: no cover - Python 3.8 fallback
 
 
 class TimeCorrectionError(ValueError):
-    def __init__(self, *, error_code: str, message: str, meta: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(
+        self,
+        *,
+        error_code: str,
+        message: str,
+        meta: Optional[Dict[str, Any]] = None,
+        stage: str = "time_correction",
+    ) -> None:
         super().__init__(message)
         self.error_code = error_code
         self.message = message
         self.meta = meta or {}
+        self.stage = stage
 
 
 @dataclass
@@ -30,6 +38,15 @@ class TimeCorrectionResult:
     day: int
     hour: int
     minute: int
+
+
+@dataclass
+class RegionalSolarCorrectionResult:
+    source_solar_datetime: str
+    corrected_solar_datetime: str
+    longitude: float
+    regional_time_offset_minutes: float
+    correction_basis: str
 
 
 def _parse_birth_time(raw_time: str) -> time:
@@ -110,4 +127,33 @@ def normalize_birth_datetime(*, birth_date: date, birth_time: str, tzid: str) ->
         day=aware_local.day,
         hour=aware_local.hour,
         minute=aware_local.minute,
+    )
+
+
+def apply_regional_solar_correction(
+    *,
+    normalized_solar_datetime: str,
+    longitude: float,
+    regional_time_offset_minutes: float,
+    correction_basis: str,
+) -> RegionalSolarCorrectionResult:
+    try:
+        source_solar_datetime = datetime.strptime(normalized_solar_datetime, "%Y-%m-%d %H:%M:%S")
+    except ValueError as exc:
+        raise TimeCorrectionError(
+            error_code="INVALID_NORMALIZED_SOLAR_DATETIME",
+            message="The solar datetime must use YYYY-MM-DD HH:MM:SS format.",
+            meta={"normalized_solar_datetime": normalized_solar_datetime},
+            stage="regional_solar_correction",
+        ) from exc
+
+    correction_seconds = int(round(regional_time_offset_minutes * 60))
+    corrected_solar_datetime = source_solar_datetime + timedelta(seconds=correction_seconds)
+
+    return RegionalSolarCorrectionResult(
+        source_solar_datetime=normalized_solar_datetime,
+        corrected_solar_datetime=corrected_solar_datetime.strftime("%Y-%m-%d %H:%M:%S"),
+        longitude=longitude,
+        regional_time_offset_minutes=regional_time_offset_minutes,
+        correction_basis=correction_basis,
     )

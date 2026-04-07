@@ -10,10 +10,23 @@ class PillarData:
     gan_zhi: str
     stem: str
     branch: str
+    stem_five_element: str
+    branch_five_element: str
     five_elements: str
     stem_ten_god: str
+    branch_ten_god: str
     branch_ten_gods: List[str]
     hidden_stems: List[str]
+    twelve_fortune: str
+    na_yin: str
+    xun: str
+    xun_kong: str
+
+
+@dataclass
+class SupplementaryPosition:
+    gan_zhi: str
+    na_yin: str
 
 
 @dataclass
@@ -32,6 +45,7 @@ class SajuCalculationResult:
     element_counts: Dict[str, int]
     ten_god_stems: Dict[str, str]
     luck_cycles: List[LuckCycle]
+    supplementary_positions: Dict[str, SupplementaryPosition]
     meta: Dict[str, str]
 
 
@@ -39,7 +53,7 @@ class SajuEngine(Protocol):
     def calculate(
         self,
         *,
-        normalized_solar_datetime: str,
+        corrected_solar_datetime: str,
         gender: Gender,
     ) -> SajuCalculationResult:
         ...

@@ -8,7 +8,7 @@ class AnalysisEngineTests(unittest.TestCase):
     def setUp(self) -> None:
         engine = LunarPythonSajuEngine()
         self.saju_calculation = engine.calculate(
-            normalized_solar_datetime="2024-02-10 10:30:00",
+            corrected_solar_datetime="2024-02-10 10:30:00",
             gender="male",
         )
 

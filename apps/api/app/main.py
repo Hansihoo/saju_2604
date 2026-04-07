@@ -50,7 +50,7 @@ async def handle_time_correction_error(request: Request, exc: TimeCorrectionErro
         status_code=400,
         content={
             "trace_id": request.state.trace_id,
-            "stage": "time_correction",
+            "stage": exc.stage,
             "error_code": exc.error_code,
             "message": exc.message,
             "meta": exc.meta if request.state.debug_requested else {},

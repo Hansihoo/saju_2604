@@ -1,4 +1,6 @@
-from typing import Dict, List
+import re
+import unicodedata
+from typing import Dict, Iterable, List
 
 from fastapi import HTTPException
 
@@ -6,31 +8,36 @@ from app.domain.saju.mock_data import LEGACY_REGION_ID_MAP, REGION_OPTIONS
 from app.domain.saju.schemas import RegionSuggestion
 
 
+def _normalize_text(value: str) -> str:
+    normalized = unicodedata.normalize("NFKC", value).strip().lower()
+    return re.sub(r"[\s,]+", "", normalized)
+
+
+def _candidate_terms(region: Dict[str, object]) -> Iterable[str]:
+    values = [
+        str(region.get("display_name", "")),
+        str(region.get("country", "")),
+        str(region.get("city", "")),
+        str(region.get("province", "")),
+        *[str(alias) for alias in region.get("aliases", [])],
+    ]
+    for value in values:
+        if value:
+            yield _normalize_text(value)
+
+
 def search_regions(*, query: str, limit: int) -> List[Dict[str, object]]:
-    normalized = query.strip().lower()
+    normalized = _normalize_text(query)
     if not normalized:
         return []
 
     starts_with: List[Dict[str, object]] = []
     contains: List[Dict[str, object]] = []
     for region in REGION_OPTIONS:
-        aliases = [alias.lower() for alias in region.get("aliases", [])]
-        haystack = " ".join(
-            [
-                region["display_name"],
-                region["country"],
-                region["city"],
-                region["tzid"],
-                *region.get("aliases", []),
-            ]
-        ).lower()
-        if (
-            region["city"].lower().startswith(normalized)
-            or region["display_name"].lower().startswith(normalized)
-            or any(alias.startswith(normalized) for alias in aliases)
-        ):
+        terms = list(_candidate_terms(region))
+        if any(term.startswith(normalized) for term in terms):
             starts_with.append(region)
-        elif normalized in haystack:
+        elif any(normalized in term for term in terms):
             contains.append(region)
 
     return (starts_with + contains)[:limit]
