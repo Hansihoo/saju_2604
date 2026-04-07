@@ -67,6 +67,7 @@ export type RegionalSolarCorrectionSummary = {
   corrected_solar_datetime: string;
   longitude: number;
   regional_time_offset_minutes: number;
+  daylight_saving_offset_minutes: number;
   correction_basis: string;
 };
 

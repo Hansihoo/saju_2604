@@ -171,7 +171,8 @@ def build_preview_response(
                     stage="regional_solar_correction",
                     status="passed",
                     note=(
-                        f"Applied {regional_solar_correction.regional_time_offset_minutes} minutes "
+                        f"Applied {regional_solar_correction.regional_time_offset_minutes} minutes"
+                        f" and DST {regional_solar_correction.daylight_saving_offset_minutes} minutes "
                         f"at longitude {regional_solar_correction.longitude} -> "
                         f"{regional_solar_correction.corrected_solar_datetime}"
                     ),
@@ -237,6 +238,7 @@ def build_preview_response(
             corrected_solar_datetime=regional_solar_correction.corrected_solar_datetime,
             longitude=regional_solar_correction.longitude,
             regional_time_offset_minutes=regional_solar_correction.regional_time_offset_minutes,
+            daylight_saving_offset_minutes=regional_solar_correction.daylight_saving_offset_minutes,
             correction_basis=regional_solar_correction.correction_basis,
         ),
         calendar_normalization=CalendarNormalizationSummary(

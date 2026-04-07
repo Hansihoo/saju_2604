@@ -10,6 +10,7 @@ from app.domain.saju.services.region_catalog import find_region_by_id
 from app.domain.saju.time_correction import (
     TimeCorrectionError,
     apply_regional_solar_correction,
+    calculate_daylight_saving_offset_minutes,
     normalize_birth_datetime,
 )
 
@@ -88,11 +89,17 @@ def create_saju_preview_response(
         },
     )
 
+    daylight_saving_offset_minutes = calculate_daylight_saving_offset_minutes(
+        tzid=region.tzid,
+        offset_minutes=time_correction.offset_minutes,
+    )
+
     try:
         regional_solar_correction = apply_regional_solar_correction(
             normalized_solar_datetime=calendar_normalization.normalized_solar_datetime,
             longitude=region.longitude,
             regional_time_offset_minutes=region.regional_time_offset_minutes,
+            daylight_saving_offset_minutes=daylight_saving_offset_minutes,
             correction_basis=region.correction_basis,
         )
     except TimeCorrectionError as exc:
@@ -116,6 +123,7 @@ def create_saju_preview_response(
             "corrected_solar_datetime": regional_solar_correction.corrected_solar_datetime,
             "longitude": regional_solar_correction.longitude,
             "regional_time_offset_minutes": regional_solar_correction.regional_time_offset_minutes,
+            "daylight_saving_offset_minutes": regional_solar_correction.daylight_saving_offset_minutes,
         },
     )
 

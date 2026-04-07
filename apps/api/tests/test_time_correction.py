@@ -4,6 +4,7 @@ from datetime import date
 from app.domain.saju.time_correction import (
     TimeCorrectionError,
     apply_regional_solar_correction,
+    calculate_daylight_saving_offset_minutes,
     normalize_birth_datetime,
 )
 
@@ -49,6 +50,7 @@ class TimeCorrectionTests(unittest.TestCase):
             normalized_solar_datetime="2024-02-10 10:30:00",
             longitude=126.991824,
             regional_time_offset_minutes=-32.033,
+            daylight_saving_offset_minutes=0,
             correction_basis="광역자치단체 중심점",
         )
 
@@ -56,6 +58,26 @@ class TimeCorrectionTests(unittest.TestCase):
         self.assertEqual(result.corrected_solar_datetime, "2024-02-10 09:57:58")
         self.assertEqual(result.longitude, 126.991824)
         self.assertEqual(result.regional_time_offset_minutes, -32.033)
+
+    def test_calculates_dst_offset_for_1988_seoul(self) -> None:
+        result = calculate_daylight_saving_offset_minutes(
+            tzid="Asia/Seoul",
+            offset_minutes=600,
+        )
+
+        self.assertEqual(result, -60)
+
+    def test_applies_dst_before_regional_solar_correction(self) -> None:
+        result = apply_regional_solar_correction(
+            normalized_solar_datetime="1988-05-20 12:30:00",
+            longitude=126.991824,
+            regional_time_offset_minutes=-32.033,
+            daylight_saving_offset_minutes=-60,
+            correction_basis="standard-meridian-longitude",
+        )
+
+        self.assertEqual(result.corrected_solar_datetime, "1988-05-20 10:57:58")
+        self.assertEqual(result.daylight_saving_offset_minutes, -60)
 
 
 if __name__ == "__main__":

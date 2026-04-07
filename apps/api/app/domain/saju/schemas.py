@@ -69,6 +69,7 @@ class RegionalSolarCorrectionSummary(BaseModel):
     corrected_solar_datetime: str
     longitude: float
     regional_time_offset_minutes: float
+    daylight_saving_offset_minutes: int = 0
     correction_basis: str
 
 

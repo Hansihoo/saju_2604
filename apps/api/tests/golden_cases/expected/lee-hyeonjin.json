@@ -1,0 +1,176 @@
+{
+  "input": {
+    "case_id": "lee-hyeonjin",
+    "source_name": "이현진",
+    "source_file": "lee-hyeonjin.txt",
+    "calendar_type": "solar",
+    "birth_date": "1988-05-20",
+    "birth_time": "12:30",
+    "gender": "female",
+    "region_id": "kr-seoul-special",
+    "is_lunar_leap_month": false
+  },
+  "expected": {
+    "basic_info": {
+      "name": "이현진",
+      "solar_birth_datetime": "1988-05-20 12:30",
+      "lunar_birth_datetime": "1988-04-05 12:30",
+      "gender_label": "여자",
+      "birth_place": "서울특별시",
+      "corrected_datetime": "1988-05-20 10:58",
+      "regional_time_offset_minutes": -32,
+      "daylight_saving_offset_minutes": -60
+    },
+    "pillar_table": {
+      "time": {
+        "key": "time",
+        "label": "생시",
+        "gan_zhi": "신사",
+        "stem": "신",
+        "stem_ten_god": "편관",
+        "branch": "사",
+        "branch_ten_god": "상관",
+        "hidden_stems": [
+          "무",
+          "경",
+          "병"
+        ],
+        "twelve_fortune": "목욕",
+        "twelve_shinsal": "겁살"
+      },
+      "day": {
+        "key": "day",
+        "label": "생일",
+        "gan_zhi": "을해",
+        "stem": "을",
+        "stem_ten_god": "비견",
+        "branch": "해",
+        "branch_ten_god": "정인",
+        "hidden_stems": [
+          "무",
+          "갑",
+          "임"
+        ],
+        "twelve_fortune": "사",
+        "twelve_shinsal": "망신살"
+      },
+      "month": {
+        "key": "month",
+        "label": "생월",
+        "gan_zhi": "정사",
+        "stem": "정",
+        "stem_ten_god": "식신",
+        "branch": "사",
+        "branch_ten_god": "상관",
+        "hidden_stems": [
+          "무",
+          "경",
+          "병"
+        ],
+        "twelve_fortune": "목욕",
+        "twelve_shinsal": "겁살"
+      },
+      "year": {
+        "key": "year",
+        "label": "생년",
+        "gan_zhi": "무진",
+        "stem": "무",
+        "stem_ten_god": "정재",
+        "branch": "진",
+        "branch_ten_god": "정재",
+        "hidden_stems": [
+          "을",
+          "계",
+          "무"
+        ],
+        "twelve_fortune": "관대",
+        "twelve_shinsal": "반안살"
+      }
+    },
+    "luck_cycles": [
+      {
+        "start_age": 5,
+        "gan_zhi": "병진",
+        "stem": "병",
+        "branch": "진"
+      },
+      {
+        "start_age": 15,
+        "gan_zhi": "을묘",
+        "stem": "을",
+        "branch": "묘"
+      },
+      {
+        "start_age": 25,
+        "gan_zhi": "갑인",
+        "stem": "갑",
+        "branch": "인"
+      },
+      {
+        "start_age": 35,
+        "gan_zhi": "계축",
+        "stem": "계",
+        "branch": "축"
+      },
+      {
+        "start_age": 45,
+        "gan_zhi": "임자",
+        "stem": "임",
+        "branch": "자"
+      },
+      {
+        "start_age": 55,
+        "gan_zhi": "신해",
+        "stem": "신",
+        "branch": "해"
+      },
+      {
+        "start_age": 65,
+        "gan_zhi": "경술",
+        "stem": "경",
+        "branch": "술"
+      },
+      {
+        "start_age": 75,
+        "gan_zhi": "기유",
+        "stem": "기",
+        "branch": "유"
+      },
+      {
+        "start_age": 85,
+        "gan_zhi": "무신",
+        "stem": "무",
+        "branch": "신"
+      },
+      {
+        "start_age": 95,
+        "gan_zhi": "정미",
+        "stem": "정",
+        "branch": "미"
+      }
+    ]
+  },
+  "supported_sections": [
+    "basic_info",
+    "pillar_table",
+    "luck_cycles"
+  ],
+  "unsupported_sections": [
+    "4주 구성 및 의미",
+    "신살과 길성",
+    "오행과 십성 분석",
+    "신강/신약 지수",
+    "용신 분석",
+    "연운 (1992년~2001년)",
+    "2025년 3월 일진 달력"
+  ],
+  "raw_sections": {
+    "4주 구성 및 의미": "| 구분 | 천간 | 십성 | 지지 | 십성 |\n| --- | --- | --- | --- | --- |\n| 생시 | 신辛 (아들) | 편관 | 사巳 (딸) | 상관 |\n| 생일 | 을乙 (자신) | 비견 | 해亥 (배우자) | 정인 |\n| 생월 | 정丁 (부친) | 식신 | 사巳 (모친) | 상관 |\n| 생년 | 무戊 (조부) | 정재 | 진辰 (조모) | 정재 |\n\n---",
+    "신살과 길성": "**신살:** 백호대살, 천의성, 화개살, 양인살, 금여성, 관귀학관, 역마살, 천문성, 천덕귀인, 현침살, 황은대사\n\n**천간 길성 & 지지 길성**\n\n| 구분 | 천간 | 길성 | 지지 | 길성 |\n| --- | --- | --- | --- | --- |\n| 생시 | 신辛 | 천덕귀인, 현침살 | 사巳 | 황은대사, 금여성, 관귀학관, 역마살 |\n| 생일 | 을乙 |  | 해亥 | 역마살, 천문성 |\n| 생월 | 정丁 |  | 사巳 | 금여성, 관귀학관, 역마살 |\n| 생년 | 무戊 | 백호대살 | 진辰 | 천의성, 화개살, 양인살, 백호대살 |\n\n---",
+    "오행과 십성 분석": "**오행 비율**\n\n- 목(木): 9.1% (부족)\n- 화(火): 50.0% (과다)\n- 토(土): 18.2% (적정)\n- 금(金): 9.1% (부족)\n- 수(水): 13.6% (적정)\n\n**십성 비율**\n\n- 비견(比肩): 9.1%\n- 겁재(劫財): -\n- 식신(食神): 9.1%\n- 상관(傷官): 40.9%\n- 편재(偏財): -\n- 정재(正財): 18.2%\n- 편관(偏官): 9.1%\n- 정관(正官): -\n- 편인(偏印): -\n- 정인(正印): 13.6%\n\n**나의 오행:** 을목\n\n- 생(生) 극(剋) 관계\n    - 목(비겁): 9.1%\n    - 화(식상): 50.0%\n    - 토(재성): 18.2%\n    - 금(관성): 9.1%\n    - 수(인성): 13.6%\n\n---",
+    "신강/신약 지수": "- **득령:** 없음\n- **득지:** 없음\n- **득시:** 없음\n- **득세:** 없음\n\n**결론:** 태약한 사주 (16.82%의 사람이 여기에 해당)\n\n---",
+    "용신 분석": "- **조후용신:** 수(水)\n- **억부용신:** 수(水)\n\n---",
+    "연운 (1992년~2001년)": "| 연도 | 십성 | 천간 | 지지 |\n| --- | --- | --- | --- |\n| 1992 | 정인 | 임壬 | 신申 |\n| 1993 | 편인 | 계癸 | 유酉 |\n| 1994 | 겁재 | 갑甲 | 술戌 |\n| 1995 | 비견 | 을乙 | 해亥 |\n| 1996 | 상관 | 병丙 | 자子 |\n| 1997 | 식신 | 정丁 | 축丑 |\n| 1998 | 정재 | 무戊 | 인寅 |\n| 1999 | 편재 | 기己 | 묘卯 |\n| 2000 | 정관 | 경庚 | 진辰 |\n| 2001 | 편관 | 신辛 | 사巳 |\n\n---",
+    "2025년 3월 일진 달력": "**을사년 무인~기묘월**\n\n- 3월 1일: 기사(己巳)\n- 3월 2일: 경오(庚午)\n- 3월 3일: 신미(辛未)\n- 3월 4일: 임신(壬申)\n- 3월 5일: 계유(癸酉) (경칩 17:07)\n- 3월 6일: 갑술(甲戌)\n- 3월 7일: 을해(乙亥)\n- 3월 8일: 병자(丙子)\n- 3월 9일: 정축(丁丑)\n- 3월 20일: 춘분 (18:00)\n\n---"
+  }
+}

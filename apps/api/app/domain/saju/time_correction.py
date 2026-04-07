@@ -8,6 +8,11 @@ except ImportError:  # pragma: no cover - Python 3.8 fallback
     from backports.zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 
+STANDARD_OFFSET_BY_TZ: Dict[str, int] = {
+    "Asia/Seoul": 540,
+}
+
+
 class TimeCorrectionError(ValueError):
     def __init__(
         self,
@@ -46,6 +51,7 @@ class RegionalSolarCorrectionResult:
     corrected_solar_datetime: str
     longitude: float
     regional_time_offset_minutes: float
+    daylight_saving_offset_minutes: int
     correction_basis: str
 
 
@@ -130,11 +136,19 @@ def normalize_birth_datetime(*, birth_date: date, birth_time: str, tzid: str) ->
     )
 
 
+def calculate_daylight_saving_offset_minutes(*, tzid: str, offset_minutes: int) -> int:
+    standard_offset = STANDARD_OFFSET_BY_TZ.get(tzid)
+    if standard_offset is None:
+        return 0
+    return standard_offset - offset_minutes
+
+
 def apply_regional_solar_correction(
     *,
     normalized_solar_datetime: str,
     longitude: float,
     regional_time_offset_minutes: float,
+    daylight_saving_offset_minutes: int = 0,
     correction_basis: str,
 ) -> RegionalSolarCorrectionResult:
     try:
@@ -147,7 +161,7 @@ def apply_regional_solar_correction(
             stage="regional_solar_correction",
         ) from exc
 
-    correction_seconds = int(round(regional_time_offset_minutes * 60))
+    correction_seconds = int(round((regional_time_offset_minutes + daylight_saving_offset_minutes) * 60))
     corrected_solar_datetime = source_solar_datetime + timedelta(seconds=correction_seconds)
 
     return RegionalSolarCorrectionResult(
@@ -155,5 +169,6 @@ def apply_regional_solar_correction(
         corrected_solar_datetime=corrected_solar_datetime.strftime("%Y-%m-%d %H:%M:%S"),
         longitude=longitude,
         regional_time_offset_minutes=regional_time_offset_minutes,
+        daylight_saving_offset_minutes=daylight_saving_offset_minutes,
         correction_basis=correction_basis,
     )

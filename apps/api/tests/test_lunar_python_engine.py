@@ -64,6 +64,43 @@ class LunarPythonSajuEngineTests(unittest.TestCase):
         self.assertEqual(result.supplementary_positions["shen_gong"].gan_zhi, "\u58ec\u7533")
         self.assertEqual(result.supplementary_positions["tai_xi"].gan_zhi, "\u5df1\u9149")
 
+    def test_uses_late_zi_convention_for_day_pillar(self) -> None:
+        engine = LunarPythonSajuEngine()
+
+        result = engine.calculate(
+            corrected_solar_datetime="1988-11-20 23:02:00",
+            gender="male",
+        )
+
+        self.assertEqual(result.pillars["day"].gan_zhi, "\u5e9a\u8fb0")
+        self.assertEqual(result.pillars["time"].gan_zhi, "\u4e19\u5b50")
+
+    def test_adjusts_backward_luck_cycle_age_with_ceiling_rule(self) -> None:
+        engine = LunarPythonSajuEngine()
+
+        result = engine.calculate(
+            corrected_solar_datetime="1988-05-20 10:57:58",
+            gender="female",
+        )
+
+        self.assertEqual(result.meta["luck_cycle_direction"], "backward")
+        self.assertEqual(result.meta["luck_cycle_start_date"], "1993-04-20")
+        self.assertEqual(result.luck_cycles[1].start_age, 5)
+        self.assertEqual(result.luck_cycles[2].start_age, 15)
+
+    def test_adjusts_forward_luck_cycle_age_with_floor_rule(self) -> None:
+        engine = LunarPythonSajuEngine()
+
+        result = engine.calculate(
+            corrected_solar_datetime="1988-12-08 02:27:58",
+            gender="male",
+        )
+
+        self.assertEqual(result.meta["luck_cycle_direction"], "forward")
+        self.assertEqual(result.meta["luck_cycle_start_date"], "1998-06-18")
+        self.assertEqual(result.luck_cycles[1].start_age, 9)
+        self.assertEqual(result.luck_cycles[2].start_age, 19)
+
 
 if __name__ == "__main__":
     unittest.main()

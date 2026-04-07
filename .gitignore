@@ -12,6 +12,7 @@ __pycache__/
 *.stdout.log
 *.stderr.log
 package-lock.json
+apps/api/tests/golden_reports/
 .env
 .env.local
 .DS_Store

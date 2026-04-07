@@ -1,0 +1,164 @@
+# Golden Answer Validation System 016
+
+## 목적
+- 사용자가 제공한 만세력 정답지를 프로젝트 내부의 표준 스키마로 변환한다.
+- 현재 사주 계산 결과도 같은 표준 스키마로 출력한다.
+- 두 결과를 JSON 기준으로 비교해 어떤 필드가 틀렸는지 구조적으로 확인한다.
+- 생성된 diff 로그를 Codex가 다시 읽고, 오류가 집중되는 단계나 필드를 추적할 수 있게 만든다.
+
+## 핵심 개념
+- 원본 정답지: 사람이 읽는 `.txt`
+- 표준 정답지: 테스트용 canonical JSON
+- 실제 출력: 현재 엔진이 만든 canonical JSON
+- 비교 리포트: expected vs actual diff JSON
+
+즉 비교 단위는 텍스트가 아니라 정규화된 JSON이다.
+
+## 적용 파일
+- 정답 비교 스키마: [golden.py](/D:/5_project/SaJu(2)/apps/api/app/domain/saju/golden.py)
+- 정답지 파서: [parse_golden_answer_text.py](/D:/5_project/SaJu(2)/apps/api/app/domain/saju/services/parse_golden_answer_text.py)
+- 실제 결과 exporter: [build_golden_snapshot.py](/D:/5_project/SaJu(2)/apps/api/app/domain/saju/services/build_golden_snapshot.py)
+- 정답지 변환 도구: [import_golden_cases.py](/D:/5_project/SaJu(2)/apps/api/app/tools/import_golden_cases.py)
+- 비교 도구: [compare_golden_cases.py](/D:/5_project/SaJu(2)/apps/api/app/tools/compare_golden_cases.py)
+- 일괄 실행 도구: [run_golden_validation.py](/D:/5_project/SaJu(2)/apps/api/app/tools/run_golden_validation.py)
+- 테스트: [test_golden_case_tools.py](/D:/5_project/SaJu(2)/apps/api/tests/test_golden_case_tools.py)
+- 엄격 비교 테스트: [test_golden_known_answers.py](/D:/5_project/SaJu(2)/apps/api/tests/test_golden_known_answers.py)
+
+## 디렉터리 구조
+```text
+apps/api/tests/golden_cases/
+  source/
+    pororo.txt
+    aru.txt
+    okji.txt
+    lee-hyeonjin.txt
+    gomaebi.txt
+  expected/
+    pororo.json
+    aru.json
+    okji.json
+    lee-hyeonjin.json
+    gomaebi.json
+
+apps/api/tests/golden_reports/
+  latest/
+    actual/
+    diff/
+    summary.json
+```
+
+`golden_reports`는 생성 산출물이므로 Git에서 추적하지 않는다.
+
+## 현재 canonical 비교 범위
+1. `basic_info`
+- 양력 생년월일시
+- 음력 생년월일시
+- 성별 표기
+- 출생지
+- 보정시간
+- 지역시 보정 분
+- 서머타임 보정 분
+
+2. `pillar_table`
+- 생년 / 생월 / 생일 / 생시
+- 천간
+- 천간 십성
+- 지지
+- 지지 십성
+- 지장간
+- 12운성
+- 12신살
+
+3. `luck_cycles`
+- 시작 나이
+- 간지
+- 천간
+- 지지
+
+## 비교에서 제외하는 값
+- `basic_info.name`
+
+이 값은 계산 결과가 아니라 원본 정답지의 대상자 식별 정보라서, 엔진 정확도 비교 기준에서는 제외한다.
+
+## 실행 명령
+정답지 txt를 JSON fixture로 변환:
+```powershell
+cd D:\5_project\SaJu(2)\apps\api
+python -m app.tools.import_golden_cases
+```
+
+현재 엔진 결과와 비교:
+```powershell
+cd D:\5_project\SaJu(2)\apps\api
+python -m app.tools.compare_golden_cases
+```
+
+한 번에 fixture 갱신 + 비교:
+```powershell
+cd D:\5_project\SaJu(2)\apps\api
+python -m app.tools.run_golden_validation
+```
+
+불일치가 있으면 종료 코드를 실패로 받고 싶을 때:
+```powershell
+python -m app.tools.run_golden_validation --fail-on-mismatch
+```
+
+## 생성 로그
+비교 실행 후 아래가 생성된다.
+- 실제 출력: `apps/api/tests/golden_reports/latest/actual/*.actual.json`
+- diff 리포트: `apps/api/tests/golden_reports/latest/diff/*.report.json`
+- 요약 파일: `apps/api/tests/golden_reports/latest/summary.json`
+
+`summary.json`에는 케이스별 mismatch 수와 report 경로가 들어간다.
+또한
+- `mismatch_groups`: `basic_info`, `pillar_table`, `luck_cycles` 중 어디에 오차가 몰리는지
+- `mismatch_fields`: `luck_cycles.gan_zhi`, `pillar_table.twelve_shinsal` 같은 세부 필드 단위로 어디가 반복적으로 틀리는지
+를 바로 볼 수 있다.
+
+## Codex가 이 로그를 어떻게 활용할지
+1. `summary.json`에서 mismatch 수가 큰 케이스를 찾는다.
+2. 해당 케이스의 `diff/*.report.json`을 연다.
+3. `path` 기준으로 오류가 어느 계층에 몰리는지 본다.
+- `basic_info.*`: 시간 보정 / 지역 보정 문제
+- `pillar_table.*`: 사주 원국 계산 문제
+- `luck_cycles.*`: 대운 계산 또는 정규화 문제
+4. 실제 산출물 `actual/*.actual.json`과 `expected/*.json`을 함께 비교한다.
+5. 수정 후 `run_golden_validation`을 다시 돌려 mismatch 감소 여부를 확인한다.
+
+## 현재 상태 (2026-04-07)
+- 사주 4주(`year/month/day/time` 간지)는 5개 정답 케이스에서 모두 일치한다.
+- 12신살은 정답지와 동일한 기준으로 정리되었다.
+- 최신 golden validation 기준 총 mismatch는 `41`개다.
+- 현재 남은 주요 mismatch는 대부분 `luck_cycles`에 집중된다.
+
+최신 집계 기준 핵심 오차 필드:
+- `basic_info.corrected_datetime`
+- `basic_info.regional_time_offset_minutes`
+- `luck_cycles.gan_zhi`
+- `luck_cycles.branch`
+- `luck_cycles`
+
+즉, 다음 우선순위는 `대운 간지 흐름`과 `마지막 대운 1칸 누락` 검토다.
+
+## 확인된 규칙 메모
+- 12신살은 만세력마다 기준이 다를 수 있다.
+- 현재 정답지는 `년의 신살은 일지 기준`, `월/일/시의 신살은 년지 기준` 규칙과 일치했다.
+- 참고: [포스텔러만세력 12신살 적용기준](https://backgram.tistory.com/entry/%ED%8F%AC%EC%8A%A4%ED%85%94%EB%9F%AC%EB%A7%8C%EC%84%B8%EB%A0%A5-12%EC%8B%A0%EC%82%B4-%ED%99%95%EC%9D%B8%EB%B2%95)
+
+- 대운 간지 흐름은 일반적으로 월주를 기준으로 순행이면 다음 간지, 역행이면 이전 간지부터 이어진다.
+- 참고: [사주팔자(四柱八字) 구성](https://octofeet.tistory.com/entry/%EC%82%AC%EC%A3%BC%ED%8C%94%EC%9E%90%E5%9B%9B%E6%9F%B1%E5%85%AB%E5%AD%97-%EA%B5%AC%EC%84%B1)
+
+- 대운수(시작 나이)는 만세력마다 반올림/절삭 차이가 존재한다.
+- 참고: [사주의 구성](https://ahtohallan.tistory.com/entry/%EC%82%AC%EC%A3%BC%EC%9D%98-%EA%B5%AC%EC%84%B1)
+
+## 현재 기대 효과
+- 텍스트 정답지와 현재 결과를 수작업으로 비교하지 않아도 된다.
+- 어디가 틀렸는지 `path` 단위로 바로 확인할 수 있다.
+- Codex가 diff JSON만 읽어도 다음 수정 포인트를 좁힐 수 있다.
+
+## 다음 확장 후보
+- `용신 분석`, `신강/신약`, `오행/십성 분포`까지 canonical 비교 범위 확대
+- KASI 기반 오라클 필드 추가
+- mismatch 패턴 자동 분류
+- CI에 `golden validation` 별도 작업 추가
