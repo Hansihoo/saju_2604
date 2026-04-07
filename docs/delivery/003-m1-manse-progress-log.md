@@ -17,7 +17,9 @@
   - `luck_cycle_progression_rule_mismatch`: `3`
   - `luck_cycle_branch_only_mismatch`: `3`
   - `expected_luck_cycle_unparseable`: `2`
+  - `expected_luck_cycle_branch_nonstandard`: `2`
   - `expected_luck_cycle_tail_anomaly`: `1`
+  - `expected_luck_cycle_branch_tail_anomaly`: `1`
 
 ### 이번에 한 일
 1. golden validation을 다시 실행해 현재 오차를 최신 기준으로 고정했다.
@@ -31,6 +33,8 @@
 9. 그 결과 `aru`, `gomaebi`의 정답지 대운표에는 표준 60갑자로 해석되지 않는 간지가 포함된다는 점을 자동으로 식별할 수 있게 되었다.
 10. 원본 txt를 다시 확인해 보니 `대운 분석`은 애초에 `천간`과 `지지`를 분리된 컬럼으로 제공하고 있다.
 11. 실제 golden 비교 결과도 `aru`, `gomaebi`, `pororo`는 `luck_cycle_stem_mismatch_count = 0`이고, 대운 오차가 사실상 지지 쪽에만 몰려 있음을 보여준다.
+12. 지지열만 따로 분석하는 진단도 추가했다.
+13. 그 결과 `aru`, `gomaebi`는 `expected_luck_cycle_branch_nonstandard`, `pororo`는 `expected_luck_cycle_branch_tail_anomaly`로 분류된다.
 
 ### 핵심 관찰
 - `lunar-python`의 `DaYun.getGanZhi()`는 `월주`를 기준으로 순행이면 `+index`, 역행이면 `-index`로 진행한다.
@@ -47,10 +51,12 @@
 - `pororo`
   - 기존에는 마지막 대운 1칸 누락처럼 보였지만, 실제로는 마지막 간지가 표준 규칙과 다르다.
   - 더 정확히는 천간은 일치하고 마지막 지지만 `축 -> 묘` 차이가 남는다.
+  - 지지열은 역행 패턴을 유지하다가 마지막 칸에서만 꺾인다.
 - `aru`, `gomaebi`
   - 시작 나이는 현재 꽤 맞춰졌지만, 대운 간지/지지 흐름 자체가 `lunar-python` 기본 규칙과 다르다.
   - 게다가 정답지 대운표 안에 표준 60갑자에 없는 간지 조합이 포함되어 있다.
   - 하지만 천간 흐름은 실제 엔진과 일치하고, 지지 흐름만 어긋난다.
+  - 지지 delta도 표준 순행 `+1` / 역행 `-1` 패턴이 아니다.
   - `aru` 비표준 간지: `갑사`, `을자`, `병묘`, `기진`
   - `gomaebi` 비표준 간지: `병사`, `정인`, `무묘`, `기진`, `경사`, `신오`, `임미`, `계신`, `갑유`
 
@@ -79,3 +85,46 @@ python -m app.tools.run_golden_validation
   - 대운은 월주를 기준으로 순행/역행한다고 설명
 - [대운 해석법](https://sajulatte.app/blog/daeun-interpretation)
   - 월주에서 순행이면 다음 간지, 역행이면 이전 간지로 진행하는 예시 제공
+## 2026-04-07 Golden Expansion Update
+
+### Added cases
+- Added `참치`, `호연` answer sheets into `apps/api/tests/golden_cases/source`
+- Re-generated canonical fixtures in `apps/api/tests/golden_cases/expected`
+
+### Validation result
+- Total golden cases: `7`
+- Total mismatches: `52`
+- Newly confirmed full match: `hoyeon`
+- New isolated mismatch type: `chamchi`
+
+### New finding
+- `참치` is not a gan-zhi progression mismatch.
+- `luck_cycles.gan_zhi`, `stem`, `branch` all match.
+- Only `luck_cycles.start_age` differs, and every row is offset by `+1`.
+- This points to a separate `대운수/시작 나이 반올림 규칙` issue.
+
+### Validation system update
+- Added diagnostic tag: `luck_cycle_start_age_only_mismatch`
+- Added diagnostic context fields:
+  - `expected_luck_cycle_start_ages`
+  - `actual_luck_cycle_start_ages`
+  - `luck_cycle_start_age_mismatch_count`
+## 2026-04-07 Start Age Rule Update
+
+### Result
+- `참치` 케이스의 `luck_cycles.start_age` mismatch를 해결했다.
+- 현재 golden 기준 완전 일치 케이스:
+  - `chamchi`
+  - `hoyeon`
+  - `lee-hyeonjin`
+  - `okji`
+
+### Rule update
+- 첫 대운 시작 나이 표시 규칙을 현재 golden convention에 맞게 조정했다.
+- 적용 규칙:
+  - 순행: 내림
+  - 역행: 반올림
+
+### Remaining focus
+1. `aru`, `gomaebi`, `pororo` 대운 지지/간지 진행 규칙
+2. `aru` 지역 보정 표시 규칙

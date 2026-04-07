@@ -147,6 +147,21 @@ LEGACY_REGION_ID_MAP = {
     "kr-jeju": "kr-jeju-jeju",
 }
 
+MANUAL_REGION_OVERRIDES: List[Dict[str, object]] = [
+    {
+        "id": "kr-gangwon-province",
+        "display_name": "강원도",
+        "country": "대한민국",
+        "province": "강원특별자치도",
+        "city": "강원도",
+        "tzid": "Asia/Seoul",
+        "longitude": 128.25,
+        "regional_time_offset_minutes": -27.0,
+        "correction_basis": "golden_override",
+        "aliases": ["강원도", "강원", "강원특별자치도", "Gangwon"],
+    },
+]
+
 
 def _display_name(province: str, city: str) -> str:
     if province == city:
@@ -224,7 +239,7 @@ def _row_to_region(row: Dict[str, str]) -> Dict[str, object]:
 def load_region_options() -> List[Dict[str, object]]:
     with DATA_PATH.open("r", encoding="utf-8-sig", newline="") as file:
         reader = csv.DictReader(file)
-        return [_row_to_region(row) for row in reader]
+        return [_row_to_region(row) for row in reader] + list(MANUAL_REGION_OVERRIDES)
 
 
 REGION_OPTIONS = load_region_options()

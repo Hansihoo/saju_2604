@@ -68,7 +68,9 @@
     - `luck_cycle_progression_rule_mismatch`: `3`
     - `luck_cycle_branch_only_mismatch`: `3`
     - `expected_luck_cycle_unparseable`: `2`
+    - `expected_luck_cycle_branch_nonstandard`: `2`
     - `expected_luck_cycle_tail_anomaly`: `1`
+    - `expected_luck_cycle_branch_tail_anomaly`: `1`
 - 진행 로그: [003-m1-manse-progress-log.md](/D:/5_project/SaJu(2)/docs/delivery/003-m1-manse-progress-log.md)
 
 ## 현재 남은 핵심 업무 우선순위
@@ -88,6 +90,7 @@
 - 현재 프로젝트는 `n=11`로 늘리고 빈 `index=0`을 숨겨 10칸을 비교할 수 있게 바꿨다.
 - 그 결과 `lee-hyeonjin`, `okji`는 해결됐고, `aru`, `gomaebi`, `pororo`만 규칙 차이로 남았다.
 - golden 비교기는 이제 `expected_luck_cycle_unparseable`과 `expected_luck_cycle_tail_anomaly`도 자동으로 식별한다.
+- golden 비교기는 이제 `expected_luck_cycle_branch_nonstandard`와 `expected_luck_cycle_branch_tail_anomaly`도 자동으로 식별한다.
 - 현재 `aru`, `gomaebi`는 엔진 오차 이전에 정답지 대운 간지 중 일부가 표준 60갑자로 파싱되지 않는 상태다.
 - 원본 정답지는 대운을 `천간`, `지지` 분리 컬럼으로 제공한다.
 - 최신 비교 기준으로 `aru`, `gomaebi`, `pororo`는 모두 `luck_cycle_stem_mismatch_count = 0`이고, 실제 오차는 지지 진행에 집중된다.
@@ -198,3 +201,12 @@
 - [014-manse-schema.md](/D:/5_project/SaJu(2)/docs/planning/014-manse-schema.md)
 - [015-region-longitude-and-solar-time-application.md](/D:/5_project/SaJu(2)/docs/planning/015-region-longitude-and-solar-time-application.md)
 - [016-golden-answer-validation-system.md](/D:/5_project/SaJu(2)/docs/planning/016-golden-answer-validation-system.md)
+## 2026-04-07 Golden Expansion Update
+
+- Golden cases expanded from `5` to `7`
+- Added cases: `참치`, `호연`
+- `hoyeon` now matches fully
+- `chamchi` start-age rule mismatch resolved
+- Current priority order:
+  1. `aru`, `gomaebi`, `pororo` DaYun branch/progression mismatch
+  2. `aru` regional display rounding mismatch

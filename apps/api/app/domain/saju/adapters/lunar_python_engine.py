@@ -236,5 +236,9 @@ class LunarPythonSajuEngine:
         start_date = datetime.strptime(start_solar_ymd, "%Y-%m-%d").date()
         elapsed_days = (start_date - birth_datetime.date()).days
         elapsed_years = elapsed_days / 365.2425
-        age = math.floor(elapsed_years) if forward else math.ceil(elapsed_years)
+        # Current golden answers use different display conventions for the
+        # first DaYun age depending on direction:
+        # - forward flow: truncate to the lower whole year
+        # - backward flow: round to the nearest whole year
+        age = math.floor(elapsed_years) if forward else math.floor(elapsed_years + 0.5)
         return max(age, 1)

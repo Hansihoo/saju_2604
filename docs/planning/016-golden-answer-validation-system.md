@@ -157,7 +157,9 @@ python -m app.tools.run_golden_validation --fail-on-mismatch
 - `luck_cycle_progression_rule_mismatch`: `3`
 - `luck_cycle_branch_only_mismatch`: `3`
 - `expected_luck_cycle_unparseable`: `2`
+- `expected_luck_cycle_branch_nonstandard`: `2`
 - `expected_luck_cycle_tail_anomaly`: `1`
+- `expected_luck_cycle_branch_tail_anomaly`: `1`
 
 즉, 다음 우선순위는 `대운 간지 흐름`과 `지역 보정 표시 규칙` 검토다.
 
@@ -176,6 +178,10 @@ python -m app.tools.run_golden_validation --fail-on-mismatch
   - `pororo`는 전 구간이 표준 60갑자로 해석되지만 마지막 행만 흐름이 끊겨 `expected_luck_cycle_tail_anomaly`로 분류된다.
 - 원본 txt의 대운표는 `천간`, `지지`를 분리된 컬럼으로 제공하므로, 현재 비교기는 `luck_cycle_branch_only_mismatch`도 함께 기록한다.
 - 현재 `aru`, `gomaebi`, `pororo`는 모두 천간 mismatch 없이 지지 mismatch만 남아 있다.
+- 추가로 지지열 자체의 delta를 계산해 `branch_sequence_nonstandard`, `branch_sequence_tail_anomaly`를 진단하고, 이를 각각 `expected_luck_cycle_branch_nonstandard`, `expected_luck_cycle_branch_tail_anomaly` 태그로 요약한다.
+- 현재 기준:
+  - `aru`, `gomaebi`: 지지열 자체가 표준 순행/역행이 아니다.
+  - `pororo`: 지지열은 역행을 유지하다가 마지막 칸에서만 꺾인다.
 
 ## 확인된 규칙 메모
 - 12신살은 만세력마다 기준이 다를 수 있다.
@@ -200,3 +206,23 @@ python -m app.tools.run_golden_validation --fail-on-mismatch
 - mismatch 패턴 자동 분류 고도화
 - 대운 지지 진행 규칙 후보별 시뮬레이션 비교
 - CI에 `golden validation` 별도 작업 추가
+## 2026-04-07 Golden Expansion Update
+
+- Added `참치`, `호연` golden source files and canonical fixtures
+- Latest validation baseline:
+  - total cases: `7`
+  - total mismatches: `42`
+  - fully matching cases: `chamchi`, `hoyeon`, `lee-hyeonjin`, `okji`
+- Added new diagnosis tag:
+  - `luck_cycle_start_age_only_mismatch`
+- Added new diagnostic context fields:
+  - `expected_luck_cycle_start_ages`
+  - `actual_luck_cycle_start_ages`
+  - `luck_cycle_start_age_mismatch_count`
+- Meaning of the new tag:
+  - DaYun gan-zhi/stem/branch progression is correct
+  - only displayed `start_age` values differ
+  - likely cause is `대운수/시작 나이 반올림 또는 절삭 규칙`
+- Current status:
+  - `참치`는 해당 규칙 조정으로 해결됨
+  - tag is kept for future regressions

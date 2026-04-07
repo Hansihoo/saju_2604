@@ -64,7 +64,7 @@ class GoldenCaseToolTests(unittest.TestCase):
             )
 
             self.assertTrue(summary_file.exists())
-            self.assertEqual(summary["total_cases"], 5)
+            self.assertEqual(summary["total_cases"], 7)
             self.assertIn("cases", summary)
             self.assertIn("mismatch_fields", summary)
             self.assertIn("diagnosis_counts", summary)
@@ -90,32 +90,54 @@ class GoldenCaseToolTests(unittest.TestCase):
             )
 
             aru_summary = next(case for case in summary["cases"] if case["case_id"] == "aru")
+            chamchi_summary = next(case for case in summary["cases"] if case["case_id"] == "chamchi")
             gomaebi_summary = next(case for case in summary["cases"] if case["case_id"] == "gomaebi")
             pororo_summary = next(case for case in summary["cases"] if case["case_id"] == "pororo")
 
+            self.assertTrue(chamchi_summary["success"])
+            self.assertEqual(chamchi_summary["mismatch_count"], 0)
+            self.assertEqual(chamchi_summary["diagnosis_tags"], [])
+            self.assertEqual(
+                chamchi_summary["diagnostic_context"]["luck_cycle_start_age_mismatch_count"], 0
+            )
             self.assertIn("luck_cycle_branch_only_mismatch", aru_summary["diagnosis_tags"])
             self.assertIn("expected_luck_cycle_unparseable", aru_summary["diagnosis_tags"])
+            self.assertIn("expected_luck_cycle_branch_nonstandard", aru_summary["diagnosis_tags"])
             self.assertEqual(
                 aru_summary["diagnostic_context"]["invalid_expected_luck_cycles"],
                 ["갑사", "을자", "병묘", "기진"],
             )
             self.assertEqual(aru_summary["diagnostic_context"]["luck_cycle_stem_mismatch_count"], 0)
             self.assertEqual(aru_summary["diagnostic_context"]["luck_cycle_branch_mismatch_count"], 10)
+            self.assertEqual(
+                aru_summary["diagnostic_context"]["expected_branch_sequence_tags"],
+                ["branch_sequence_nonstandard"],
+            )
             self.assertIn("expected_luck_cycle_unparseable", gomaebi_summary["diagnosis_tags"])
             self.assertIn("luck_cycle_branch_only_mismatch", gomaebi_summary["diagnosis_tags"])
+            self.assertIn("expected_luck_cycle_branch_nonstandard", gomaebi_summary["diagnosis_tags"])
             self.assertEqual(
                 gomaebi_summary["diagnostic_context"]["invalid_expected_luck_cycles"],
                 ["병사", "정인", "무묘", "기진", "경사", "신오", "임미", "계신", "갑유"],
             )
             self.assertEqual(gomaebi_summary["diagnostic_context"]["luck_cycle_stem_mismatch_count"], 0)
+            self.assertEqual(
+                gomaebi_summary["diagnostic_context"]["expected_branch_sequence_tags"],
+                ["branch_sequence_nonstandard"],
+            )
             self.assertIn("expected_luck_cycle_tail_anomaly", pororo_summary["diagnosis_tags"])
             self.assertIn("luck_cycle_branch_only_mismatch", pororo_summary["diagnosis_tags"])
+            self.assertIn("expected_luck_cycle_branch_tail_anomaly", pororo_summary["diagnosis_tags"])
             self.assertEqual(
                 pororo_summary["diagnostic_context"]["invalid_expected_luck_cycles"],
                 [],
             )
             self.assertEqual(pororo_summary["diagnostic_context"]["luck_cycle_stem_mismatch_count"], 0)
             self.assertEqual(pororo_summary["diagnostic_context"]["luck_cycle_branch_mismatch_count"], 1)
+            self.assertEqual(
+                pororo_summary["diagnostic_context"]["expected_branch_sequence_tags"],
+                ["branch_sequence_tail_anomaly"],
+            )
 
     def test_known_answer_cases_match_all_four_pillars(self) -> None:
         mismatches = []

@@ -1,0 +1,173 @@
+{
+  "input": {
+    "case_id": "chamchi",
+    "source_name": "참치",
+    "source_file": "chamchi.txt",
+    "calendar_type": "solar",
+    "birth_date": "1995-02-19",
+    "birth_time": "17:30",
+    "gender": "male",
+    "region_id": "kr-gangwon-province",
+    "is_lunar_leap_month": false
+  },
+  "expected": {
+    "basic_info": {
+      "name": null,
+      "solar_birth_datetime": "1995-02-19 17:30",
+      "lunar_birth_datetime": "1995-01-20 17:30",
+      "gender_label": "남자",
+      "birth_place": "강원도",
+      "corrected_datetime": "1995-02-19 17:03",
+      "regional_time_offset_minutes": -27,
+      "daylight_saving_offset_minutes": null
+    },
+    "pillar_table": {
+      "time": {
+        "key": "time",
+        "label": "생시",
+        "gan_zhi": "정유",
+        "stem": "정",
+        "stem_ten_god": "편관",
+        "branch": "유",
+        "branch_ten_god": "비견",
+        "hidden_stems": [
+          "경",
+          "신"
+        ],
+        "twelve_fortune": "건록",
+        "twelve_shinsal": "재살"
+      },
+      "day": {
+        "key": "day",
+        "label": "생일",
+        "gan_zhi": "신사",
+        "stem": "신",
+        "stem_ten_god": "비견",
+        "branch": "사",
+        "branch_ten_god": "정관",
+        "hidden_stems": [
+          "무",
+          "경",
+          "병"
+        ],
+        "twelve_fortune": "사",
+        "twelve_shinsal": "역마살"
+      },
+      "month": {
+        "key": "month",
+        "label": "생월",
+        "gan_zhi": "무인",
+        "stem": "무",
+        "stem_ten_god": "정인",
+        "branch": "인",
+        "branch_ten_god": "정재",
+        "hidden_stems": [
+          "무",
+          "병",
+          "갑"
+        ],
+        "twelve_fortune": "태",
+        "twelve_shinsal": "망신살"
+      },
+      "year": {
+        "key": "year",
+        "label": "생년",
+        "gan_zhi": "을해",
+        "stem": "을",
+        "stem_ten_god": "편재",
+        "branch": "해",
+        "branch_ten_god": "상관",
+        "hidden_stems": [
+          "무",
+          "갑",
+          "임"
+        ],
+        "twelve_fortune": "목욕",
+        "twelve_shinsal": "역마살"
+      }
+    },
+    "luck_cycles": [
+      {
+        "start_age": 5,
+        "gan_zhi": "정축",
+        "stem": "정",
+        "branch": "축"
+      },
+      {
+        "start_age": 15,
+        "gan_zhi": "병자",
+        "stem": "병",
+        "branch": "자"
+      },
+      {
+        "start_age": 25,
+        "gan_zhi": "을해",
+        "stem": "을",
+        "branch": "해"
+      },
+      {
+        "start_age": 35,
+        "gan_zhi": "갑술",
+        "stem": "갑",
+        "branch": "술"
+      },
+      {
+        "start_age": 45,
+        "gan_zhi": "계유",
+        "stem": "계",
+        "branch": "유"
+      },
+      {
+        "start_age": 55,
+        "gan_zhi": "임신",
+        "stem": "임",
+        "branch": "신"
+      },
+      {
+        "start_age": 65,
+        "gan_zhi": "신미",
+        "stem": "신",
+        "branch": "미"
+      },
+      {
+        "start_age": 75,
+        "gan_zhi": "경오",
+        "stem": "경",
+        "branch": "오"
+      },
+      {
+        "start_age": 85,
+        "gan_zhi": "기사",
+        "stem": "기",
+        "branch": "사"
+      },
+      {
+        "start_age": 95,
+        "gan_zhi": "무진",
+        "stem": "무",
+        "branch": "진"
+      }
+    ]
+  },
+  "supported_sections": [
+    "basic_info",
+    "pillar_table",
+    "luck_cycles"
+  ],
+  "unsupported_sections": [
+    "4주 구성 및 의미",
+    "신살과 길성",
+    "오행과 십성 분석",
+    "신강/신약 지수",
+    "용신 분석",
+    "2025년 3월 일진 달력"
+  ],
+  "raw_sections": {
+    "4주 구성 및 의미": "| 구분 | 천간 | 십성 | 지지 | 십성 |\n| --- | --- | --- | --- | --- |\n| 생시 | 정丁 (아들) | 편관 | 유酉 (딸) | 비견 |\n| 생일 | 신辛 (자신) | 비견 | 사巳 (배우자) | 정관 |\n| 생월 | 무戊 (부친) | 정인 | 인寅 (모친) | 정재 |\n| 생년 | 을乙 (조부) | 편재 | 해亥 (조모) | 상관 |\n\n---",
+    "신살과 길성": "**신살:** 금여성, 태극귀인, 역마살, 천문성, 천을귀인, 관귀학관, 고신살, 현침살, 천덕귀인, 정록, 홍염살, 도화살\n\n**천간 길성 & 지지 길성**\n\n| 구분 | 천간 | 길성 | 지지 | 길성 |\n| --- | --- | --- | --- | --- |\n| 생시 | 정丁 | 천덕귀인 | 유酉 | 정록, 홍염살, 도화살 |\n| 생일 | 신辛 | 현침살 | 사巳 | 역마살 |\n| 생월 | 무戊 |  | 인寅 | 천을귀인, 관귀학관, 태극귀인, 역마살, 고신살 |\n| 생년 | 을乙 |  | 해亥 | 금여성, 태극귀인, 역마살, 천문성 |\n\n---",
+    "오행과 십성 분석": "**오행 비율**\n\n- 목(木): 22.7% (발달)\n- 화(火): 22.7% (발달)\n- 토(土): 9.1% (부족)\n- 금(金): 22.7% (발달)\n- 수(水): 22.7% (발달)\n\n**십성 비율**\n\n- 편재(偏財): 9.1%\n- 정재(正財): 13.6%\n- 편관(偏官): 9.1%\n- 정관(正官): 13.6%\n- 편인(偏印): -\n- 정인(正印): 9.1%\n- 비견(比肩): 22.7%\n- 겁재(劫財): -\n- 식신(食神): -\n- 상관(傷官): 22.7%\n\n**나의 오행:** 신금\n\n- 생(生) 극(剋) 관계\n    - 금(비겁): 22.7%\n    - 수(식상): 22.7%\n    - 목(재성): 22.7%\n    - 화(관성): 22.7%\n    - 토(인성): 9.1%\n\n---",
+    "신강/신약 지수": "- **득령:** 없음\n- **득지:** 없음\n- **득시:** 없음\n- **득세:** 없음\n\n**결론:** 신약한 사주 (20.19%의 사람이 여기에 해당)\n\n---",
+    "용신 분석": "- **억부용신:** 금(金)\n\n---",
+    "2025년 3월 일진 달력": "**을사년 무인~기묘월**\n\n- 3월 1일: 기사(己巳)\n- 3월 2일: 경오(庚午)\n- 3월 3일: 신미(辛未)\n- 3월 4일: 임신(壬申)\n- 3월 5일: 계유(癸酉) (경칩 17:07)\n- 3월 20일: 춘분 (18:00)\n\n---"
+  }
+}

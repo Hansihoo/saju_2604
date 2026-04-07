@@ -14,6 +14,8 @@ CASE_NAME_BY_FILE = {
     "okji.txt": "옥지",
     "lee-hyeonjin.txt": "이현진",
     "gomaebi.txt": "곰애비",
+    "chamchi.txt": "참치",
+    "hoyeon.txt": "호연",
 }
 
 

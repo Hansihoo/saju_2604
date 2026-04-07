@@ -71,6 +71,7 @@ JIA_ZI_KO = [
     "임술",
     "계해",
 ]
+BRANCHES_KO = ["자", "축", "인", "묘", "진", "사", "오", "미", "신", "유", "술", "해"]
 
 
 def _group_path(path: str) -> str:
@@ -96,6 +97,47 @@ def _gan_zhi_index(value: str) -> int | None:
         return JIA_ZI_KO.index(value)
     except ValueError:
         return None
+
+
+def _branch_index(value: str) -> int | None:
+    try:
+        return BRANCHES_KO.index(value)
+    except ValueError:
+        return None
+
+
+def _analyze_branch_sequence(values: List[str]) -> Dict[str, object]:
+    if len(values) < 2:
+        return {"tags": [], "invalid_values": [], "deltas": []}
+
+    indexed_values = [(value, _branch_index(value)) for value in values]
+    invalid_values = [value for value, index in indexed_values if index is None]
+    if invalid_values:
+        return {
+            "tags": ["branch_sequence_unparseable"],
+            "invalid_values": invalid_values,
+            "deltas": [],
+        }
+
+    indexes = [index for _, index in indexed_values if index is not None]
+    deltas = [((indexes[i + 1] - indexes[i]) % 12) for i in range(len(indexes) - 1)]
+    unique_deltas = set(deltas)
+
+    if len(unique_deltas) == 1 and unique_deltas.issubset({1, 11}):
+        return {"tags": [], "invalid_values": [], "deltas": deltas}
+
+    if len(deltas) >= 2 and len(set(deltas[:-1])) == 1 and deltas[:-1][0] in {1, 11} and deltas[-1] != deltas[:-1][0]:
+        return {
+            "tags": ["branch_sequence_tail_anomaly"],
+            "invalid_values": [],
+            "deltas": deltas,
+        }
+
+    return {
+        "tags": ["branch_sequence_nonstandard"],
+        "invalid_values": [],
+        "deltas": deltas,
+    }
 
 
 def _analyze_expected_luck_cycle_sequence(expected_cycles: List[str]) -> Dict[str, object]:
@@ -132,8 +174,14 @@ def _build_case_diagnostics(*, case: GoldenKnownAnswerCase, actual: object, repo
 
     expected_cycles = [cycle.gan_zhi for cycle in case.expected.luck_cycles]
     actual_cycles = [cycle.gan_zhi for cycle in actual.luck_cycles]
+    expected_branches = [cycle.branch for cycle in case.expected.luck_cycles]
+    actual_branches = [cycle.branch for cycle in actual.luck_cycles]
+    expected_start_ages = [cycle.start_age for cycle in case.expected.luck_cycles]
+    actual_start_ages = [cycle.start_age for cycle in actual.luck_cycles]
     aligned_luck_cycles = list(zip(case.expected.luck_cycles, actual.luck_cycles))
     expected_sequence_analysis = _analyze_expected_luck_cycle_sequence(expected_cycles)
+    expected_branch_analysis = _analyze_branch_sequence(expected_branches)
+    actual_branch_analysis = _analyze_branch_sequence(actual_branches)
     expected_sequence_tags = expected_sequence_analysis["tags"]
     invalid_expected_cycles = expected_sequence_analysis["invalid_values"]
 
@@ -158,6 +206,12 @@ def _build_case_diagnostics(*, case: GoldenKnownAnswerCase, actual: object, repo
             "Review displayed DaYun count; the current export stops one cycle earlier than the answer sheet."
         )
 
+    if luck_cycle_paths and all(path.endswith(".start_age") for path in luck_cycle_paths):
+        tags.append("luck_cycle_start_age_only_mismatch")
+        recommended_actions.append(
+            "Review DaYun start-age rounding/truncation rules; gan-zhi progression matches while the displayed start ages are offset."
+        )
+
     if any(path.endswith(".gan_zhi") for path in luck_cycle_paths) and any(
         path.endswith(".branch") for path in luck_cycle_paths
     ):
@@ -179,6 +233,10 @@ def _build_case_diagnostics(*, case: GoldenKnownAnswerCase, actual: object, repo
             expected_cycle.gan_zhi != actual_cycle.gan_zhi
             for expected_cycle, actual_cycle in aligned_luck_cycles
         )
+        start_age_mismatch_count = sum(
+            expected_cycle.start_age != actual_cycle.start_age
+            for expected_cycle, actual_cycle in aligned_luck_cycles
+        )
         if stem_mismatch_count == 0 and branch_mismatch_count > 0 and gan_zhi_mismatch_count == branch_mismatch_count:
             tags.append("luck_cycle_branch_only_mismatch")
             recommended_actions.append(
@@ -188,6 +246,7 @@ def _build_case_diagnostics(*, case: GoldenKnownAnswerCase, actual: object, repo
         stem_mismatch_count = 0
         branch_mismatch_count = 0
         gan_zhi_mismatch_count = 0
+        start_age_mismatch_count = 0
 
     for tag in expected_sequence_tags:
         if tag not in tags:
@@ -205,6 +264,22 @@ def _build_case_diagnostics(*, case: GoldenKnownAnswerCase, actual: object, repo
             "Verify the answer sheet DaYun labels; at least one expected gan-zhi row could not be parsed into the standard 60-cycle."
         )
 
+    if "branch_sequence_nonstandard" in expected_branch_analysis["tags"]:
+        tags.append("expected_luck_cycle_branch_nonstandard")
+        recommended_actions.append(
+            "Verify the answer sheet DaYun branch sequence; the branch column does not follow a standard consecutive forward/reverse progression."
+        )
+    if "branch_sequence_tail_anomaly" in expected_branch_analysis["tags"]:
+        tags.append("expected_luck_cycle_branch_tail_anomaly")
+        recommended_actions.append(
+            "Verify the answer sheet DaYun branch tail; the branch column is consecutive until the last row and then breaks."
+        )
+    if "branch_sequence_unparseable" in expected_branch_analysis["tags"]:
+        tags.append("expected_luck_cycle_branch_unparseable")
+        recommended_actions.append(
+            "Verify the answer sheet DaYun branch labels; at least one branch value could not be parsed."
+        )
+
     if not tags and mismatch_path_set:
         tags.append("unclassified_mismatch")
 
@@ -216,10 +291,19 @@ def _build_case_diagnostics(*, case: GoldenKnownAnswerCase, actual: object, repo
             "actual_luck_cycle_count": len(actual_cycles),
             "expected_luck_cycles": expected_cycles,
             "actual_luck_cycles": actual_cycles,
+            "expected_luck_cycle_start_ages": expected_start_ages,
+            "actual_luck_cycle_start_ages": actual_start_ages,
             "invalid_expected_luck_cycles": invalid_expected_cycles,
+            "expected_luck_cycle_branches": expected_branches,
+            "actual_luck_cycle_branches": actual_branches,
+            "expected_branch_sequence_tags": expected_branch_analysis["tags"],
+            "expected_branch_deltas": expected_branch_analysis["deltas"],
+            "actual_branch_sequence_tags": actual_branch_analysis["tags"],
+            "actual_branch_deltas": actual_branch_analysis["deltas"],
             "luck_cycle_stem_mismatch_count": stem_mismatch_count,
             "luck_cycle_branch_mismatch_count": branch_mismatch_count,
             "luck_cycle_gan_zhi_mismatch_count": gan_zhi_mismatch_count,
+            "luck_cycle_start_age_mismatch_count": start_age_mismatch_count,
         },
     }
 

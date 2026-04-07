@@ -31,6 +31,11 @@ def _trim_primary_text(text: str) -> str:
     return text.split("```", 1)[0]
 
 
+def _clean_markdown_cell(value: str) -> str:
+    cleaned = re.sub(r"[*`_\\]", "", value)
+    return re.sub(r"\s+", " ", cleaned).strip()
+
+
 def _split_sections(text: str) -> Dict[str, str]:
     sections: Dict[str, List[str]] = {}
     current_title: Optional[str] = None
@@ -77,7 +82,7 @@ def _parse_markdown_table(section_text: str) -> List[List[str]]:
 
     rows: List[List[str]] = []
     for line in table_lines:
-        cells = [cell.strip() for cell in line.strip("|").split("|")]
+        cells = [_clean_markdown_cell(cell) for cell in line.strip("|").split("|")]
         if cells and all(set(cell) <= {"-"} for cell in cells):
             continue
         rows.append(cells)
