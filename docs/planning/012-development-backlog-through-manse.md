@@ -66,6 +66,7 @@
   - 자동 진단:
     - `regional_display_rounding_mismatch`: `1`
     - `luck_cycle_progression_rule_mismatch`: `3`
+    - `luck_cycle_branch_only_mismatch`: `3`
     - `expected_luck_cycle_unparseable`: `2`
     - `expected_luck_cycle_tail_anomaly`: `1`
 - 진행 로그: [003-m1-manse-progress-log.md](/D:/5_project/SaJu(2)/docs/delivery/003-m1-manse-progress-log.md)
@@ -88,6 +89,8 @@
 - 그 결과 `lee-hyeonjin`, `okji`는 해결됐고, `aru`, `gomaebi`, `pororo`만 규칙 차이로 남았다.
 - golden 비교기는 이제 `expected_luck_cycle_unparseable`과 `expected_luck_cycle_tail_anomaly`도 자동으로 식별한다.
 - 현재 `aru`, `gomaebi`는 엔진 오차 이전에 정답지 대운 간지 중 일부가 표준 60갑자로 파싱되지 않는 상태다.
+- 원본 정답지는 대운을 `천간`, `지지` 분리 컬럼으로 제공한다.
+- 최신 비교 기준으로 `aru`, `gomaebi`, `pororo`는 모두 `luck_cycle_stem_mismatch_count = 0`이고, 실제 오차는 지지 진행에 집중된다.
 
 완료 기준:
 - golden summary에서 남은 mismatch가 대운 기준으로 더 줄어듦
@@ -181,8 +184,8 @@
 - golden validation 기반 회귀 검증 체계 유지
 
 ## 지금 바로 해야 할 일
-1. `aru`, `gomaebi` 정답지 대운표의 비표준 간지 표기 확인
-2. `pororo` 마지막 대운 `신축` 표기가 규칙 차이인지 정답지 이상인지 확인
+1. `aru`, `gomaebi` 정답지 대운표의 지지 진행 규칙 확인
+2. `pororo` 마지막 대운 `신축`의 마지막 지지 출처 확인
 3. 지역 보정 표시 규칙 결정
 4. 사용자 결과 화면에 만세력 표 초안 반영
 

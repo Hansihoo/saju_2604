@@ -121,6 +121,9 @@ python -m app.tools.run_golden_validation --fail-on-mismatch
 - `expected_luck_cycles`
 - `actual_luck_cycles`
 - `invalid_expected_luck_cycles`
+- `luck_cycle_stem_mismatch_count`
+- `luck_cycle_branch_mismatch_count`
+- `luck_cycle_gan_zhi_mismatch_count`
 
 즉 Codex는 mismatch 수만 보는 것이 아니라, 정답지 대운표 자체가 표준 60갑자로 해석 가능한지까지 함께 판단할 수 있다.
 
@@ -152,6 +155,7 @@ python -m app.tools.run_golden_validation --fail-on-mismatch
 최신 진단 집계:
 - `regional_display_rounding_mismatch`: `1`
 - `luck_cycle_progression_rule_mismatch`: `3`
+- `luck_cycle_branch_only_mismatch`: `3`
 - `expected_luck_cycle_unparseable`: `2`
 - `expected_luck_cycle_tail_anomaly`: `1`
 
@@ -170,6 +174,8 @@ python -m app.tools.run_golden_validation --fail-on-mismatch
   - `aru` 비표준 예상 대운: `갑사`, `을자`, `병묘`, `기진`
   - `gomaebi` 비표준 예상 대운: `병사`, `정인`, `무묘`, `기진`, `경사`, `신오`, `임미`, `계신`, `갑유`
   - `pororo`는 전 구간이 표준 60갑자로 해석되지만 마지막 행만 흐름이 끊겨 `expected_luck_cycle_tail_anomaly`로 분류된다.
+- 원본 txt의 대운표는 `천간`, `지지`를 분리된 컬럼으로 제공하므로, 현재 비교기는 `luck_cycle_branch_only_mismatch`도 함께 기록한다.
+- 현재 `aru`, `gomaebi`, `pororo`는 모두 천간 mismatch 없이 지지 mismatch만 남아 있다.
 
 ## 확인된 규칙 메모
 - 12신살은 만세력마다 기준이 다를 수 있다.
@@ -192,4 +198,5 @@ python -m app.tools.run_golden_validation --fail-on-mismatch
 - KASI 기반 오라클 필드 추가
 - `pillar_table`, `basic_info`에도 비표준 표기 탐지 추가
 - mismatch 패턴 자동 분류 고도화
+- 대운 지지 진행 규칙 후보별 시뮬레이션 비교
 - CI에 `golden validation` 별도 작업 추가

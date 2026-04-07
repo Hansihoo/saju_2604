@@ -132,6 +132,7 @@ def _build_case_diagnostics(*, case: GoldenKnownAnswerCase, actual: object, repo
 
     expected_cycles = [cycle.gan_zhi for cycle in case.expected.luck_cycles]
     actual_cycles = [cycle.gan_zhi for cycle in actual.luck_cycles]
+    aligned_luck_cycles = list(zip(case.expected.luck_cycles, actual.luck_cycles))
     expected_sequence_analysis = _analyze_expected_luck_cycle_sequence(expected_cycles)
     expected_sequence_tags = expected_sequence_analysis["tags"]
     invalid_expected_cycles = expected_sequence_analysis["invalid_values"]
@@ -165,6 +166,29 @@ def _build_case_diagnostics(*, case: GoldenKnownAnswerCase, actual: object, repo
             "Investigate DaYun progression rules or source differences; current lunar-python month-pillar progression diverges from the answer sheet."
         )
 
+    if aligned_luck_cycles:
+        stem_mismatch_count = sum(
+            expected_cycle.stem != actual_cycle.stem
+            for expected_cycle, actual_cycle in aligned_luck_cycles
+        )
+        branch_mismatch_count = sum(
+            expected_cycle.branch != actual_cycle.branch
+            for expected_cycle, actual_cycle in aligned_luck_cycles
+        )
+        gan_zhi_mismatch_count = sum(
+            expected_cycle.gan_zhi != actual_cycle.gan_zhi
+            for expected_cycle, actual_cycle in aligned_luck_cycles
+        )
+        if stem_mismatch_count == 0 and branch_mismatch_count > 0 and gan_zhi_mismatch_count == branch_mismatch_count:
+            tags.append("luck_cycle_branch_only_mismatch")
+            recommended_actions.append(
+                "Compare DaYun branch progression rules separately; stems already align while branches diverge."
+            )
+    else:
+        stem_mismatch_count = 0
+        branch_mismatch_count = 0
+        gan_zhi_mismatch_count = 0
+
     for tag in expected_sequence_tags:
         if tag not in tags:
             tags.append(tag)
@@ -193,6 +217,9 @@ def _build_case_diagnostics(*, case: GoldenKnownAnswerCase, actual: object, repo
             "expected_luck_cycles": expected_cycles,
             "actual_luck_cycles": actual_cycles,
             "invalid_expected_luck_cycles": invalid_expected_cycles,
+            "luck_cycle_stem_mismatch_count": stem_mismatch_count,
+            "luck_cycle_branch_mismatch_count": branch_mismatch_count,
+            "luck_cycle_gan_zhi_mismatch_count": gan_zhi_mismatch_count,
         },
     }
 
