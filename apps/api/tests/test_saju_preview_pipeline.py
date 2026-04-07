@@ -75,6 +75,7 @@ class SajuPreviewPipelineTests(unittest.TestCase):
             "\u4e01\u5df3",
         )
         self.assertGreaterEqual(len(response.manse.luck_cycles), 2)
+        self.assertTrue(all(cycle.gan_zhi for cycle in response.manse.luck_cycles))
 
     def test_estimated_birth_time_hides_hour_pillar_outputs(self) -> None:
         request = SimpleNamespace(

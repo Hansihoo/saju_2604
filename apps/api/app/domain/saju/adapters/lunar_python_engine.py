@@ -152,7 +152,10 @@ class LunarPythonSajuEngine:
                         else cycle.getEndAge()
                     ),
                 )
-                for cycle in yun.getDaYun()
+                # Ask the engine for one extra decade so canonical exports can
+                # compare the full 10 active luck-cycle rows after skipping the
+                # empty index 0 placeholder.
+                for cycle in yun.getDaYun(11)
             ],
             supplementary_positions={
                 "tai_yuan": SupplementaryPosition(

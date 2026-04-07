@@ -67,8 +67,15 @@ class GoldenCaseToolTests(unittest.TestCase):
             self.assertEqual(summary["total_cases"], 5)
             self.assertIn("cases", summary)
             self.assertIn("mismatch_fields", summary)
+            self.assertIn("diagnosis_counts", summary)
             self.assertTrue(
                 any(key.startswith("luck_cycles") for key in summary["mismatch_fields"])
+            )
+            self.assertTrue(
+                any(
+                    "diagnosis_tags" in case_summary and "recommended_actions" in case_summary
+                    for case_summary in summary["cases"]
+                )
             )
 
     def test_known_answer_cases_match_all_four_pillars(self) -> None:

@@ -332,6 +332,7 @@ def build_manse_data(
     analysis_result: AnalysisResult,
     birth_time_policy: BirthTimePolicyResult,
 ) -> ManseData:
+    visible_luck_cycles = [cycle for cycle in saju_calculation.luck_cycles if cycle.gan_zhi]
     pillar_enabled_map = {
         "year": True,
         "month": True,
@@ -378,7 +379,7 @@ def build_manse_data(
                     "start_age": cycle.start_age,
                     "end_age": cycle.end_age,
                 }
-                for cycle in saju_calculation.luck_cycles
+                for cycle in visible_luck_cycles
             ]
             if birth_time_policy.hour_pillar_enabled
             else []

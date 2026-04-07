@@ -28,6 +28,59 @@ def _field_path(path: str) -> str:
     return path
 
 
+def _build_case_diagnostics(*, case: GoldenKnownAnswerCase, actual: object, report: object) -> Dict[str, object]:
+    mismatch_paths = [mismatch.path for mismatch in report.mismatches]
+    mismatch_path_set = set(mismatch_paths)
+    tags: List[str] = []
+    recommended_actions: List[str] = []
+
+    expected_cycles = [cycle.gan_zhi for cycle in case.expected.luck_cycles]
+    actual_cycles = [cycle.gan_zhi for cycle in actual.luck_cycles]
+
+    luck_cycle_paths = [path for path in mismatch_paths if path.startswith("luck_cycles")]
+    basic_info_paths = [path for path in mismatch_paths if path.startswith("basic_info")]
+
+    if basic_info_paths and set(basic_info_paths).issubset(
+        {"basic_info.corrected_datetime", "basic_info.regional_time_offset_minutes"}
+    ):
+        tags.append("regional_display_rounding_mismatch")
+        recommended_actions.append(
+            "Review corrected_datetime/regional_time_offset_minutes display rounding against answer sheet conventions."
+        )
+
+    if (
+        len(luck_cycle_paths) == 1
+        and luck_cycle_paths[0].startswith(f"luck_cycles[{len(actual_cycles)}]")
+        and any(mismatch.kind == "missing_actual" for mismatch in report.mismatches)
+    ):
+        tags.append("luck_cycle_tail_missing_only")
+        recommended_actions.append(
+            "Review displayed DaYun count; the current export stops one cycle earlier than the answer sheet."
+        )
+
+    if any(path.endswith(".gan_zhi") for path in luck_cycle_paths) and any(
+        path.endswith(".branch") for path in luck_cycle_paths
+    ):
+        tags.append("luck_cycle_progression_rule_mismatch")
+        recommended_actions.append(
+            "Investigate DaYun progression rules or source differences; current lunar-python month-pillar progression diverges from the answer sheet."
+        )
+
+    if not tags and mismatch_path_set:
+        tags.append("unclassified_mismatch")
+
+    return {
+        "tags": tags,
+        "recommended_actions": recommended_actions,
+        "context": {
+            "expected_luck_cycle_count": len(expected_cycles),
+            "actual_luck_cycle_count": len(actual_cycles),
+            "expected_luck_cycles": expected_cycles,
+            "actual_luck_cycles": actual_cycles,
+        },
+    }
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Compare canonical golden fixtures against current saju output."
@@ -65,6 +118,7 @@ def compare_golden_cases(*, expected_dir: Path, report_dir: Path, summary_file: 
     total_mismatches = 0
     case_summaries: List[Dict[str, object]] = []
     global_field_counts: Counter[str] = Counter()
+    diagnosis_counts: Counter[str] = Counter()
 
     for expected_path in sorted(expected_dir.glob("*.json")):
         case = GoldenKnownAnswerCase.model_validate_json(expected_path.read_text(encoding="utf-8"))
@@ -87,6 +141,8 @@ def compare_golden_cases(*, expected_dir: Path, report_dir: Path, summary_file: 
         group_counts = Counter(_group_path(mismatch.path) for mismatch in report.mismatches)
         field_counts = Counter(_field_path(mismatch.path) for mismatch in report.mismatches)
         global_field_counts.update(field_counts)
+        diagnostics = _build_case_diagnostics(case=case, actual=actual, report=report)
+        diagnosis_counts.update(diagnostics["tags"])
 
         case_summary = {
             "case_id": report.case_id,
@@ -96,6 +152,9 @@ def compare_golden_cases(*, expected_dir: Path, report_dir: Path, summary_file: 
             "mismatch_count": report.mismatch_count,
             "mismatch_groups": dict(group_counts),
             "mismatch_fields": dict(field_counts),
+            "diagnosis_tags": diagnostics["tags"],
+            "recommended_actions": diagnostics["recommended_actions"],
+            "diagnostic_context": diagnostics["context"],
             "report_path": str(diff_path),
             "actual_path": str(actual_path),
         }
@@ -108,6 +167,7 @@ def compare_golden_cases(*, expected_dir: Path, report_dir: Path, summary_file: 
         "report_dir": str(report_dir),
         "summary_file": str(summary_file),
         "mismatch_fields": dict(global_field_counts),
+        "diagnosis_counts": dict(diagnosis_counts),
         "cases": case_summaries,
     }
     summary_file.parent.mkdir(parents=True, exist_ok=True)

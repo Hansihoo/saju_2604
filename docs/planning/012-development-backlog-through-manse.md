@@ -59,10 +59,11 @@
 ## 최신 검증 상태
 - 기준 문서: [016-golden-answer-validation-system.md](/D:/5_project/SaJu(2)/docs/planning/016-golden-answer-validation-system.md)
 - 최신 golden validation 기준:
-  - 총 mismatch: `41`
+  - 총 mismatch: `42`
   - 사주 4주 mismatch: `0`
   - 12신살 mismatch: `0`
   - 남은 주요 mismatch: `luck_cycles`
+- 진행 로그: [003-m1-manse-progress-log.md](/D:/5_project/SaJu(2)/docs/delivery/003-m1-manse-progress-log.md)
 
 ## 현재 남은 핵심 업무 우선순위
 
@@ -73,7 +74,13 @@
 - `luck_cycles.start_age` 규칙을 정답지 기준으로 확정
 - `luck_cycles.gan_zhi`, `luck_cycles.branch`가 어긋나는 케이스 원인 확인
 - `aru`, `gomaebi`처럼 흐름 자체가 다른 케이스를 별도로 분석
-- `pororo`, `lee-hyeonjin`, `okji`의 마지막 대운 1칸 누락 원인 확인
+- `pororo` 마지막 대운 `신축` 표기가 표준 규칙과 왜 다른지 확인
+
+현재 메모:
+- `lunar-python` 기본 `DaYun` 규칙은 월주 기준 순행/역행으로 간지를 이동한다.
+- 기본 `getDaYun()`은 빈 `index=0`을 포함한 10개를 반환해 실제 표시용으로는 9칸만 남는다.
+- 현재 프로젝트는 `n=11`로 늘리고 빈 `index=0`을 숨겨 10칸을 비교할 수 있게 바꿨다.
+- 그 결과 `lee-hyeonjin`, `okji`는 해결됐고, `aru`, `gomaebi`, `pororo`만 규칙 차이로 남았다.
 
 완료 기준:
 - golden summary에서 남은 mismatch가 대운 기준으로 더 줄어듦
@@ -168,7 +175,7 @@
 
 ## 지금 바로 해야 할 일
 1. `aru`, `gomaebi` 대운 간지 흐름 규칙 조사
-2. `pororo`, `lee-hyeonjin`, `okji` 마지막 대운 누락 원인 확인
+2. `pororo` 마지막 대운 `신축` 표기가 규칙 차이인지 정답지 이상인지 확인
 3. 지역 보정 표시 규칙 결정
 4. 사용자 결과 화면에 만세력 표 초안 반영
 

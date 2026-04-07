@@ -114,6 +114,7 @@ python -m app.tools.run_golden_validation --fail-on-mismatch
 또한
 - `mismatch_groups`: `basic_info`, `pillar_table`, `luck_cycles` 중 어디에 오차가 몰리는지
 - `mismatch_fields`: `luck_cycles.gan_zhi`, `pillar_table.twelve_shinsal` 같은 세부 필드 단위로 어디가 반복적으로 틀리는지
+- `diagnosis_counts`: 자동 진단 태그 기준으로 어떤 유형의 문제가 많은지
 를 바로 볼 수 있다.
 
 ## Codex가 이 로그를 어떻게 활용할지
@@ -129,8 +130,10 @@ python -m app.tools.run_golden_validation --fail-on-mismatch
 ## 현재 상태 (2026-04-07)
 - 사주 4주(`year/month/day/time` 간지)는 5개 정답 케이스에서 모두 일치한다.
 - 12신살은 정답지와 동일한 기준으로 정리되었다.
-- 최신 golden validation 기준 총 mismatch는 `41`개다.
+- 최신 golden validation 기준 총 mismatch는 `42`개다.
 - 현재 남은 주요 mismatch는 대부분 `luck_cycles`에 집중된다.
+- 진행 기록은 [003-m1-manse-progress-log.md](/D:/5_project/SaJu(2)/docs/delivery/003-m1-manse-progress-log.md)에 누적한다.
+- summary에는 자동 진단 태그와 추천 조치도 포함된다.
 
 최신 집계 기준 핵심 오차 필드:
 - `basic_info.corrected_datetime`
@@ -139,7 +142,20 @@ python -m app.tools.run_golden_validation --fail-on-mismatch
 - `luck_cycles.branch`
 - `luck_cycles`
 
-즉, 다음 우선순위는 `대운 간지 흐름`과 `마지막 대운 1칸 누락` 검토다.
+최신 진단 집계:
+- `regional_display_rounding_mismatch`: `1`
+- `luck_cycle_progression_rule_mismatch`: `3`
+
+즉, 다음 우선순위는 `대운 간지 흐름`과 `지역 보정 표시 규칙` 검토다.
+
+현재까지의 진행:
+- `n=11` 대운 비교와 빈 `index=0` 제외 처리로 `lee-hyeonjin`, `okji`는 golden과 일치하게 되었다.
+- `pororo`는 마지막 대운 한 칸이 표준 역행 규칙상 `신묘`로 계산되지만, 정답지는 `신축`으로 적혀 있어 별도 확인이 필요하다.
+
+추가 확인:
+- `lunar-python`의 `Yun.getDaYun()` 기본값은 빈 `index=0`을 포함한 10개를 반환한다.
+- 현재 프로젝트는 빈 간지를 필터링해 표시하므로 기본값만 사용하면 실제 대운 9칸이 남는다.
+- 하지만 단순히 `n=11`로 늘리는 것만으로는 golden 정답의 마지막 대운과 일치하지 않았다.
 
 ## 확인된 규칙 메모
 - 12신살은 만세력마다 기준이 다를 수 있다.
