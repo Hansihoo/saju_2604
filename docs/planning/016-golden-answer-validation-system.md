@@ -117,6 +117,13 @@ python -m app.tools.run_golden_validation --fail-on-mismatch
 - `diagnosis_counts`: 자동 진단 태그 기준으로 어떤 유형의 문제가 많은지
 를 바로 볼 수 있다.
 
+케이스별 `diagnostic_context`에는 아래도 포함된다.
+- `expected_luck_cycles`
+- `actual_luck_cycles`
+- `invalid_expected_luck_cycles`
+
+즉 Codex는 mismatch 수만 보는 것이 아니라, 정답지 대운표 자체가 표준 60갑자로 해석 가능한지까지 함께 판단할 수 있다.
+
 ## Codex가 이 로그를 어떻게 활용할지
 1. `summary.json`에서 mismatch 수가 큰 케이스를 찾는다.
 2. 해당 케이스의 `diff/*.report.json`을 연다.
@@ -145,6 +152,8 @@ python -m app.tools.run_golden_validation --fail-on-mismatch
 최신 진단 집계:
 - `regional_display_rounding_mismatch`: `1`
 - `luck_cycle_progression_rule_mismatch`: `3`
+- `expected_luck_cycle_unparseable`: `2`
+- `expected_luck_cycle_tail_anomaly`: `1`
 
 즉, 다음 우선순위는 `대운 간지 흐름`과 `지역 보정 표시 규칙` 검토다.
 
@@ -156,6 +165,11 @@ python -m app.tools.run_golden_validation --fail-on-mismatch
 - `lunar-python`의 `Yun.getDaYun()` 기본값은 빈 `index=0`을 포함한 10개를 반환한다.
 - 현재 프로젝트는 빈 간지를 필터링해 표시하므로 기본값만 사용하면 실제 대운 9칸이 남는다.
 - 하지만 단순히 `n=11`로 늘리는 것만으로는 golden 정답의 마지막 대운과 일치하지 않았다.
+- 추가로 현재 비교기는 정답지 대운표의 `gan_zhi`가 표준 60갑자에 없는 조합이면 `expected_luck_cycle_unparseable`로 바로 표시한다.
+- 현재 기준으로:
+  - `aru` 비표준 예상 대운: `갑사`, `을자`, `병묘`, `기진`
+  - `gomaebi` 비표준 예상 대운: `병사`, `정인`, `무묘`, `기진`, `경사`, `신오`, `임미`, `계신`, `갑유`
+  - `pororo`는 전 구간이 표준 60갑자로 해석되지만 마지막 행만 흐름이 끊겨 `expected_luck_cycle_tail_anomaly`로 분류된다.
 
 ## 확인된 규칙 메모
 - 12신살은 만세력마다 기준이 다를 수 있다.
@@ -176,5 +190,6 @@ python -m app.tools.run_golden_validation --fail-on-mismatch
 ## 다음 확장 후보
 - `용신 분석`, `신강/신약`, `오행/십성 분포`까지 canonical 비교 범위 확대
 - KASI 기반 오라클 필드 추가
-- mismatch 패턴 자동 분류
+- `pillar_table`, `basic_info`에도 비표준 표기 탐지 추가
+- mismatch 패턴 자동 분류 고도화
 - CI에 `golden validation` 별도 작업 추가

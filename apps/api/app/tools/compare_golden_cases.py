@@ -9,6 +9,69 @@ from typing import Dict, List
 from app.domain.saju.golden import GoldenKnownAnswerCase, compare_golden_snapshots
 from app.domain.saju.services.build_golden_snapshot import build_actual_golden_snapshot
 
+JIA_ZI_KO = [
+    "갑자",
+    "을축",
+    "병인",
+    "정묘",
+    "무진",
+    "기사",
+    "경오",
+    "신미",
+    "임신",
+    "계유",
+    "갑술",
+    "을해",
+    "병자",
+    "정축",
+    "무인",
+    "기묘",
+    "경진",
+    "신사",
+    "임오",
+    "계미",
+    "갑신",
+    "을유",
+    "병술",
+    "정해",
+    "무자",
+    "기축",
+    "경인",
+    "신묘",
+    "임진",
+    "계사",
+    "갑오",
+    "을미",
+    "병신",
+    "정유",
+    "무술",
+    "기해",
+    "경자",
+    "신축",
+    "임인",
+    "계묘",
+    "갑진",
+    "을사",
+    "병오",
+    "정미",
+    "무신",
+    "기유",
+    "경술",
+    "신해",
+    "임자",
+    "계축",
+    "갑인",
+    "을묘",
+    "병진",
+    "정사",
+    "무오",
+    "기미",
+    "경신",
+    "신유",
+    "임술",
+    "계해",
+]
+
 
 def _group_path(path: str) -> str:
     if "[" in path:
@@ -28,6 +91,39 @@ def _field_path(path: str) -> str:
     return path
 
 
+def _gan_zhi_index(value: str) -> int | None:
+    try:
+        return JIA_ZI_KO.index(value)
+    except ValueError:
+        return None
+
+
+def _analyze_expected_luck_cycle_sequence(expected_cycles: List[str]) -> Dict[str, object]:
+    if len(expected_cycles) < 2:
+        return {"tags": [], "invalid_values": []}
+
+    indexed_cycles = [(value, _gan_zhi_index(value)) for value in expected_cycles]
+    invalid_values = [value for value, index in indexed_cycles if index is None]
+    if invalid_values:
+        return {
+            "tags": ["expected_luck_cycle_unparseable"],
+            "invalid_values": invalid_values,
+        }
+
+    indexes = [index for _, index in indexed_cycles if index is not None]
+
+    deltas = [((indexes[i + 1] - indexes[i]) % 60) for i in range(len(indexes) - 1)]
+    unique_deltas = set(deltas)
+
+    if len(unique_deltas) == 1 and unique_deltas.issubset({1, 59}):
+        return {"tags": [], "invalid_values": []}
+
+    if len(deltas) >= 2 and len(set(deltas[:-1])) == 1 and deltas[:-1][0] in {1, 59} and deltas[-1] != deltas[:-1][0]:
+        return {"tags": ["expected_luck_cycle_tail_anomaly"], "invalid_values": []}
+
+    return {"tags": ["expected_luck_cycle_nonconsecutive"], "invalid_values": []}
+
+
 def _build_case_diagnostics(*, case: GoldenKnownAnswerCase, actual: object, report: object) -> Dict[str, object]:
     mismatch_paths = [mismatch.path for mismatch in report.mismatches]
     mismatch_path_set = set(mismatch_paths)
@@ -36,6 +132,9 @@ def _build_case_diagnostics(*, case: GoldenKnownAnswerCase, actual: object, repo
 
     expected_cycles = [cycle.gan_zhi for cycle in case.expected.luck_cycles]
     actual_cycles = [cycle.gan_zhi for cycle in actual.luck_cycles]
+    expected_sequence_analysis = _analyze_expected_luck_cycle_sequence(expected_cycles)
+    expected_sequence_tags = expected_sequence_analysis["tags"]
+    invalid_expected_cycles = expected_sequence_analysis["invalid_values"]
 
     luck_cycle_paths = [path for path in mismatch_paths if path.startswith("luck_cycles")]
     basic_info_paths = [path for path in mismatch_paths if path.startswith("basic_info")]
@@ -66,6 +165,22 @@ def _build_case_diagnostics(*, case: GoldenKnownAnswerCase, actual: object, repo
             "Investigate DaYun progression rules or source differences; current lunar-python month-pillar progression diverges from the answer sheet."
         )
 
+    for tag in expected_sequence_tags:
+        if tag not in tags:
+            tags.append(tag)
+    if "expected_luck_cycle_tail_anomaly" in expected_sequence_tags:
+        recommended_actions.append(
+            "Verify the answer sheet tail row; the expected DaYun sequence is consecutive until the last step and then breaks."
+        )
+    if "expected_luck_cycle_nonconsecutive" in expected_sequence_tags:
+        recommended_actions.append(
+            "Verify the answer sheet DaYun sequence; the expected rows themselves do not follow a consecutive 60-cycle progression."
+        )
+    if "expected_luck_cycle_unparseable" in expected_sequence_tags:
+        recommended_actions.append(
+            "Verify the answer sheet DaYun labels; at least one expected gan-zhi row could not be parsed into the standard 60-cycle."
+        )
+
     if not tags and mismatch_path_set:
         tags.append("unclassified_mismatch")
 
@@ -77,6 +192,7 @@ def _build_case_diagnostics(*, case: GoldenKnownAnswerCase, actual: object, repo
             "actual_luck_cycle_count": len(actual_cycles),
             "expected_luck_cycles": expected_cycles,
             "actual_luck_cycles": actual_cycles,
+            "invalid_expected_luck_cycles": invalid_expected_cycles,
         },
     }
 

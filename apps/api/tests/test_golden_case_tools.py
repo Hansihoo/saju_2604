@@ -78,6 +78,37 @@ class GoldenCaseToolTests(unittest.TestCase):
                 )
             )
 
+    def test_compare_tool_flags_expected_luck_cycle_anomalies(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            report_dir = Path(temp_dir) / "reports"
+            summary_file = report_dir / "summary.json"
+
+            summary = compare_golden_cases(
+                expected_dir=EXPECTED_DIR,
+                report_dir=report_dir,
+                summary_file=summary_file,
+            )
+
+            aru_summary = next(case for case in summary["cases"] if case["case_id"] == "aru")
+            gomaebi_summary = next(case for case in summary["cases"] if case["case_id"] == "gomaebi")
+            pororo_summary = next(case for case in summary["cases"] if case["case_id"] == "pororo")
+
+            self.assertIn("expected_luck_cycle_unparseable", aru_summary["diagnosis_tags"])
+            self.assertEqual(
+                aru_summary["diagnostic_context"]["invalid_expected_luck_cycles"],
+                ["갑사", "을자", "병묘", "기진"],
+            )
+            self.assertIn("expected_luck_cycle_unparseable", gomaebi_summary["diagnosis_tags"])
+            self.assertEqual(
+                gomaebi_summary["diagnostic_context"]["invalid_expected_luck_cycles"],
+                ["병사", "정인", "무묘", "기진", "경사", "신오", "임미", "계신", "갑유"],
+            )
+            self.assertIn("expected_luck_cycle_tail_anomaly", pororo_summary["diagnosis_tags"])
+            self.assertEqual(
+                pororo_summary["diagnostic_context"]["invalid_expected_luck_cycles"],
+                [],
+            )
+
     def test_known_answer_cases_match_all_four_pillars(self) -> None:
         mismatches = []
 
