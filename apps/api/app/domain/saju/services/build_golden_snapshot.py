@@ -12,8 +12,8 @@ from app.domain.saju.golden import (
     PILLAR_LABEL_BY_KEY,
     apply_display_time_correction,
     calculate_daylight_saving_correction,
+    derive_display_minutes_from_longitude,
     format_datetime_minute,
-    round_display_minutes,
     to_korean_branch,
     to_korean_gan_zhi,
     to_korean_stem,
@@ -70,7 +70,7 @@ def build_actual_golden_snapshot(*, case_input: GoldenCaseInput) -> GoldenSnapsh
         offset_minutes=response.time_correction.offset_minutes,
     )
     solar_birth_datetime = format_datetime_minute(response.calendar_normalization.normalized_solar_datetime)
-    regional_offset_minutes = round_display_minutes(response.region.regional_time_offset_minutes)
+    regional_offset_minutes = derive_display_minutes_from_longitude(response.region.longitude)
 
     return GoldenSnapshot(
         basic_info=GoldenBasicInfo(

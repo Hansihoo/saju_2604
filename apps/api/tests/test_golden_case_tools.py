@@ -2,7 +2,11 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from app.domain.saju.golden import GoldenKnownAnswerCase, compare_golden_snapshots
+from app.domain.saju.golden import (
+    GoldenKnownAnswerCase,
+    compare_golden_snapshots,
+    derive_display_minutes_from_longitude,
+)
 from app.domain.saju.services.build_golden_snapshot import build_actual_golden_snapshot
 from app.domain.saju.services.parse_golden_answer_text import load_golden_answer_text
 from app.tools.compare_golden_cases import compare_golden_cases
@@ -52,6 +56,11 @@ class GoldenCaseToolTests(unittest.TestCase):
         self.assertEqual(report.mismatch_count, 1)
         self.assertEqual(report.mismatches[0].path, "basic_info.corrected_datetime")
 
+    def test_derives_display_minutes_from_longitude_using_answer_sheet_rule(self) -> None:
+        self.assertEqual(derive_display_minutes_from_longitude(126.991824), -32)
+        self.assertEqual(derive_display_minutes_from_longitude(127.258722), -31)
+        self.assertEqual(derive_display_minutes_from_longitude(128.140959), -28)
+
     def test_compare_tool_writes_summary_file(self) -> None:
         with TemporaryDirectory() as temp_dir:
             report_dir = Path(temp_dir) / "reports"
@@ -68,6 +77,7 @@ class GoldenCaseToolTests(unittest.TestCase):
             self.assertIn("cases", summary)
             self.assertIn("mismatch_fields", summary)
             self.assertIn("diagnosis_counts", summary)
+            self.assertIn("case_status_counts", summary)
             self.assertTrue(
                 any(key.startswith("luck_cycles") for key in summary["mismatch_fields"])
             )
@@ -95,14 +105,18 @@ class GoldenCaseToolTests(unittest.TestCase):
             pororo_summary = next(case for case in summary["cases"] if case["case_id"] == "pororo")
 
             self.assertTrue(chamchi_summary["success"])
+            self.assertEqual(chamchi_summary["case_status"], "match")
             self.assertEqual(chamchi_summary["mismatch_count"], 0)
             self.assertEqual(chamchi_summary["diagnosis_tags"], [])
             self.assertEqual(
                 chamchi_summary["diagnostic_context"]["luck_cycle_start_age_mismatch_count"], 0
             )
             self.assertIn("luck_cycle_branch_only_mismatch", aru_summary["diagnosis_tags"])
+            self.assertIn("luck_cycle_start_age_mismatch_present", aru_summary["diagnosis_tags"])
             self.assertIn("expected_luck_cycle_unparseable", aru_summary["diagnosis_tags"])
             self.assertIn("expected_luck_cycle_branch_nonstandard", aru_summary["diagnosis_tags"])
+            self.assertIn("expected_answer_sheet_suspect", aru_summary["diagnosis_tags"])
+            self.assertEqual(aru_summary["case_status"], "answer_sheet_review")
             self.assertEqual(
                 aru_summary["diagnostic_context"]["invalid_expected_luck_cycles"],
                 ["갑사", "을자", "병묘", "기진"],
@@ -110,12 +124,18 @@ class GoldenCaseToolTests(unittest.TestCase):
             self.assertEqual(aru_summary["diagnostic_context"]["luck_cycle_stem_mismatch_count"], 0)
             self.assertEqual(aru_summary["diagnostic_context"]["luck_cycle_branch_mismatch_count"], 10)
             self.assertEqual(
+                aru_summary["diagnostic_context"]["actual_luck_cycle_sequence_tags"],
+                [],
+            )
+            self.assertEqual(
                 aru_summary["diagnostic_context"]["expected_branch_sequence_tags"],
                 ["branch_sequence_nonstandard"],
             )
             self.assertIn("expected_luck_cycle_unparseable", gomaebi_summary["diagnosis_tags"])
             self.assertIn("luck_cycle_branch_only_mismatch", gomaebi_summary["diagnosis_tags"])
             self.assertIn("expected_luck_cycle_branch_nonstandard", gomaebi_summary["diagnosis_tags"])
+            self.assertIn("expected_answer_sheet_suspect", gomaebi_summary["diagnosis_tags"])
+            self.assertEqual(gomaebi_summary["case_status"], "answer_sheet_review")
             self.assertEqual(
                 gomaebi_summary["diagnostic_context"]["invalid_expected_luck_cycles"],
                 ["병사", "정인", "무묘", "기진", "경사", "신오", "임미", "계신", "갑유"],
@@ -128,6 +148,8 @@ class GoldenCaseToolTests(unittest.TestCase):
             self.assertIn("expected_luck_cycle_tail_anomaly", pororo_summary["diagnosis_tags"])
             self.assertIn("luck_cycle_branch_only_mismatch", pororo_summary["diagnosis_tags"])
             self.assertIn("expected_luck_cycle_branch_tail_anomaly", pororo_summary["diagnosis_tags"])
+            self.assertIn("expected_answer_sheet_suspect", pororo_summary["diagnosis_tags"])
+            self.assertEqual(pororo_summary["case_status"], "answer_sheet_review")
             self.assertEqual(
                 pororo_summary["diagnostic_context"]["invalid_expected_luck_cycles"],
                 [],
@@ -135,9 +157,14 @@ class GoldenCaseToolTests(unittest.TestCase):
             self.assertEqual(pororo_summary["diagnostic_context"]["luck_cycle_stem_mismatch_count"], 0)
             self.assertEqual(pororo_summary["diagnostic_context"]["luck_cycle_branch_mismatch_count"], 1)
             self.assertEqual(
+                pororo_summary["diagnostic_context"]["expected_luck_cycle_sequence_tags"],
+                ["expected_luck_cycle_tail_anomaly"],
+            )
+            self.assertEqual(
                 pororo_summary["diagnostic_context"]["expected_branch_sequence_tags"],
                 ["branch_sequence_tail_anomaly"],
             )
+            self.assertEqual(summary["case_status_counts"], {"answer_sheet_review": 3, "match": 4})
 
     def test_known_answer_cases_match_all_four_pillars(self) -> None:
         mismatches = []
@@ -161,6 +188,16 @@ class GoldenCaseToolTests(unittest.TestCase):
                     )
 
         self.assertEqual(mismatches, [])
+
+    def test_aru_display_values_follow_answer_sheet_convention(self) -> None:
+        case = GoldenKnownAnswerCase.model_validate_json(
+            (EXPECTED_DIR / "aru.json").read_text(encoding="utf-8")
+        )
+
+        actual = build_actual_golden_snapshot(case_input=case.input)
+
+        self.assertEqual(actual.basic_info.regional_time_offset_minutes, -28)
+        self.assertEqual(actual.basic_info.corrected_datetime, "1988-11-20 23:02")
 
 
 if __name__ == "__main__":

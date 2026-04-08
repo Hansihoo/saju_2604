@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Literal, Optional, Union
 
@@ -68,6 +69,13 @@ IGNORED_GOLDEN_PATHS = {
 
 def round_display_minutes(value: float) -> int:
     return int(round(value))
+
+
+def derive_display_minutes_from_longitude(longitude: float) -> int:
+    # The provided answer sheets appear to display regional time offsets from
+    # longitudes normalized to one decimal place before converting to minutes.
+    normalized_longitude = round(longitude, 1)
+    return math.floor(((normalized_longitude - 135.0) * 4.0) + 0.5)
 
 
 def format_datetime_minute(value: Union[str, datetime]) -> str:

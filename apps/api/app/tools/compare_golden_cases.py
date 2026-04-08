@@ -180,6 +180,7 @@ def _build_case_diagnostics(*, case: GoldenKnownAnswerCase, actual: object, repo
     actual_start_ages = [cycle.start_age for cycle in actual.luck_cycles]
     aligned_luck_cycles = list(zip(case.expected.luck_cycles, actual.luck_cycles))
     expected_sequence_analysis = _analyze_expected_luck_cycle_sequence(expected_cycles)
+    actual_sequence_analysis = _analyze_expected_luck_cycle_sequence(actual_cycles)
     expected_branch_analysis = _analyze_branch_sequence(expected_branches)
     actual_branch_analysis = _analyze_branch_sequence(actual_branches)
     expected_sequence_tags = expected_sequence_analysis["tags"]
@@ -210,6 +211,12 @@ def _build_case_diagnostics(*, case: GoldenKnownAnswerCase, actual: object, repo
         tags.append("luck_cycle_start_age_only_mismatch")
         recommended_actions.append(
             "Review DaYun start-age rounding/truncation rules; gan-zhi progression matches while the displayed start ages are offset."
+        )
+
+    if any(path.endswith(".start_age") for path in luck_cycle_paths):
+        tags.append("luck_cycle_start_age_mismatch_present")
+        recommended_actions.append(
+            "Review DaYun start-age display rules separately from gan-zhi progression; the current output differs on one or more displayed start ages."
         )
 
     if any(path.endswith(".gan_zhi") for path in luck_cycle_paths) and any(
@@ -280,6 +287,24 @@ def _build_case_diagnostics(*, case: GoldenKnownAnswerCase, actual: object, repo
             "Verify the answer sheet DaYun branch labels; at least one branch value could not be parsed."
         )
 
+    if (
+        stem_mismatch_count == 0
+        and not actual_sequence_analysis["tags"]
+        and not actual_branch_analysis["tags"]
+        and (
+            "expected_luck_cycle_unparseable" in expected_sequence_tags
+            or "expected_luck_cycle_nonconsecutive" in expected_sequence_tags
+            or "expected_luck_cycle_tail_anomaly" in expected_sequence_tags
+            or "branch_sequence_nonstandard" in expected_branch_analysis["tags"]
+            or "branch_sequence_tail_anomaly" in expected_branch_analysis["tags"]
+            or "branch_sequence_unparseable" in expected_branch_analysis["tags"]
+        )
+    ):
+        tags.append("expected_answer_sheet_suspect")
+        recommended_actions.append(
+            "Verify the answer sheet before changing the engine; the expected DaYun rows look non-standard while the engine output remains consecutive."
+        )
+
     if not tags and mismatch_path_set:
         tags.append("unclassified_mismatch")
 
@@ -294,6 +319,8 @@ def _build_case_diagnostics(*, case: GoldenKnownAnswerCase, actual: object, repo
             "expected_luck_cycle_start_ages": expected_start_ages,
             "actual_luck_cycle_start_ages": actual_start_ages,
             "invalid_expected_luck_cycles": invalid_expected_cycles,
+            "expected_luck_cycle_sequence_tags": expected_sequence_analysis["tags"],
+            "actual_luck_cycle_sequence_tags": actual_sequence_analysis["tags"],
             "expected_luck_cycle_branches": expected_branches,
             "actual_luck_cycle_branches": actual_branches,
             "expected_branch_sequence_tags": expected_branch_analysis["tags"],
@@ -306,6 +333,21 @@ def _build_case_diagnostics(*, case: GoldenKnownAnswerCase, actual: object, repo
             "luck_cycle_start_age_mismatch_count": start_age_mismatch_count,
         },
     }
+
+
+def _classify_case_status(*, report: object, diagnostics: Dict[str, object]) -> str:
+    if report.success:
+        return "match"
+
+    mismatch_paths = [mismatch.path for mismatch in report.mismatches]
+    if (
+        "expected_answer_sheet_suspect" in diagnostics["tags"]
+        and mismatch_paths
+        and all(path.startswith("luck_cycles") for path in mismatch_paths)
+    ):
+        return "answer_sheet_review"
+
+    return "engine_review"
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -346,6 +388,7 @@ def compare_golden_cases(*, expected_dir: Path, report_dir: Path, summary_file: 
     case_summaries: List[Dict[str, object]] = []
     global_field_counts: Counter[str] = Counter()
     diagnosis_counts: Counter[str] = Counter()
+    case_status_counts: Counter[str] = Counter()
 
     for expected_path in sorted(expected_dir.glob("*.json")):
         case = GoldenKnownAnswerCase.model_validate_json(expected_path.read_text(encoding="utf-8"))
@@ -370,11 +413,14 @@ def compare_golden_cases(*, expected_dir: Path, report_dir: Path, summary_file: 
         global_field_counts.update(field_counts)
         diagnostics = _build_case_diagnostics(case=case, actual=actual, report=report)
         diagnosis_counts.update(diagnostics["tags"])
+        case_status = _classify_case_status(report=report, diagnostics=diagnostics)
+        case_status_counts.update([case_status])
 
         case_summary = {
             "case_id": report.case_id,
             "source_name": report.source_name,
             "success": report.success,
+            "case_status": case_status,
             "compared_leaf_count": report.compared_leaf_count,
             "mismatch_count": report.mismatch_count,
             "mismatch_groups": dict(group_counts),
@@ -395,6 +441,7 @@ def compare_golden_cases(*, expected_dir: Path, report_dir: Path, summary_file: 
         "summary_file": str(summary_file),
         "mismatch_fields": dict(global_field_counts),
         "diagnosis_counts": dict(diagnosis_counts),
+        "case_status_counts": dict(case_status_counts),
         "cases": case_summaries,
     }
     summary_file.parent.mkdir(parents=True, exist_ok=True)

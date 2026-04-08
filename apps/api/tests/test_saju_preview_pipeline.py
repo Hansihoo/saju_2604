@@ -74,8 +74,10 @@ class SajuPreviewPipelineTests(unittest.TestCase):
             response.manse.supplementary_positions.tai_yuan.gan_zhi,
             "\u4e01\u5df3",
         )
-        self.assertGreaterEqual(len(response.manse.luck_cycles), 2)
+        self.assertEqual(len(response.manse.luck_cycles), 10)
         self.assertTrue(all(cycle.gan_zhi for cycle in response.manse.luck_cycles))
+        self.assertEqual(response.manse.luck_cycles[0].gan_zhi, "\u4e01\u536f")
+        self.assertEqual(response.manse.luck_cycles[0].start_age, 8)
 
     def test_estimated_birth_time_hides_hour_pillar_outputs(self) -> None:
         request = SimpleNamespace(
@@ -111,6 +113,33 @@ class SajuPreviewPipelineTests(unittest.TestCase):
             response.manse.notes,
             ["\ucd9c\uc0dd\uc2dc\uac04 \ubbf8\uc0c1\uc73c\ub85c \uc2dc\uc8fc\uc640 \uc2dc\uc8fc \uae30\ubc18 \ub300\uc6b4 \uc815\ubcf4\ub294 \ube44\ud65c\uc131\ud654\ub418\uc5c8\uc2b5\ub2c8\ub2e4."],
         )
+
+    def test_preview_pipeline_uses_explicit_luck_cycle_formula(self) -> None:
+        request = SimpleNamespace(
+            state=SimpleNamespace(
+                trace_id="test-trace-luck-cycles",
+                debug_requested=True,
+            )
+        )
+        payload = SajuPreviewRequest(
+            calendar_type="solar",
+            birth_date="1996-06-19",
+            birth_time="15:03",
+            is_birth_time_estimated=False,
+            is_lunar_leap_month=False,
+            gender="female",
+            region_id="kr-seoul-special",
+            debug=True,
+        )
+
+        response = create_saju_preview(payload=payload, request=request)
+
+        self.assertEqual(response.pipeline_status.saju_calculation, "passed")
+        self.assertEqual(response.manse.luck_cycles[0].start_age, 5)
+        self.assertEqual(response.manse.luck_cycles[0].gan_zhi, "\u7678\u5df3")
+        self.assertEqual(response.manse.luck_cycles[1].start_age, 15)
+        self.assertEqual(response.manse.luck_cycles[1].gan_zhi, "\u58ec\u8fb0")
+        self.assertIn("\u7678\u5df3", response.result.evidence_sections["luck_cycles"].summary)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, List, Literal, Protocol
+from typing import Dict, List, Literal, Optional, Protocol
 
 
 Gender = Literal["male", "female"]
@@ -37,6 +37,9 @@ class LuckCycle:
     end_year: int
     start_age: int
     end_age: int
+    direction: Optional[Literal["forward", "backward"]] = None
+    exact_start_age_years: Optional[float] = None
+    month_boundary_datetime: Optional[str] = None
 
 
 @dataclass

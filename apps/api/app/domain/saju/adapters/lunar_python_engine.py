@@ -1,4 +1,3 @@
-import math
 from datetime import datetime
 from typing import Dict, List
 
@@ -6,11 +5,11 @@ from lunar_python import Solar
 
 from app.domain.saju.engine import (
     Gender,
-    LuckCycle,
     PillarData,
     SajuCalculationResult,
     SupplementaryPosition,
 )
+from app.domain.saju.services.calculate_luck_cycles import calculate_luck_cycles
 
 
 ELEMENT_KEY_BY_CHAR = {
@@ -53,8 +52,6 @@ class LunarPythonSajuEngine:
             # Use the late-zi-day-switch convention expected by the current
             # golden answers: day pillar changes after 23:00.
             eight_char.setSect(1)
-            yun = eight_char.getYun(1 if gender == "male" else 0)
-            luck_cycle_start_solar = yun.getStartSolar()
         except Exception as exc:
             raise SajuCalculationError(
                 error_code="SAJU_ENGINE_CALCULATION_ERROR",
@@ -120,11 +117,15 @@ class LunarPythonSajuEngine:
             ),
         }
 
-        base_luck_cycle_age = self._calculate_base_luck_cycle_age(
-            birth_datetime=dt,
-            start_solar_ymd=luck_cycle_start_solar.toYmd(),
-            forward=yun.isForward(),
+        luck_cycles = calculate_luck_cycles(
+            gender=gender,
+            normalized_birth_dt=dt,
+            year_pillar=pillars["year"].gan_zhi,
+            month_pillar=pillars["month"].gan_zhi,
+            day_pillar=pillars["day"].gan_zhi,
+            cycle_count=10,
         )
+        first_luck_cycle = luck_cycles[0] if luck_cycles else None
 
         return SajuCalculationResult(
             pillars=pillars,
@@ -135,28 +136,7 @@ class LunarPythonSajuEngine:
                 "day": pillars["day"].stem_ten_god,
                 "time": pillars["time"].stem_ten_god,
             },
-            luck_cycles=[
-                LuckCycle(
-                    index=cycle.getIndex(),
-                    gan_zhi=cycle.getGanZhi(),
-                    start_year=cycle.getStartYear(),
-                    end_year=cycle.getEndYear(),
-                    start_age=(
-                        base_luck_cycle_age + (cycle.getIndex() - 1) * 10
-                        if cycle.getIndex() >= 1
-                        else cycle.getStartAge()
-                    ),
-                    end_age=(
-                        base_luck_cycle_age + (cycle.getIndex() - 1) * 10 + 9
-                        if cycle.getIndex() >= 1
-                        else cycle.getEndAge()
-                    ),
-                )
-                # Ask the engine for one extra decade so canonical exports can
-                # compare the full 10 active luck-cycle rows after skipping the
-                # empty index 0 placeholder.
-                for cycle in yun.getDaYun(11)
-            ],
+            luck_cycles=luck_cycles,
             supplementary_positions={
                 "tai_yuan": SupplementaryPosition(
                     gan_zhi=eight_char.getTaiYuan(),
@@ -179,8 +159,20 @@ class LunarPythonSajuEngine:
                 "corrected_solar_datetime": corrected_solar_datetime,
                 "gender": gender,
                 "day_master": pillars["day"].stem,
-                "luck_cycle_start_date": yun.getStartSolar().toYmd(),
-                "luck_cycle_direction": "forward" if yun.isForward() else "backward",
+                "luck_cycle_start_date": (
+                    first_luck_cycle.month_boundary_datetime[:10]
+                    if first_luck_cycle and first_luck_cycle.month_boundary_datetime
+                    else ""
+                ),
+                "luck_cycle_boundary_datetime": (
+                    first_luck_cycle.month_boundary_datetime if first_luck_cycle else ""
+                ),
+                "luck_cycle_direction": first_luck_cycle.direction if first_luck_cycle else "",
+                "luck_cycle_exact_start_age_years": (
+                    f"{first_luck_cycle.exact_start_age_years:.6f}"
+                    if first_luck_cycle and first_luck_cycle.exact_start_age_years is not None
+                    else ""
+                ),
             },
         )
 
@@ -225,20 +217,3 @@ class LunarPythonSajuEngine:
                 if char in ELEMENT_KEY_BY_CHAR:
                     counts[ELEMENT_KEY_BY_CHAR[char]] += 1
         return counts
-
-    def _calculate_base_luck_cycle_age(
-        self,
-        *,
-        birth_datetime: datetime,
-        start_solar_ymd: str,
-        forward: bool,
-    ) -> int:
-        start_date = datetime.strptime(start_solar_ymd, "%Y-%m-%d").date()
-        elapsed_days = (start_date - birth_datetime.date()).days
-        elapsed_years = elapsed_days / 365.2425
-        # Current golden answers use different display conventions for the
-        # first DaYun age depending on direction:
-        # - forward flow: truncate to the lower whole year
-        # - backward flow: round to the nearest whole year
-        age = math.floor(elapsed_years) if forward else math.floor(elapsed_years + 0.5)
-        return max(age, 1)

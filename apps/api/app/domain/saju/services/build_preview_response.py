@@ -50,6 +50,7 @@ def build_preview_response(
         saju_calculation=saju_calculation,
         visible_pillar_keys=birth_time_policy.visible_pillar_keys,
     )
+    first_luck_cycle = saju_calculation.luck_cycles[0] if saju_calculation.luck_cycles else None
     limitations: List[str] = []
     if payload.is_birth_time_estimated:
         limitations.append(
@@ -97,9 +98,9 @@ def build_preview_response(
                 if not hour_pillar_enabled
                 else (
                     "First active decade cycle: "
-                    f"{saju_calculation.luck_cycles[1].gan_zhi} "
-                    f"({saju_calculation.luck_cycles[1].start_year}-{saju_calculation.luck_cycles[1].end_year})."
-                    if len(saju_calculation.luck_cycles) > 1
+                    f"{first_luck_cycle.gan_zhi} "
+                    f"({first_luck_cycle.start_year}-{first_luck_cycle.end_year})."
+                    if first_luck_cycle is not None
                     else "Luck-cycle data is available but shorter than expected."
                 )
             ),

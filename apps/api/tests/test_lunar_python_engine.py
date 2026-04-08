@@ -45,11 +45,14 @@ class LunarPythonSajuEngineTests(unittest.TestCase):
             gender="male",
         )
 
-        self.assertGreaterEqual(len(result.luck_cycles), 2)
-        self.assertEqual(result.luck_cycles[1].gan_zhi, "\u4e01\u536f")
-        self.assertEqual(result.luck_cycles[1].start_year, 2032)
-        self.assertEqual(result.luck_cycles[1].end_year, 2041)
-        self.assertEqual(result.meta["luck_cycle_start_date"], "2032-02-10")
+        self.assertEqual(len(result.luck_cycles), 10)
+        self.assertEqual(result.luck_cycles[0].gan_zhi, "\u4e01\u536f")
+        self.assertEqual(result.luck_cycles[0].start_year, 2032)
+        self.assertEqual(result.luck_cycles[0].end_year, 2041)
+        self.assertEqual(result.luck_cycles[0].start_age, 8)
+        self.assertEqual(result.meta["luck_cycle_start_date"], "2024-03-05")
+        self.assertEqual(result.meta["luck_cycle_direction"], "forward")
+        self.assertEqual(result.meta["luck_cycle_boundary_datetime"], "2024-03-05 10:22:45")
 
     def test_returns_supplementary_positions_for_manse_scope(self) -> None:
         engine = LunarPythonSajuEngine()
@@ -84,9 +87,11 @@ class LunarPythonSajuEngineTests(unittest.TestCase):
         )
 
         self.assertEqual(result.meta["luck_cycle_direction"], "backward")
-        self.assertEqual(result.meta["luck_cycle_start_date"], "1993-04-20")
-        self.assertEqual(result.luck_cycles[1].start_age, 5)
-        self.assertEqual(result.luck_cycles[2].start_age, 15)
+        self.assertEqual(result.meta["luck_cycle_start_date"], "1988-05-05")
+        self.assertEqual(result.luck_cycles[0].start_age, 5)
+        self.assertEqual(result.luck_cycles[1].start_age, 15)
+        self.assertEqual(result.luck_cycles[0].month_boundary_datetime, "1988-05-05 15:01:43")
+        self.assertTrue(4.9 < result.luck_cycles[0].exact_start_age_years < 5.0)
 
     def test_adjusts_forward_luck_cycle_age_with_floor_rule(self) -> None:
         engine = LunarPythonSajuEngine()
@@ -97,9 +102,11 @@ class LunarPythonSajuEngineTests(unittest.TestCase):
         )
 
         self.assertEqual(result.meta["luck_cycle_direction"], "forward")
-        self.assertEqual(result.meta["luck_cycle_start_date"], "1998-06-18")
-        self.assertEqual(result.luck_cycles[1].start_age, 9)
-        self.assertEqual(result.luck_cycles[2].start_age, 19)
+        self.assertEqual(result.meta["luck_cycle_start_date"], "1989-01-05")
+        self.assertEqual(result.luck_cycles[0].start_age, 9)
+        self.assertEqual(result.luck_cycles[1].start_age, 19)
+        self.assertEqual(result.luck_cycles[0].month_boundary_datetime, "1989-01-05 16:45:55")
+        self.assertTrue(9.5 < result.luck_cycles[0].exact_start_age_years < 9.6)
 
 
 if __name__ == "__main__":
