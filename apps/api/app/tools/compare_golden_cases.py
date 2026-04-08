@@ -3,11 +3,19 @@ from __future__ import annotations
 import argparse
 import json
 from collections import Counter
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, List
 
+from app.domain.saju.adapters.lunar_python_engine import LunarPythonSajuEngine
 from app.domain.saju.golden import GoldenKnownAnswerCase, compare_golden_snapshots
+from app.domain.saju.services.calculate_luck_cycles import (
+    get_adjacent_month_boundary,
+    get_luck_direction,
+)
 from app.domain.saju.services.build_golden_snapshot import build_actual_golden_snapshot
+from app.domain.saju.services.region_catalog import find_region_by_id
+from app.domain.saju.time_correction import apply_regional_solar_correction
 
 JIA_ZI_KO = [
     "갑자",
@@ -72,6 +80,8 @@ JIA_ZI_KO = [
     "계해",
 ]
 BRANCHES_KO = ["자", "축", "인", "묘", "진", "사", "오", "미", "신", "유", "술", "해"]
+SOLAR_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+ENGINE = LunarPythonSajuEngine()
 
 
 def _group_path(path: str) -> str:
@@ -166,6 +176,61 @@ def _analyze_expected_luck_cycle_sequence(expected_cycles: List[str]) -> Dict[st
     return {"tags": ["expected_luck_cycle_nonconsecutive"], "invalid_values": []}
 
 
+def _build_start_age_rule_context(case: GoldenKnownAnswerCase) -> Dict[str, object]:
+    region = find_region_by_id(case.input.region_id)
+    normalized_solar_datetime = f"{case.input.birth_date} {case.input.birth_time}:00"
+    regional_result = apply_regional_solar_correction(
+        normalized_solar_datetime=normalized_solar_datetime,
+        longitude=region.longitude,
+        regional_time_offset_minutes=region.regional_time_offset_minutes,
+        daylight_saving_offset_minutes=0,
+        correction_basis=region.correction_basis,
+    )
+    corrected_dt = datetime.strptime(
+        regional_result.corrected_solar_datetime,
+        SOLAR_DATETIME_FORMAT,
+    )
+    calculation = ENGINE.calculate(
+        corrected_solar_datetime=regional_result.corrected_solar_datetime,
+        gender=case.input.gender,
+    )
+    direction = get_luck_direction(calculation.pillars["year"].stem, case.input.gender)
+    boundary_dt = get_adjacent_month_boundary(corrected_dt, direction)
+    delta_days = abs((boundary_dt - corrected_dt).total_seconds()) / 86400
+    exact_start_age_years = delta_days / 3.0
+    date_diff = abs((boundary_dt.date() - corrected_dt.date()).days)
+
+    q, r = divmod(date_diff, 3)
+    q_exclusive, r_exclusive = divmod(max(date_diff - 1, 0), 3)
+    candidate_start_ages = {
+        "current_day_count_r2": q + 1 if r == 2 else q,
+        "exclude_both_day_count_r2": (
+            q_exclusive + 1 if r_exclusive == 2 else q_exclusive
+        ),
+        "floor_exact": int(exact_start_age_years),
+        "ceil_exact": int(-(-exact_start_age_years // 1)),
+        "round_exact": round(exact_start_age_years),
+    }
+    expected_first_age = case.expected.luck_cycles[0].start_age if case.expected.luck_cycles else None
+    matched_rules = [
+        rule_name
+        for rule_name, candidate_age in candidate_start_ages.items()
+        if candidate_age == expected_first_age
+    ]
+
+    return {
+        "corrected_solar_datetime": regional_result.corrected_solar_datetime,
+        "month_boundary_datetime": boundary_dt.strftime(SOLAR_DATETIME_FORMAT),
+        "direction": direction,
+        "year_pillar": calculation.pillars["year"].gan_zhi,
+        "month_pillar": calculation.pillars["month"].gan_zhi,
+        "exact_start_age_years": exact_start_age_years,
+        "date_diff_days": date_diff,
+        "candidate_start_ages": candidate_start_ages,
+        "matched_expected_start_age_rules": matched_rules,
+    }
+
+
 def _build_case_diagnostics(*, case: GoldenKnownAnswerCase, actual: object, report: object) -> Dict[str, object]:
     mismatch_paths = [mismatch.path for mismatch in report.mismatches]
     mismatch_path_set = set(mismatch_paths)
@@ -183,6 +248,7 @@ def _build_case_diagnostics(*, case: GoldenKnownAnswerCase, actual: object, repo
     actual_sequence_analysis = _analyze_expected_luck_cycle_sequence(actual_cycles)
     expected_branch_analysis = _analyze_branch_sequence(expected_branches)
     actual_branch_analysis = _analyze_branch_sequence(actual_branches)
+    start_age_rule_context = _build_start_age_rule_context(case)
     expected_sequence_tags = expected_sequence_analysis["tags"]
     invalid_expected_cycles = expected_sequence_analysis["invalid_values"]
 
@@ -218,6 +284,13 @@ def _build_case_diagnostics(*, case: GoldenKnownAnswerCase, actual: object, repo
         recommended_actions.append(
             "Review DaYun start-age display rules separately from gan-zhi progression; the current output differs on one or more displayed start ages."
         )
+        matched_rules = start_age_rule_context["matched_expected_start_age_rules"]
+        if matched_rules:
+            tags.append("expected_start_age_matches_alternative_rule")
+            recommended_actions.append(
+                "Compare the answer sheet against alternative displayed-age conventions; "
+                f"the expected first age matches: {', '.join(matched_rules)}."
+            )
 
     if any(path.endswith(".gan_zhi") for path in luck_cycle_paths) and any(
         path.endswith(".branch") for path in luck_cycle_paths
@@ -331,6 +404,16 @@ def _build_case_diagnostics(*, case: GoldenKnownAnswerCase, actual: object, repo
             "luck_cycle_branch_mismatch_count": branch_mismatch_count,
             "luck_cycle_gan_zhi_mismatch_count": gan_zhi_mismatch_count,
             "luck_cycle_start_age_mismatch_count": start_age_mismatch_count,
+            "actual_luck_cycle_direction": start_age_rule_context["direction"],
+            "actual_month_boundary_datetime": start_age_rule_context["month_boundary_datetime"],
+            "actual_exact_start_age_years": start_age_rule_context["exact_start_age_years"],
+            "actual_year_pillar": start_age_rule_context["year_pillar"],
+            "actual_month_pillar": start_age_rule_context["month_pillar"],
+            "start_age_rule_date_diff_days": start_age_rule_context["date_diff_days"],
+            "candidate_start_ages": start_age_rule_context["candidate_start_ages"],
+            "matched_expected_start_age_rules": start_age_rule_context[
+                "matched_expected_start_age_rules"
+            ],
         },
     }
 

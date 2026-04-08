@@ -210,3 +210,41 @@
 - Current priority order:
   1. `aru`, `gomaebi`, `pororo` DaYun branch/progression mismatch
   2. `aru` regional display rounding mismatch
+  3. suspected answer-sheet anomalies should be reviewed before engine rule changes
+
+## 2026-04-08 Update
+
+### Newly resolved
+- `aru`의 `regional_time_offset_minutes`, `corrected_datetime` 표시 mismatch 해결
+- 표시 규칙은 `경도 0.1도 정규화 -> 분 환산 -> 정수 분 표시`로 정리
+
+### Latest validation baseline
+- total cases: `7`
+- total mismatches: `40`
+- fully matching cases: `chamchi`, `hoyeon`, `lee-hyeonjin`, `okji`
+- 남은 mismatch는 모두 `luck_cycles`에만 존재
+- case status counts:
+  - `match`: `4`
+  - `answer_sheet_review`: `3`
+
+### Updated priority order
+1. `aru`, `gomaebi`, `pororo` 대운 branch/progression mismatch 검토
+2. answer-sheet suspicion 케이스를 별도 상태로 승격할지 검토
+3. 사용자 결과 화면에 만세력 표 반영
+4. 지역 데이터 구조를 공식 데이터 전환 가능 형태로 고정
+
+## 2026-04-08 Explicit DaYun Formula Update
+
+### Status change
+- explicit DaYun formula rollout 이후 golden mismatch는 다시 `50`으로 고정되었다.
+- 이것은 후퇴라기보다 `aru`의 시작 나이 불일치가 더 정직하게 surface된 결과다.
+
+### Latest priority order
+1. `aru`, `gomaebi`, `pororo` answer-sheet-review 유지
+2. 대운 unresolved 상태를 사용자 결과 화면에서 어떻게 고지할지 결정
+3. 사용자 결과 화면에 만세력 표 반영
+4. 지역 데이터 구조를 공식 데이터 전환 가능 형태로 고정
+
+### Current decision
+- 대운 branch 규칙은 당장 엔진을 더 바꾸지 않는다.
+- 먼저 정답지의 비표준 branch 흐름과 마지막 tail anomaly를 재검토한다.

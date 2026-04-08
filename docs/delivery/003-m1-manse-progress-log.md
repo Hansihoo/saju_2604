@@ -128,3 +128,70 @@ python -m app.tools.run_golden_validation
 ### Remaining focus
 1. `aru`, `gomaebi`, `pororo` 대운 지지/간지 진행 규칙
 2. `aru` 지역 보정 표시 규칙
+
+## 2026-04-08 Answer Sheet Suspicion Diagnostics
+
+### Goal
+- 남은 대운 mismatch 중 일부가 엔진 계산 문제가 아니라 정답지 표기 문제일 가능성을 자동으로 분리한다.
+
+### Added diagnosis
+- `expected_answer_sheet_suspect`
+
+### Intended meaning
+- 엔진 출력은 표준 연속 60갑자/지지 흐름을 유지함
+- 반면 정답지 대운표는 비표준 조합, 비연속 지지, 마지막 행 이상치 등을 보임
+- 이 경우 Codex가 먼저 정답지 검토를 우선하도록 유도한다
+
+## 2026-04-08 Regional Display Convention Match
+
+### What changed
+- `aru`에 남아 있던 지역시차 표시 mismatch를 해결했다.
+- golden 표시 전용 규칙을 `raw 분 반올림` 대신 `경도 0.1도 정규화 -> 분 환산 -> 정수 분 표시`로 바꿨다.
+- 이 규칙으로 현재 7개 정답지의 `regional_time_offset_minutes`와 `corrected_datetime` 표기가 모두 맞는다.
+
+### Validation result
+- `python -m unittest discover -s tests -p "test_*.py"` 통과
+- `pnpm --dir "D:\\5_project\\SaJu(2)\\apps\\web" build` 통과
+- `python -m app.tools.run_golden_validation` 통과
+
+### Current status
+- 전체 golden 케이스: `7`
+- 전체 mismatch: `40`
+- 더 이상 `basic_info` mismatch는 남아 있지 않다.
+- 남은 mismatch는 전부 `luck_cycles`에만 있다.
+- case status:
+  - `match`: `4`
+  - `answer_sheet_review`: `3`
+
+### Remaining focus
+1. `aru`, `gomaebi`의 비표준 대운 지지열/간지 표기 검증
+2. `pororo` 마지막 대운 `신축` tail anomaly 출처 확인
+3. answer-sheet suspicion 케이스를 리포트 상에서 더 분리할지 검토
+
+## 2026-04-08 Explicit DaYun Formula Follow-up
+
+### What changed
+- adapter 내부 `Yun.getDaYun()` 의존을 걷어내고, 프로젝트 내부 계산식으로 대운을 명시적으로 계산하도록 전환했다.
+- 이후 golden 비교기는 시작 나이 관례 후보까지 함께 기록하도록 확장했다.
+
+### Latest baseline
+- total cases: `7`
+- total mismatches: `50`
+- case status counts:
+  - `match`: `4`
+  - `answer_sheet_review`: `3`
+
+### Current interpretation
+- 사주 4주는 전체 케이스에서 모두 일치한다.
+- 남은 mismatch는 전부 `luck_cycles`에만 있다.
+- `aru`
+  - 시작 나이 `5`가 `floor_exact`, `exclude_both_day_count_r2`, `round_exact`와는 맞는다.
+  - 하지만 대운 branch 흐름 자체는 여전히 비표준이다.
+- `gomaebi`
+  - 시작 나이는 현재 규칙과도 맞지만, branch 흐름은 비표준이다.
+- `pororo`
+  - 전체 흐름은 표준 역행과 맞고 마지막 행만 tail anomaly 형태로 어긋난다.
+
+### Next
+1. `aru`, `gomaebi`, `pororo`를 정답지 재검토 대상으로 유지
+2. 사용자 결과 화면에 만세력 표 반영 전, 대운 unresolved 규칙을 note로 남길지 결정

@@ -215,6 +215,7 @@ python -m app.tools.run_golden_validation --fail-on-mismatch
   - fully matching cases: `chamchi`, `hoyeon`, `lee-hyeonjin`, `okji`
 - Added new diagnosis tag:
   - `luck_cycle_start_age_only_mismatch`
+  - `expected_answer_sheet_suspect`
 - Added new diagnostic context fields:
   - `expected_luck_cycle_start_ages`
   - `actual_luck_cycle_start_ages`
@@ -226,3 +227,69 @@ python -m app.tools.run_golden_validation --fail-on-mismatch
 - Current status:
   - `참치`는 해당 규칙 조정으로 해결됨
   - tag is kept for future regressions
+  - `aru`, `gomaebi`, `pororo`처럼 표준 흐름과 정답지 흐름이 다를 때는 answer-sheet suspicion도 함께 기록한다
+
+## 2026-04-08 Display Convention Update
+
+### Resolved
+- `aru` 케이스의 `basic_info.corrected_datetime`, `basic_info.regional_time_offset_minutes` mismatch를 해결했다.
+- golden snapshot의 지역시차 표시 규칙은 이제 `경도 0.1도 정규화 -> 분 환산 -> 정수 분 표시`를 사용한다.
+
+### Why this rule
+- 현재 7개 정답지의 지역시차 표시값과 모두 일치한다.
+- raw `regional_time_offset_minutes`의 소수점 반올림 규칙만으로는 `aru`를 설명할 수 없었다.
+- 경도 기반 표시 규칙으로 바꾸면 `pororo`, `hoyeon`, `chamchi`, `aru`가 동시에 일관되게 맞는다.
+
+### Latest validation baseline
+- total cases: `7`
+- total mismatches: `40`
+- case status counts:
+  - `match`: `4`
+  - `answer_sheet_review`: `3`
+- mismatch fields:
+  - `luck_cycles.gan_zhi`
+  - `luck_cycles.branch`
+- diagnosis counts:
+  - `luck_cycle_progression_rule_mismatch`: `3`
+  - `luck_cycle_branch_only_mismatch`: `3`
+  - `expected_luck_cycle_unparseable`: `2`
+  - `expected_luck_cycle_branch_nonstandard`: `2`
+  - `expected_answer_sheet_suspect`: `3`
+  - `expected_luck_cycle_tail_anomaly`: `1`
+  - `expected_luck_cycle_branch_tail_anomaly`: `1`
+
+### Current interpretation
+- 남은 mismatch는 모두 대운(`luck_cycles`)에 집중된다.
+- `aru`, `gomaebi`는 정답지 대운표 자체가 표준 60갑자/연속 지지 규칙과 다를 가능성이 높다.
+- `pororo`는 마지막 행 1칸만 어긋나는 tail anomaly 패턴이다.
+
+## 2026-04-08 Explicit Formula and Candidate Rules
+
+### Added diagnostics
+- `expected_start_age_matches_alternative_rule`
+
+### Candidate first-age rules now logged
+- `current_day_count_r2`
+- `exclude_both_day_count_r2`
+- `floor_exact`
+- `ceil_exact`
+- `round_exact`
+
+### Latest baseline
+- total cases: `7`
+- total mismatches: `50`
+- mismatch fields:
+  - `luck_cycles.branch`
+  - `luck_cycles.gan_zhi`
+  - `luck_cycles.start_age`
+- case status counts:
+  - `match`: `4`
+  - `answer_sheet_review`: `3`
+
+### Why this matters
+- `aru` no longer looks like a simple engine bug.
+- The summary now shows that its expected first age `5` matches alternative display conventions, while its branch flow is still non-standard.
+- This gives Codex enough structure to separate:
+  - start-age display convention review
+  - branch progression review
+  - answer-sheet anomaly review

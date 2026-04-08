@@ -113,6 +113,7 @@ class GoldenCaseToolTests(unittest.TestCase):
             )
             self.assertIn("luck_cycle_branch_only_mismatch", aru_summary["diagnosis_tags"])
             self.assertIn("luck_cycle_start_age_mismatch_present", aru_summary["diagnosis_tags"])
+            self.assertIn("expected_start_age_matches_alternative_rule", aru_summary["diagnosis_tags"])
             self.assertIn("expected_luck_cycle_unparseable", aru_summary["diagnosis_tags"])
             self.assertIn("expected_luck_cycle_branch_nonstandard", aru_summary["diagnosis_tags"])
             self.assertIn("expected_answer_sheet_suspect", aru_summary["diagnosis_tags"])
@@ -123,6 +124,19 @@ class GoldenCaseToolTests(unittest.TestCase):
             )
             self.assertEqual(aru_summary["diagnostic_context"]["luck_cycle_stem_mismatch_count"], 0)
             self.assertEqual(aru_summary["diagnostic_context"]["luck_cycle_branch_mismatch_count"], 10)
+            self.assertEqual(aru_summary["diagnostic_context"]["actual_luck_cycle_direction"], "forward")
+            self.assertEqual(
+                aru_summary["diagnostic_context"]["candidate_start_ages"]["current_day_count_r2"],
+                6,
+            )
+            self.assertEqual(
+                aru_summary["diagnostic_context"]["candidate_start_ages"]["floor_exact"],
+                5,
+            )
+            self.assertIn(
+                "floor_exact",
+                aru_summary["diagnostic_context"]["matched_expected_start_age_rules"],
+            )
             self.assertEqual(
                 aru_summary["diagnostic_context"]["actual_luck_cycle_sequence_tags"],
                 [],

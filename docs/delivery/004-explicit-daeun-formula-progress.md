@@ -76,3 +76,16 @@
 1. Review whether `aru` uses a different displayed start-age convention.
 2. Keep `aru`, `gomaebi`, `pororo` in answer-sheet-review status until a second trustworthy source confirms their DaYun branch flow.
 3. After DaYun stabilization, move to user-facing manse rendering.
+
+## 2026-04-08 Follow-up
+- Expanded the golden comparison summary with start-age convention candidates:
+  - `current_day_count_r2`
+  - `exclude_both_day_count_r2`
+  - `floor_exact`
+  - `ceil_exact`
+  - `round_exact`
+- `aru` now logs that its expected first age `5` matches alternative conventions such as `floor_exact`, while the current engine rule still yields `6`.
+- Remaining non-match cases continue to point at answer-sheet review, not a confirmed engine regression:
+  - `aru`: alternative start-age convention + non-standard branch progression
+  - `gomaebi`: non-standard branch progression
+  - `pororo`: last DaYun row tail anomaly only
