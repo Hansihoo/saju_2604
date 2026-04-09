@@ -1,6 +1,7 @@
 import { SajuPreviewResponse } from "../../../shared/api/contracts";
 import { Locale, getCopy } from "../../../shared/copy";
 import { buildResultNarrative } from "../resultNarrative";
+import { ManseTestPanel } from "./ManseTestPanel";
 
 type SajuResultViewProps = {
   locale: Locale;
@@ -11,11 +12,15 @@ type SajuResultViewProps = {
 export function SajuResultView({ locale, result, onReset }: SajuResultViewProps) {
   const texts = getCopy(locale);
   const narrative = buildResultNarrative(locale, result);
+  const visiblePillars = result.result.signals.visible_pillar_values.join(" / ");
 
   return (
     <section className="result-screen">
       <div className="result-header">
-        <h2>{texts.resultTitle}</h2>
+        <div className="result-header-copy">
+          <h2>{texts.resultTitle}</h2>
+          <p>{visiblePillars}</p>
+        </div>
         <button className="secondary-button" type="button" onClick={onReset}>
           {texts.backToForm}
         </button>
@@ -49,6 +54,8 @@ export function SajuResultView({ locale, result, onReset }: SajuResultViewProps)
         <h3>{texts.action}</h3>
         <p>{narrative.action}</p>
       </div>
+
+      <ManseTestPanel locale={locale} result={result} />
     </section>
   );
 }

@@ -430,3 +430,19 @@ python -m app.tools.run_golden_validation
 - Backend tests pass
 - Golden validation remains `7/7`
 - Frontend build remains healthy
+
+## 2026-04-09 Service Result Review For Test Output
+
+### Completed
+- Reviewed the service UI before moving further into the LLM phase.
+- Kept the input form narrow and familiar.
+- Widened the result-state layout only after submission.
+- Added a temporary testing block in the service result screen so Manse data can be inspected without opening debug-only tools.
+
+### Included in the testing block
+- corrected solar datetime
+- day master and internal grade
+- manse table rows
+- five-element counts and percentages
+- luck cycles
+- supplementary positions

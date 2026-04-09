@@ -160,7 +160,7 @@ export function ServicePage({
   }
 
   return (
-    <main className="service-page">
+    <main className={`service-page${result ? " result-mode" : ""}`}>
       <ServiceHeader
         title={texts.title}
         subtitle={texts.subtitle}

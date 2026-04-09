@@ -18,8 +18,8 @@ export function ServiceHeader({
   return (
     <header className="service-header">
       <div className="service-header-top">
-        <span className="service-icon" aria-hidden="true">
-          ○
+        <span className="service-mark" aria-hidden="true">
+          SAJU
         </span>
         <label className="locale-select">
           <span>{languageLabel}</span>

@@ -350,3 +350,15 @@
 ### What this means
 - M1 no longer needs additional raw manse fields before M2.
 - New work should now focus on interpretation payloads and narrative generation on top of the stable manse contract.
+
+## 2026-04-09 Service Review Follow-up
+
+### Done
+- Added a temporary test-only manse output block to the service result screen.
+- This does not change the backend contract.
+- This is a verification aid before the final user-facing interpretation layer is attached.
+
+### Next
+1. Keep the current testing output stable while M2 is wired
+2. Add the actual LLM/provider interpretation boundary
+3. Replace temporary testing emphasis with final user-facing interpretation once M2 is ready
