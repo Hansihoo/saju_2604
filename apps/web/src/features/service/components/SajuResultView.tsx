@@ -1,5 +1,6 @@
 import { SajuPreviewResponse } from "../../../shared/api/contracts";
 import { Locale, getCopy } from "../../../shared/copy";
+import { buildResultNarrative } from "../resultNarrative";
 
 type SajuResultViewProps = {
   locale: Locale;
@@ -9,6 +10,7 @@ type SajuResultViewProps = {
 
 export function SajuResultView({ locale, result, onReset }: SajuResultViewProps) {
   const texts = getCopy(locale);
+  const narrative = buildResultNarrative(locale, result);
 
   return (
     <section className="result-screen">
@@ -21,31 +23,31 @@ export function SajuResultView({ locale, result, onReset }: SajuResultViewProps)
 
       <div className="result-section">
         <h3>{texts.overview}</h3>
-        <p>{result.result.overview}</p>
+        <p>{narrative.overview}</p>
       </div>
       <div className="result-section">
         <h3>{texts.strengths}</h3>
-        <p>{result.result.strengths[0]}</p>
+        <p>{narrative.strength}</p>
       </div>
       <div className="result-section">
         <h3>{texts.cautions}</h3>
-        <p>{result.result.cautions[0]}</p>
+        <p>{narrative.caution}</p>
       </div>
       <div className="result-section">
         <h3>{texts.love}</h3>
-        <p>{result.result.love}</p>
+        <p>{narrative.love}</p>
       </div>
       <div className="result-section">
         <h3>{texts.career}</h3>
-        <p>{result.result.career}</p>
+        <p>{narrative.career}</p>
       </div>
       <div className="result-section">
         <h3>{texts.wealth}</h3>
-        <p>{result.result.wealth}</p>
+        <p>{narrative.wealth}</p>
       </div>
       <div className="result-section">
         <h3>{texts.action}</h3>
-        <p>{result.result.action_advice}</p>
+        <p>{narrative.action}</p>
       </div>
     </section>
   );

@@ -293,3 +293,34 @@
 ### M1 status
 - `대운(luck_cycles)` is no longer the main blocker.
 - The main remaining work is presentation and productization, not engine correctness.
+
+## 2026-04-09 User-Facing Scope Adjustment
+
+### Product decision
+- 사용자 화면에는 raw 만세력 표를 직접 노출하지 않는다.
+- 만세력은 내부 계산 근거와 검증 기준으로 유지하고, 사용자 경험은 요약 결과 중심으로 설계한다.
+
+### Revised priority order
+1. 지역 데이터 구조를 공식 데이터로 교체 가능한 형태로 고정
+2. 사용자 결과 화면은 만세력 표가 아니라 요약/해석용 결과 구조로 정리
+3. M1 종료 문서 정리
+4. M2 LLM 사주풀이 준비
+
+### Immediate next task
+- 다음 구현 우선순위는 `지역 데이터 구조 정리`다.
+- 현재는 하드코딩 CSV와 alias 검색으로 동작하지만, 이후 `{지역, 경도}` 공식 데이터셋으로 교체해도 코드 변경이 작도록 스키마와 로딩 구조를 먼저 정리해야 한다.
+## 2026-04-09 Region Schema And User Result Follow-up
+
+### Done
+- Region records now use a typed repository layer.
+- Search, lookup, and golden parsing resolve regions through the same repository boundary.
+- Future metadata slots were added so the seed dataset can be replaced without changing service code.
+
+### In Progress
+- The user-facing result contract is being narrowed to summary and interpretation only.
+- Raw Manse tables remain backend/debug data and are not the user-facing target.
+
+### Current Order
+1. Finish region-data normalization documentation and code boundary review
+2. Keep the user result contract stable for M1 closeout
+3. Prepare M2 LLM payloads using result signals instead of developer-style copy

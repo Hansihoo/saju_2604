@@ -16,6 +16,11 @@ export type RegionSuggestion = {
   longitude: number;
   regional_time_offset_minutes: number;
   correction_basis: string;
+  aliases: string[];
+  latitude?: number | null;
+  admin_code?: string | null;
+  source: string;
+  is_active: boolean;
 };
 
 export type RegionSearchResponse = {
@@ -156,9 +161,22 @@ export type ManseData = {
   notes: string[];
 };
 
+export type SajuResultSignals = {
+  visible_pillar_keys: Array<"year" | "month" | "day" | "time">;
+  visible_pillar_values: string[];
+  dominant_elements: Array<"wood" | "fire" | "earth" | "metal" | "water">;
+  missing_elements: Array<"wood" | "fire" | "earth" | "metal" | "water">;
+  balance_score: number;
+  charm_score: number;
+  wealth_score: number;
+  career_score: number;
+  leadership_score: number;
+  internal_grade: "S" | "A" | "B" | "C";
+};
+
 export type SajuPreviewResponse = {
   trace_id: string;
-  response_mode: "mock";
+  response_mode: "preview";
   pipeline_status: PipelineStatus;
   region: RegionSuggestion;
   time_correction: TimeCorrectionSummary;
@@ -192,6 +210,7 @@ export type SajuPreviewResponse = {
     disabled_sections: string[];
     evidence_sections: Record<string, EvidenceSection>;
     hour_pillar_enabled: boolean;
+    signals: SajuResultSignals;
   };
   debug_trace?: {
     stage_order: string[];

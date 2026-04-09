@@ -19,7 +19,7 @@ from app.domain.saju.golden import (
     to_korean_gan_zhi,
     to_korean_stem,
 )
-from app.domain.saju.mock_data import REGION_OPTIONS
+from app.domain.saju.region_repository import load_region_records
 
 
 DATE_TIME_PATTERN = re.compile(
@@ -95,9 +95,9 @@ def _parse_markdown_table(section_text: str) -> List[List[str]]:
 
 
 def _parse_region_id(birth_place: str) -> str:
-    for region in REGION_OPTIONS:
-        if region["display_name"] == birth_place or region["city"] == birth_place:
-            return str(region["id"])
+    for region in load_region_records():
+        if region.display_name == birth_place or region.city == birth_place:
+            return region.id
     raise ValueError(f"Could not resolve region_id for birth place: {birth_place}")
 
 

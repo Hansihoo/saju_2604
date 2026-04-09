@@ -3,9 +3,12 @@ from typing import Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field, constr
 
+from app.domain.saju.analysis import InternalGrade
+
 
 PipelineState = Literal["passed", "failed", "skipped", "disabled"]
 BirthTimeStr = constr(pattern=r"^\d{2}:\d{2}$")
+ElementKey = Literal["wood", "fire", "earth", "metal", "water"]
 
 
 class RegionSuggestion(BaseModel):
@@ -18,6 +21,11 @@ class RegionSuggestion(BaseModel):
     longitude: float
     regional_time_offset_minutes: float
     correction_basis: str
+    aliases: List[str] = Field(default_factory=list)
+    latitude: Optional[float] = None
+    admin_code: Optional[str] = None
+    source: str = "csv_seed"
+    is_active: bool = True
 
 
 class RegionSearchResponse(BaseModel):
@@ -175,6 +183,19 @@ class ManseData(BaseModel):
     notes: List[str]
 
 
+class SajuResultSignals(BaseModel):
+    visible_pillar_keys: List[Literal["year", "month", "day", "time"]]
+    visible_pillar_values: List[str]
+    dominant_elements: List[ElementKey]
+    missing_elements: List[ElementKey]
+    balance_score: int
+    charm_score: int
+    wealth_score: int
+    career_score: int
+    leadership_score: int
+    internal_grade: InternalGrade
+
+
 class SajuPreviewResult(BaseModel):
     overview: str
     strengths: List[str]
@@ -187,6 +208,7 @@ class SajuPreviewResult(BaseModel):
     disabled_sections: List[str]
     evidence_sections: Dict[str, EvidenceSection]
     hour_pillar_enabled: bool
+    signals: SajuResultSignals
 
 
 class DebugCheckpoint(BaseModel):
@@ -205,7 +227,7 @@ class DebugTrace(BaseModel):
 
 class SajuPreviewResponse(BaseModel):
     trace_id: str
-    response_mode: Literal["mock"] = "mock"
+    response_mode: Literal["preview"] = "preview"
     pipeline_status: PipelineStatus
     region: RegionSuggestion
     time_correction: TimeCorrectionSummary

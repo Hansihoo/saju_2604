@@ -358,3 +358,29 @@ python -m app.tools.run_golden_validation
   - `engine_review`: `0`
 - `gomaebi` now matches with first age `9`.
 - Current project no longer has a known DaYun mismatch in the registered golden set.
+
+## 2026-04-09 User Screen Scope Update
+
+### Decision
+- User-facing 화면에는 raw 만세력 표를 직접 붙이지 않기로 했다.
+- 만세력은 내부 검증, golden 비교, 후속 분석 입력용 구조로 유지한다.
+
+### Next focus
+- 엔진/검증 단계가 안정화되었으므로 다음 작업은 지역 데이터 구조 정리와 사용자 결과 경험 설계다.
+## 2026-04-09 Region Structure And User Result Contract
+
+### Completed
+- Region access now goes through a typed repository layer instead of raw dict access.
+- The current seed dataset remains in place, but the code boundary is ready for an official dataset swap later.
+- The preview API now exposes structured result signals for the frontend.
+- The user-facing result screen now derives readable summaries from structured signals instead of developer-oriented API copy.
+
+### Validation
+- Backend unit tests passed
+- Golden validation stayed fully matched
+- Frontend build passed
+
+### Next
+1. Finish the region-data normalization step in planning docs
+2. Stabilize the user-facing result contract as the M1 exit shape
+3. Prepare the M2 LLM payload on top of the new result signals

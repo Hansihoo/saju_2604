@@ -26,10 +26,13 @@ class SajuPreviewPipelineTests(unittest.TestCase):
 
         response = create_saju_preview(payload=payload, request=request)
 
+        self.assertEqual(response.response_mode, "preview")
         self.assertEqual(response.pipeline_status.saju_calculation, "passed")
         self.assertEqual(response.pipeline_status.regional_solar_correction, "passed")
         self.assertEqual(response.result.evidence_sections["elements"].status, "ready")
         self.assertEqual(response.result.evidence_sections["ten_gods"].status, "ready")
+        self.assertEqual(response.result.signals.visible_pillar_keys, ["year", "month", "day", "time"])
+        self.assertEqual(response.result.signals.internal_grade, "B")
         self.assertEqual(response.debug_trace.checkpoints[4].stage, "regional_solar_correction")
         self.assertEqual(response.debug_trace.checkpoints[4].status, "passed")
         self.assertEqual(response.debug_trace.checkpoints[5].stage, "saju_calculation")
@@ -64,6 +67,8 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         self.assertEqual(response.manse.meta.day_master, "\u7532")
         self.assertEqual(response.manse.meta.schema_version, "v1")
         self.assertTrue(response.manse.meta.hour_pillar_enabled)
+        self.assertEqual(response.result.signals.balance_score, 35)
+        self.assertEqual(response.result.signals.missing_elements, ["metal", "water"])
         self.assertEqual(response.manse.elements.wood, 3)
         self.assertEqual(response.manse.pillars.time.twelve_fortune, "병")
         self.assertEqual(response.manse.pillars.day.twelve_shinsal, "\ud654\uac1c\uc0b4")

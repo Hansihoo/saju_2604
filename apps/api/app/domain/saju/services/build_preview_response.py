@@ -13,6 +13,7 @@ from app.domain.saju.schemas import (
     SajuPreviewRequest,
     SajuPreviewResponse,
     SajuPreviewResult,
+    SajuResultSignals,
     TimeCorrectionSummary,
 )
 from app.domain.saju.services.birth_time_policy import resolve_birth_time_policy
@@ -25,6 +26,26 @@ def _summarize_visible_pillars(
     visible_pillar_keys: List[str],
 ) -> str:
     return " / ".join(saju_calculation.pillars[key].gan_zhi for key in visible_pillar_keys)
+
+
+def _build_result_signals(
+    *,
+    saju_calculation: SajuCalculationResult,
+    analysis_result: AnalysisResult,
+    visible_pillar_keys: List[str],
+) -> SajuResultSignals:
+    return SajuResultSignals(
+        visible_pillar_keys=visible_pillar_keys,
+        visible_pillar_values=[saju_calculation.pillars[key].gan_zhi for key in visible_pillar_keys],
+        dominant_elements=analysis_result.dominant_elements,
+        missing_elements=analysis_result.missing_elements,
+        balance_score=analysis_result.balance_score,
+        charm_score=analysis_result.charm_score,
+        wealth_score=analysis_result.wealth_score,
+        career_score=analysis_result.career_score,
+        leadership_score=analysis_result.leadership_score,
+        internal_grade=analysis_result.internal_grade,
+    )
 
 
 def build_preview_response(
@@ -45,6 +66,11 @@ def build_preview_response(
         saju_calculation=saju_calculation,
         analysis_result=analysis_result,
         birth_time_policy=birth_time_policy,
+    )
+    signals = _build_result_signals(
+        saju_calculation=saju_calculation,
+        analysis_result=analysis_result,
+        visible_pillar_keys=birth_time_policy.visible_pillar_keys,
     )
     visible_pillar_summary = _summarize_visible_pillars(
         saju_calculation=saju_calculation,
@@ -109,27 +135,30 @@ def build_preview_response(
 
     result = SajuPreviewResult(
         overview=(
-            f"This preview uses a real saju calculation core for {region.city}, "
-            f"with visible pillars {visible_pillar_summary}. "
-            f"{'The hour pillar is hidden because the birth time is estimated. ' if payload.is_birth_time_estimated else ''}"
-            "The analysis engine and LLM phrasing are still mock layers."
+            f"Visible pillars for {region.city}: {visible_pillar_summary}. "
+            f"Current balance score is {analysis_result.balance_score}/100 with grade {analysis_result.internal_grade}."
         ),
         strengths=[
-            "The current flow preserves calendar type, leap-month intent, region selection, normalized time context, real saju pillar output, and deterministic baseline analysis in one contract.",
+            f"Dominant visible elements: {', '.join(analysis_result.dominant_elements) or 'none'}.",
             analysis_result.strengths[0],
         ],
         cautions=[
-            "This response now uses a real saju calculation engine and a deterministic baseline analysis, but the final narrative layer is still provisional.",
+            (
+                f"Missing visible elements: {', '.join(analysis_result.missing_elements)}."
+                if analysis_result.missing_elements
+                else "No missing visible elements were detected."
+            ),
             analysis_result.cautions[0],
         ],
-        love=f"Baseline attraction profile score: {analysis_result.charm_score}/100. Narrative refinement will come after the LLM layer is connected.",
-        career=f"Baseline career fit score: {analysis_result.career_score}/100, derived from the current visible element profile.",
-        wealth=f"Baseline wealth score: {analysis_result.wealth_score}/100. This stays conservative and rule-based at this stage.",
+        love=f"Current attraction score: {analysis_result.charm_score}/100.",
+        career=f"Current career fit score: {analysis_result.career_score}/100.",
+        wealth=f"Current wealth score: {analysis_result.wealth_score}/100.",
         action_advice=analysis_result.action_advice,
         limitations=limitations,
         disabled_sections=birth_time_policy.disabled_sections,
         evidence_sections=evidence_sections,
         hour_pillar_enabled=hour_pillar_enabled,
+        signals=signals,
     )
 
     debug_trace = None
