@@ -86,6 +86,10 @@
         "twelve_shinsal": "년살"
       }
     },
+    "luck_cycle_header": {
+      "start_age": 5,
+      "reference_pillar": "갑오"
+    },
     "luck_cycles": [
       {
         "start_age": 5,

@@ -87,6 +87,10 @@
         "twelve_shinsal": "반안살"
       }
     },
+    "luck_cycle_header": {
+      "start_age": 5,
+      "reference_pillar": "정사"
+    },
     "luck_cycles": [
       {
         "start_age": 5,

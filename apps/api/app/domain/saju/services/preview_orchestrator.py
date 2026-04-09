@@ -131,6 +131,7 @@ def create_saju_preview_response(
         saju_calculation = calculate_saju(
             corrected_solar_datetime=regional_solar_correction.corrected_solar_datetime,
             gender=payload.gender,
+            tzid=region.tzid,
         )
     except SajuCalculationError as exc:
         log_stage(

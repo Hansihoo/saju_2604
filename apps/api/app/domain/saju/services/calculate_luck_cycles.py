@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
+from math import floor
 from typing import List, Literal
 
 from lunar_python import Solar
@@ -13,6 +14,9 @@ LuckDirection = Literal["forward", "backward"]
 
 YANG_STEMS = {"甲", "丙", "戊", "庚", "壬"}
 SEXAGENARY_CYCLE = tuple(LunarUtil.JIA_ZI)
+LUNAR_ENGINE_STANDARD_OFFSET_MINUTES = 480
+TROPICAL_YEAR_DAYS = 365.2422
+LUCK_CYCLE_YEAR_TO_DAY_FACTOR = 120.0
 
 
 def is_yang_stem(stem: str) -> bool:
@@ -30,6 +34,7 @@ def get_luck_direction(year_stem: str, gender: Gender) -> LuckDirection:
 def get_adjacent_month_boundary(
     normalized_birth_dt: datetime,
     direction: LuckDirection,
+    target_standard_offset_minutes: int | None = None,
 ) -> datetime:
     solar = Solar.fromYmdHms(
         normalized_birth_dt.year,
@@ -42,7 +47,7 @@ def get_adjacent_month_boundary(
     lunar = solar.getLunar()
     boundary = lunar.getNextJie() if direction == "forward" else lunar.getPrevJie()
     boundary_solar = boundary.getSolar()
-    return datetime(
+    boundary_dt = datetime(
         boundary_solar.getYear(),
         boundary_solar.getMonth(),
         boundary_solar.getDay(),
@@ -50,6 +55,11 @@ def get_adjacent_month_boundary(
         boundary_solar.getMinute(),
         boundary_solar.getSecond(),
     )
+    if target_standard_offset_minutes is None:
+        return boundary_dt
+
+    offset_delta_minutes = target_standard_offset_minutes - LUNAR_ENGINE_STANDARD_OFFSET_MINUTES
+    return boundary_dt + timedelta(minutes=offset_delta_minutes)
 
 
 def get_display_start_age(
@@ -58,9 +68,9 @@ def get_display_start_age(
     direction: LuckDirection,
 ) -> int:
     del direction  # Kept to make the helper interface explicit for tests/debugging.
-    day_count = abs((boundary_dt.date() - birth_dt.date()).days)
-    q, r = divmod(day_count, 3)
-    return q + 1 if r == 2 else q
+    delta_days = abs((boundary_dt - birth_dt).total_seconds()) / 86400
+    precise_start_age_years = delta_days * LUCK_CYCLE_YEAR_TO_DAY_FACTOR / TROPICAL_YEAR_DAYS
+    return floor(precise_start_age_years + 0.5)
 
 
 def shift_ganzhi(pillar: str, steps: int) -> str:
@@ -78,12 +88,17 @@ def calculate_luck_cycles(
     month_pillar: str,
     day_pillar: str | None = None,
     cycle_count: int = 10,
+    target_standard_offset_minutes: int | None = None,
 ) -> List[LuckCycle]:
     del day_pillar  # Reserved for downstream rule extensions and debug reporting.
 
     year_stem = year_pillar[:1]
     direction = get_luck_direction(year_stem, gender)
-    boundary_dt = get_adjacent_month_boundary(normalized_birth_dt, direction)
+    boundary_dt = get_adjacent_month_boundary(
+        normalized_birth_dt,
+        direction,
+        target_standard_offset_minutes=target_standard_offset_minutes,
+    )
 
     if direction == "forward":
         delta = boundary_dt - normalized_birth_dt
@@ -94,7 +109,11 @@ def calculate_luck_cycles(
         first_pillar = shift_ganzhi(month_pillar, -1)
         step_sign = -1
 
-    exact_start_age_years = delta.total_seconds() / 86400 / 3.0
+    delta_days = delta.total_seconds() / 86400
+    exact_start_age_years = delta_days / 3.0
+    precise_start_age_years = (
+        delta_days * LUCK_CYCLE_YEAR_TO_DAY_FACTOR / TROPICAL_YEAR_DAYS
+    )
     display_start_age = get_display_start_age(
         normalized_birth_dt,
         boundary_dt,
@@ -116,6 +135,7 @@ def calculate_luck_cycles(
                 end_age=start_age + 9,
                 direction=direction,
                 exact_start_age_years=exact_start_age_years,
+                precise_start_age_years=precise_start_age_years,
                 month_boundary_datetime=boundary_dt.strftime("%Y-%m-%d %H:%M:%S"),
             )
         )

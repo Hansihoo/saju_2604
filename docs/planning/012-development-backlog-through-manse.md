@@ -248,3 +248,48 @@
 ### Current decision
 - 대운 branch 규칙은 당장 엔진을 더 바꾸지 않는다.
 - 먼저 정답지의 비표준 branch 흐름과 마지막 tail anomaly를 재검토한다.
+
+## 2026-04-08 Header consistency update
+
+### Latest verified baseline
+- Full test suite: `42 passed`, `1 skipped`
+- Golden cases: `7`
+- Case status counts:
+  - `match`: `4`
+  - `answer_sheet_review`: `3`
+
+### Current decision
+- The remaining DaYun mismatches are now treated as source-answer review items, not engine-correction items.
+- This is based on the new header-aware validation:
+  - the answer-sheet header month pillar matches the engine month pillar
+  - the engine DaYun rows follow that header sequence
+  - the answer-sheet rows do not
+
+### Updated priority order
+1. Keep `aru`, `gomaebi`, `pororo` as `answer_sheet_review`
+2. Continue implementation with user-facing Manse output
+3. Preserve unresolved DaYun review notes in developer/debug output
+4. Keep region dataset normalization as the next infra task
+
+## 2026-04-09 DaYun Validation Resolution
+
+### Updated state
+- Registered golden cases: `7`
+- Golden mismatches: `0`
+- DaYun start-age rule is now treated as resolved for the current answer-sheet set.
+
+### What changed
+- The project adopted a precise proportional first-age rule for displayed DaYun age:
+  - `precise_start_age_years = delta_days * 120 / 365.2422`
+  - `display_start_age = floor(precise_start_age_years + 0.5)`
+- The previous `delta_days / 3.0` exact value is still kept for diagnostics.
+
+### Revised priority order
+1. User-facing 만세력 결과 화면 렌더링
+2. 지역 데이터 구조를 공식 데이터로 교체 가능한 형태로 고정
+3. M1 종료 문서 정리
+4. M2 LLM 사주풀이 준비
+
+### M1 status
+- `대운(luck_cycles)` is no longer the main blocker.
+- The main remaining work is presentation and productization, not engine correctness.

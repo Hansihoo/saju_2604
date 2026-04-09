@@ -191,9 +191,15 @@ class GoldenLuckCycleRow(BaseModel):
     branch: str
 
 
+class GoldenLuckCycleHeader(BaseModel):
+    start_age: int
+    reference_pillar: str
+
+
 class GoldenSnapshot(BaseModel):
     basic_info: GoldenBasicInfo
     pillar_table: Dict[Literal["year", "month", "day", "time"], GoldenPillarRow]
+    luck_cycle_header: Optional[GoldenLuckCycleHeader] = None
     luck_cycles: List[GoldenLuckCycleRow] = Field(default_factory=list)
 
 

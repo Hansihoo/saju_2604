@@ -86,6 +86,10 @@
         "twelve_shinsal": "천살"
       }
     },
+    "luck_cycle_header": {
+      "start_age": 4,
+      "reference_pillar": "기사"
+    },
     "luck_cycles": [
       {
         "start_age": 4,

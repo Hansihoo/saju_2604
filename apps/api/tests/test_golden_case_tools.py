@@ -21,15 +21,17 @@ class GoldenCaseToolTests(unittest.TestCase):
         case = load_golden_answer_text(
             SOURCE_DIR / "pororo.txt",
             case_id="pororo",
-            source_name="\ubf40\ub85c\ub85c",
+            source_name="뽀로로",
         )
 
         self.assertEqual(case.input.birth_date, "1997-02-03")
         self.assertEqual(case.input.birth_time, "17:00")
         self.assertEqual(case.input.gender, "female")
-        self.assertEqual(case.expected.basic_info.birth_place, "\uc11c\uc6b8\ud2b9\ubcc4\uc2dc")
-        self.assertEqual(case.expected.pillar_table["time"].gan_zhi, "\ubcd1\uc2e0")
-        self.assertEqual(case.expected.luck_cycles[0].gan_zhi, "\uacbd\uc790")
+        self.assertEqual(case.expected.basic_info.birth_place, "서울특별시")
+        self.assertEqual(case.expected.pillar_table["time"].gan_zhi, "병신")
+        self.assertEqual(case.expected.luck_cycle_header.reference_pillar, "신축")
+        self.assertEqual(case.expected.luck_cycle_header.start_age, 10)
+        self.assertEqual(case.expected.luck_cycles[0].gan_zhi, "경자")
 
     def test_builds_actual_golden_snapshot(self) -> None:
         case = GoldenKnownAnswerCase.model_validate_json(
@@ -39,8 +41,9 @@ class GoldenCaseToolTests(unittest.TestCase):
         actual = build_actual_golden_snapshot(case_input=case.input)
 
         self.assertRegex(actual.basic_info.corrected_datetime, r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$")
-        self.assertEqual(actual.basic_info.birth_place, "\uc11c\uc6b8\ud2b9\ubcc4\uc2dc")
-        self.assertEqual(actual.pillar_table["year"].gan_zhi, "\ubcd1\uc790")
+        self.assertEqual(actual.basic_info.birth_place, "서울특별시")
+        self.assertEqual(actual.pillar_table["year"].gan_zhi, "병자")
+        self.assertEqual(actual.luck_cycle_header.reference_pillar, "신축")
         self.assertGreater(len(actual.luck_cycles), 0)
 
     def test_reports_mismatch_paths_in_structured_form(self) -> None:
@@ -78,17 +81,11 @@ class GoldenCaseToolTests(unittest.TestCase):
             self.assertIn("mismatch_fields", summary)
             self.assertIn("diagnosis_counts", summary)
             self.assertIn("case_status_counts", summary)
-            self.assertTrue(
-                any(key.startswith("luck_cycles") for key in summary["mismatch_fields"])
-            )
-            self.assertTrue(
-                any(
-                    "diagnosis_tags" in case_summary and "recommended_actions" in case_summary
-                    for case_summary in summary["cases"]
-                )
-            )
+            self.assertEqual(summary["case_status_counts"], {"match": 7})
+            self.assertEqual(summary["total_mismatches"], 0)
+            self.assertEqual(summary["mismatch_fields"], {})
 
-    def test_compare_tool_flags_expected_luck_cycle_anomalies(self) -> None:
+    def test_compare_tool_confirms_current_golden_alignment(self) -> None:
         with TemporaryDirectory() as temp_dir:
             report_dir = Path(temp_dir) / "reports"
             summary_file = report_dir / "summary.json"
@@ -100,85 +97,64 @@ class GoldenCaseToolTests(unittest.TestCase):
             )
 
             aru_summary = next(case for case in summary["cases"] if case["case_id"] == "aru")
-            chamchi_summary = next(case for case in summary["cases"] if case["case_id"] == "chamchi")
             gomaebi_summary = next(case for case in summary["cases"] if case["case_id"] == "gomaebi")
             pororo_summary = next(case for case in summary["cases"] if case["case_id"] == "pororo")
 
-            self.assertTrue(chamchi_summary["success"])
-            self.assertEqual(chamchi_summary["case_status"], "match")
-            self.assertEqual(chamchi_summary["mismatch_count"], 0)
-            self.assertEqual(chamchi_summary["diagnosis_tags"], [])
+            self.assertTrue(aru_summary["success"])
+            self.assertEqual(aru_summary["case_status"], "match")
+            self.assertEqual(aru_summary["diagnosis_tags"], [])
             self.assertEqual(
-                chamchi_summary["diagnostic_context"]["luck_cycle_start_age_mismatch_count"], 0
-            )
-            self.assertIn("luck_cycle_branch_only_mismatch", aru_summary["diagnosis_tags"])
-            self.assertIn("luck_cycle_start_age_mismatch_present", aru_summary["diagnosis_tags"])
-            self.assertIn("expected_start_age_matches_alternative_rule", aru_summary["diagnosis_tags"])
-            self.assertIn("expected_luck_cycle_unparseable", aru_summary["diagnosis_tags"])
-            self.assertIn("expected_luck_cycle_branch_nonstandard", aru_summary["diagnosis_tags"])
-            self.assertIn("expected_answer_sheet_suspect", aru_summary["diagnosis_tags"])
-            self.assertEqual(aru_summary["case_status"], "answer_sheet_review")
-            self.assertEqual(
-                aru_summary["diagnostic_context"]["invalid_expected_luck_cycles"],
-                ["갑사", "을자", "병묘", "기진"],
-            )
-            self.assertEqual(aru_summary["diagnostic_context"]["luck_cycle_stem_mismatch_count"], 0)
-            self.assertEqual(aru_summary["diagnostic_context"]["luck_cycle_branch_mismatch_count"], 10)
-            self.assertEqual(aru_summary["diagnostic_context"]["actual_luck_cycle_direction"], "forward")
-            self.assertEqual(
-                aru_summary["diagnostic_context"]["candidate_start_ages"]["current_day_count_r2"],
-                6,
+                aru_summary["diagnostic_context"]["actual_month_boundary_datetime"],
+                "1988-12-07 06:34:28",
             )
             self.assertEqual(
-                aru_summary["diagnostic_context"]["candidate_start_ages"]["floor_exact"],
+                aru_summary["diagnostic_context"]["candidate_start_ages"]["round_precise"],
                 5,
             )
-            self.assertIn(
-                "floor_exact",
-                aru_summary["diagnostic_context"]["matched_expected_start_age_rules"],
+
+            self.assertTrue(gomaebi_summary["success"])
+            self.assertEqual(gomaebi_summary["case_status"], "match")
+            self.assertEqual(gomaebi_summary["diagnosis_tags"], [])
+            self.assertEqual(
+                gomaebi_summary["diagnostic_context"]["actual_month_boundary_datetime"],
+                "1989-01-05 17:45:55",
+            )
+            self.assertTrue(
+                9.4
+                < gomaebi_summary["diagnostic_context"]["actual_precise_start_age_years"]
+                < 9.5
             )
             self.assertEqual(
-                aru_summary["diagnostic_context"]["actual_luck_cycle_sequence_tags"],
-                [],
+                gomaebi_summary["diagnostic_context"]["candidate_start_ages"],
+                {
+                    "current_day_count_r2": 9,
+                    "exclude_both_day_count_r2": 9,
+                    "floor_exact": 9,
+                    "ceil_exact": 10,
+                    "round_exact": 10,
+                    "floor_precise": 9,
+                    "ceil_precise": 10,
+                    "round_precise": 9,
+                },
             )
             self.assertEqual(
-                aru_summary["diagnostic_context"]["expected_branch_sequence_tags"],
-                ["branch_sequence_nonstandard"],
+                gomaebi_summary["diagnostic_context"]["matched_expected_start_age_rules"],
+                [
+                    "current_day_count_r2",
+                    "exclude_both_day_count_r2",
+                    "floor_exact",
+                    "floor_precise",
+                    "round_precise",
+                ],
             )
-            self.assertIn("expected_luck_cycle_unparseable", gomaebi_summary["diagnosis_tags"])
-            self.assertIn("luck_cycle_branch_only_mismatch", gomaebi_summary["diagnosis_tags"])
-            self.assertIn("expected_luck_cycle_branch_nonstandard", gomaebi_summary["diagnosis_tags"])
-            self.assertIn("expected_answer_sheet_suspect", gomaebi_summary["diagnosis_tags"])
-            self.assertEqual(gomaebi_summary["case_status"], "answer_sheet_review")
+
+            self.assertTrue(pororo_summary["success"])
+            self.assertEqual(pororo_summary["case_status"], "match")
+            self.assertEqual(pororo_summary["diagnosis_tags"], [])
             self.assertEqual(
-                gomaebi_summary["diagnostic_context"]["invalid_expected_luck_cycles"],
-                ["병사", "정인", "무묘", "기진", "경사", "신오", "임미", "계신", "갑유"],
+                pororo_summary["diagnostic_context"]["candidate_start_ages"]["round_precise"],
+                10,
             )
-            self.assertEqual(gomaebi_summary["diagnostic_context"]["luck_cycle_stem_mismatch_count"], 0)
-            self.assertEqual(
-                gomaebi_summary["diagnostic_context"]["expected_branch_sequence_tags"],
-                ["branch_sequence_nonstandard"],
-            )
-            self.assertIn("expected_luck_cycle_tail_anomaly", pororo_summary["diagnosis_tags"])
-            self.assertIn("luck_cycle_branch_only_mismatch", pororo_summary["diagnosis_tags"])
-            self.assertIn("expected_luck_cycle_branch_tail_anomaly", pororo_summary["diagnosis_tags"])
-            self.assertIn("expected_answer_sheet_suspect", pororo_summary["diagnosis_tags"])
-            self.assertEqual(pororo_summary["case_status"], "answer_sheet_review")
-            self.assertEqual(
-                pororo_summary["diagnostic_context"]["invalid_expected_luck_cycles"],
-                [],
-            )
-            self.assertEqual(pororo_summary["diagnostic_context"]["luck_cycle_stem_mismatch_count"], 0)
-            self.assertEqual(pororo_summary["diagnostic_context"]["luck_cycle_branch_mismatch_count"], 1)
-            self.assertEqual(
-                pororo_summary["diagnostic_context"]["expected_luck_cycle_sequence_tags"],
-                ["expected_luck_cycle_tail_anomaly"],
-            )
-            self.assertEqual(
-                pororo_summary["diagnostic_context"]["expected_branch_sequence_tags"],
-                ["branch_sequence_tail_anomaly"],
-            )
-            self.assertEqual(summary["case_status_counts"], {"answer_sheet_review": 3, "match": 4})
 
     def test_known_answer_cases_match_all_four_pillars(self) -> None:
         mismatches = []

@@ -7,6 +7,7 @@ from typing import Dict, List, Optional
 from app.domain.saju.golden import (
     GoldenBasicInfo,
     GoldenCaseInput,
+    GoldenLuckCycleHeader,
     GoldenKnownAnswerCase,
     GoldenLuckCycleRow,
     GoldenPillarRow,
@@ -15,6 +16,7 @@ from app.domain.saju.golden import (
     SUPPORTED_GOLDEN_SECTIONS,
     split_hidden_stems,
     to_korean_branch,
+    to_korean_gan_zhi,
     to_korean_stem,
 )
 from app.domain.saju.mock_data import REGION_OPTIONS
@@ -25,6 +27,9 @@ DATE_TIME_PATTERN = re.compile(
 )
 OFFSET_PATTERN = re.compile(r"(\uc9c0\uc5ed\uc2dc|\uc11c\uba38\ud0c0\uc784)\s*([+-]?\d+)\ubd84")
 FIELD_PATTERN = re.compile(r"^\*\*(.+?):\*\*\s*(.+)$")
+LUCK_CYCLE_HEADER_PATTERN = re.compile(
+    r"대운 분석\s*\(대운수:\s*(\d+)\s*,\s*([가-힣甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳午未申酉戌亥]+)\s*\)"
+)
 
 
 def _trim_primary_text(text: str) -> str:
@@ -168,6 +173,17 @@ def _parse_luck_cycles(section_text: str) -> List[GoldenLuckCycleRow]:
     return cycles
 
 
+def _parse_luck_cycle_header(section_title: str) -> GoldenLuckCycleHeader | None:
+    match = LUCK_CYCLE_HEADER_PATTERN.search(section_title)
+    if not match:
+        return None
+    start_age_text, reference_pillar = match.groups()
+    return GoldenLuckCycleHeader(
+        start_age=int(start_age_text),
+        reference_pillar=to_korean_gan_zhi(reference_pillar),
+    )
+
+
 def parse_golden_answer_text(
     *,
     case_id: str,
@@ -188,6 +204,7 @@ def parse_golden_answer_text(
         None,
     )
     luck_cycles = _parse_luck_cycles(sections[luck_section_title]) if luck_section_title else []
+    luck_cycle_header = _parse_luck_cycle_header(luck_section_title) if luck_section_title else None
 
     unsupported_sections = [
         title
@@ -224,6 +241,7 @@ def parse_golden_answer_text(
                 ),
             ),
             pillar_table=pillar_table,
+            luck_cycle_header=luck_cycle_header,
             luck_cycles=luck_cycles,
         ),
         supported_sections=list(SUPPORTED_GOLDEN_SECTIONS),

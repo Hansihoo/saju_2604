@@ -293,3 +293,54 @@ python -m app.tools.run_golden_validation --fail-on-mismatch
   - start-age display convention review
   - branch progression review
   - answer-sheet anomaly review
+
+## 2026-04-08 Header-aware answer-sheet validation
+
+### Added validation scope
+- Parse the raw header line `대운 분석 (대운수: n, 월주)` into `luck_cycle_header`.
+- Compare that header against:
+  - actual month pillar
+  - actual DaYun sequence
+  - expected answer-sheet DaYun sequence
+
+### New interpretation rule
+- If the header month pillar matches the actual month pillar,
+- and the engine DaYun rows follow that header sequence,
+- but the expected answer-sheet rows do not,
+- classify the case as `answer_sheet_review`.
+
+### Latest verified state
+- test suite: `42 passed`, `1 skipped`
+- golden cases: `7`
+- case status counts:
+  - `match`: `4`
+  - `answer_sheet_review`: `3`
+- current review-only cases:
+  - `aru`
+  - `gomaebi`
+  - `pororo`
+
+## 2026-04-09 Golden Baseline Reset
+
+### Validation outcome
+- The current golden baseline is now fully green.
+- Registered golden cases: `7`
+- Total mismatches: `0`
+- Case status counts:
+  - `match`: `7`
+
+### Rule change that closed the last gap
+- Displayed first DaYun age now uses a precise proportional conversion:
+  - `precise_start_age_years = delta_days * 120 / 365.2422`
+  - `display_start_age = floor(precise_start_age_years + 0.5)`
+- The older `delta_days / 3.0` exact value remains in the report as a diagnostic field.
+
+### Operational meaning
+- The golden suite is no longer blocked by known DaYun mismatches.
+- `summary.json` should now be interpreted as a regression alarm:
+  - if `total_mismatches > 0`, something changed
+  - if `case_status_counts` differs from `{"match": 7}`, the pipeline regressed
+
+### Current source of truth
+- Use `apps/api/tests/golden_reports/latest/summary.json` after each validation run.
+- Use `diagnostic_context.actual_precise_start_age_years` to inspect the precise displayed-age basis.

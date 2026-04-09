@@ -195,3 +195,166 @@ python -m app.tools.run_golden_validation
 ### Next
 1. `aru`, `gomaebi`, `pororo`를 정답지 재검토 대상으로 유지
 2. 사용자 결과 화면에 만세력 표 반영 전, 대운 unresolved 규칙을 note로 남길지 결정
+
+## 2026-04-08 Header Consistency Validation
+
+### What was validated
+- Re-ran the loop `validate -> inspect raw source txt -> adjust diagnostics`.
+- Added `luck_cycle_header` parsing from the raw answer sheet line `대운 분석 (대운수: n, 월주)`.
+- Added validator checks for whether expected DaYun rows follow the sequence implied by that header.
+
+### Latest result
+- Test suite: `42 passed`, `1 skipped`
+- Golden cases: `7`
+- Status counts:
+  - `match`: `4`
+  - `answer_sheet_review`: `3`
+
+### Blocker after repeated attempts
+- After more than two validate/research/fix cycles, the remaining failures do not look like engine bugs.
+- For `aru`, `gomaebi`, and `pororo`:
+  - actual month pillar matches the answer-sheet header reference pillar
+  - actual engine DaYun rows follow the header-implied sequence
+  - expected answer-sheet rows do not follow the header-implied sequence
+- Current conclusion: keep these as `answer_sheet_review` unless corrected source answers are provided.
+
+## 2026-04-08 Corrected Source TXT Re-import
+
+### What was done
+- Re-copied the updated external source files for `aru`, `gomaebi`, and `pororo` into the project golden source directory.
+- Re-generated canonical JSON fixtures with `python -m app.tools.import_golden_cases`.
+- Re-ran both the unit test suite and the full golden validation flow.
+
+### Validation result
+- `python -m unittest discover -s tests -p "test_*.py"`: `42 passed`, `1 skipped`
+- `python -m app.tools.run_golden_validation`: completed
+
+### Outcome
+- The corrected TXT re-import did not change the remaining mismatch set.
+- Current unresolved cases are still:
+  - `aru`
+  - `gomaebi`
+  - `pororo`
+- Remaining mismatch shape:
+  - `aru`: DaYun `start_age` plus full `gan_zhi/branch` divergence
+  - `gomaebi`: DaYun `gan_zhi/branch` divergence from row 2 onward
+  - `pororo`: only the last DaYun row differs
+
+### Interpretation
+- The updated source TXT files were successfully imported, but the remaining DaYun mismatches persist.
+- Next step should focus on either:
+  1. another targeted source-answer review for those three cases, or
+  2. a deliberate decision on whether `aru` should use an alternative displayed start-age convention.
+
+## 2026-04-08 Aru Regional-Time Verification And Start-Age Rule Update
+
+### What was verified
+- `aru` answer sheet and current engine agree on the regional solar correction itself.
+- Verified values:
+  - corrected datetime: `1988-11-20 23:02`
+  - regional time offset: `-28`
+- This confirms the `5 vs 6` mismatch was not caused by longitude/regional-time correction.
+
+### Rule decision
+- Switched displayed DaYun start age from the day-count convention to `exact_start_age_years` half-up rounding.
+- Applied rule:
+  - `display_start_age = floor(exact_start_age_years + 0.5)`
+
+### Why this rule was chosen
+- Candidate rule coverage across the current 7 answer sheets:
+  - `current_day_count_r2`: `5`
+  - `exclude_both_day_count_r2`: `3`
+  - `floor_exact`: `2`
+  - `ceil_exact`: `4`
+  - `round_exact`: `6`
+- `round_exact` is the best fit for the current answer-sheet set and fixes `aru` without regressing the already matching cases.
+
+### Result
+- `aru` DaYun `start_age` now matches the answer sheet: `5, 15, 25, ...`
+- Remaining `aru` mismatches are now only DaYun progression rows.
+- `gomaebi` still remains an engine-review case because both the header/reference pillar and the start ages diverge from the current engine output.
+
+## 2026-04-09 Exact Jie Boundary Investigation For Korea
+
+### What was verified
+- Re-checked the Korean answer-sheet mismatch against minute-level solar-term boundaries instead of day-only conventions.
+- Confirmed that `lunar-python` jie timestamps align with a GMT+8/Beijing-style baseline, while KASI publishes solar-term times in Korean Standard Time.
+- Applied a Korea-specific standard-offset adjustment when the region `tzid` is `Asia/Seoul`, so DaYun boundary diagnostics now use the same KST-style convention as the answer sheets.
+
+### Result after applying exact boundary conversion
+- `aru` boundary moved from `1988-12-07 05:34:28` to `1988-12-07 06:34:28`, matching the expected Korean-minute-level reference.
+- Golden status improved to:
+  - `match`: `6`
+  - `engine_review`: `1`
+- The only remaining mismatch is `gomaebi`, and it is now isolated to displayed `start_age` only:
+  - expected `9, 19, ... 99`
+  - actual `10, 20, ... 100`
+
+### Interpretation
+- The remaining `gomaebi` gap is no longer a regional-time or exact-jie-boundary problem.
+- It is now purely a displayed DaYun start-age convention problem:
+  - answer sheet aligns with `current_day_count_r2`, `exclude_both_day_count_r2`, or `floor_exact`
+  - project currently uses `round_exact`
+
+## 2026-04-09 Gomaebi Start-Age Factor Audit
+
+### Scope
+- Reviewed every value that can affect DaYun start order or displayed first age for `gomaebi`.
+- Re-checked the current project output against the source answer sheet and web references.
+
+### Factor-by-factor result
+- Birth input
+  - source answer sheet and current golden input both use `1988-12-08 03:00`, solar
+  - no mismatch
+- Time zone / DST
+  - `Asia/Seoul` historical offset check shows UTC+9 with no DST on `1988-12-08`
+  - this does not explain the remaining mismatch
+- Regional solar correction
+  - Seoul longitude dataset value `126.991824`, derived regional offset `-32.033`
+  - displayed answer-sheet value `-32` matches current output
+- Corrected birth time
+  - answer sheet `1988-12-08 02:28`
+  - current output `1988-12-08 02:28`
+  - no mismatch
+- Month pillar / direction / first DaYun pillar
+  - current output: month pillar `갑자`, direction `forward`, first DaYun pillar `을축`
+  - answer sheet matches all three
+- Exact Jie boundary
+  - current output: `1989-01-05 17:45:55`
+  - corroborated by external references showing `1989-01-05 17:45` / `17:45:56`
+  - boundary time no longer looks suspicious
+
+### Remaining mismatch
+- Only displayed DaYun `start_age` remains different:
+  - expected `9, 19, ... 99`
+  - current `10, 20, ... 100`
+- Candidate-rule audit:
+  - `current_day_count_r2 = 9`
+  - `exclude_both_day_count_r2 = 9`
+  - `floor_exact = 9`
+  - `ceil_exact = 10`
+  - `round_exact = 10`
+
+### Conclusion
+- `gomaebi` is not blocked by timezone, DST, regional correction, month pillar, direction, or DaYun progression.
+- The only unresolved point is the displayed first-age convention.
+
+## 2026-04-09 Precise Start-Age Ratio Adoption
+
+### What changed
+- Replaced the displayed DaYun first-age rule with a more precise proportional conversion:
+  - `precise_start_age_years = delta_days * 120 / 365.2422`
+  - displayed first age uses half-up rounding on that precise value
+- Kept the older `delta_days / 3.0` value as `exact_start_age_years` for diagnostics and comparison.
+
+### Why this rule was adopted
+- It matches all current golden cases with one consistent rule.
+- It preserves the already-correct minute-level Jie boundary handling and avoids per-case branching.
+- It explains the `gomaebi` answer sheet without regressing `aru`.
+
+### Result
+- Golden status is now:
+  - `match`: `7`
+  - `engine_review`: `0`
+- `gomaebi` now matches with first age `9`.
+- Current project no longer has a known DaYun mismatch in the registered golden set.

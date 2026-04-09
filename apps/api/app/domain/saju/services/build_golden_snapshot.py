@@ -6,6 +6,7 @@ from app.config import settings
 from app.domain.saju.golden import (
     GoldenBasicInfo,
     GoldenCaseInput,
+    GoldenLuckCycleHeader,
     GoldenLuckCycleRow,
     GoldenPillarRow,
     GoldenSnapshot,
@@ -87,6 +88,10 @@ def build_actual_golden_snapshot(*, case_input: GoldenCaseInput) -> GoldenSnapsh
             daylight_saving_offset_minutes=daylight_saving_offset_minutes,
         ),
         pillar_table=_build_pillar_table(response),
+        luck_cycle_header=GoldenLuckCycleHeader(
+            start_age=response.manse.luck_cycles[0].start_age if response.manse.luck_cycles else 0,
+            reference_pillar=to_korean_gan_zhi(response.manse.pillars.month.gan_zhi or ""),
+        ),
         luck_cycles=[
             GoldenLuckCycleRow(
                 start_age=cycle.start_age,

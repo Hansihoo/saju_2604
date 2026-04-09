@@ -22,11 +22,12 @@ class LuckCycleCalculationTests(unittest.TestCase):
             month_pillar="\u7532\u5348",
             day_pillar="\u4e01\u4ea5",
             cycle_count=10,
+            target_standard_offset_minutes=540,
         )
 
         self.assertEqual(cycles[0].direction, "backward")
         self.assertTrue(4.5 < cycles[0].exact_start_age_years < 4.7)
-        self.assertEqual(cycles[0].month_boundary_datetime, "1996-06-05 17:40:47")
+        self.assertEqual(cycles[0].month_boundary_datetime, "1996-06-05 18:40:47")
         self.assertEqual(
             [(cycle.start_age, cycle.gan_zhi) for cycle in cycles],
             [
@@ -51,6 +52,7 @@ class LuckCycleCalculationTests(unittest.TestCase):
             month_pillar="\u4e19\u5bc5",
             day_pillar="\u7532\u8fb0",
             cycle_count=3,
+            target_standard_offset_minutes=540,
         )
 
         self.assertEqual(cycles[0].direction, "forward")

@@ -39,6 +39,7 @@ class LuckCycle:
     end_age: int
     direction: Optional[Literal["forward", "backward"]] = None
     exact_start_age_years: Optional[float] = None
+    precise_start_age_years: Optional[float] = None
     month_boundary_datetime: Optional[str] = None
 
 
@@ -58,5 +59,6 @@ class SajuEngine(Protocol):
         *,
         corrected_solar_datetime: str,
         gender: Gender,
+        tzid: Optional[str] = None,
     ) -> SajuCalculationResult:
         ...

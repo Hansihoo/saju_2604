@@ -4,18 +4,25 @@ import argparse
 import json
 from collections import Counter
 from datetime import datetime
+from math import floor
 from pathlib import Path
 from typing import Dict, List
 
 from app.domain.saju.adapters.lunar_python_engine import LunarPythonSajuEngine
-from app.domain.saju.golden import GoldenKnownAnswerCase, compare_golden_snapshots
+from app.domain.saju.golden import (
+    GoldenKnownAnswerCase,
+    compare_golden_snapshots,
+    to_korean_gan_zhi,
+)
 from app.domain.saju.services.calculate_luck_cycles import (
     get_adjacent_month_boundary,
     get_luck_direction,
+    LUCK_CYCLE_YEAR_TO_DAY_FACTOR,
+    TROPICAL_YEAR_DAYS,
 )
 from app.domain.saju.services.build_golden_snapshot import build_actual_golden_snapshot
 from app.domain.saju.services.region_catalog import find_region_by_id
-from app.domain.saju.time_correction import apply_regional_solar_correction
+from app.domain.saju.time_correction import STANDARD_OFFSET_BY_TZ, apply_regional_solar_correction
 
 JIA_ZI_KO = [
     "갑자",
@@ -116,6 +123,13 @@ def _branch_index(value: str) -> int | None:
         return None
 
 
+def _shift_korean_ganzhi(value: str, steps: int) -> str | None:
+    index = _gan_zhi_index(value)
+    if index is None:
+        return None
+    return JIA_ZI_KO[(index + steps) % len(JIA_ZI_KO)]
+
+
 def _analyze_branch_sequence(values: List[str]) -> Dict[str, object]:
     if len(values) < 2:
         return {"tags": [], "invalid_values": [], "deltas": []}
@@ -193,11 +207,17 @@ def _build_start_age_rule_context(case: GoldenKnownAnswerCase) -> Dict[str, obje
     calculation = ENGINE.calculate(
         corrected_solar_datetime=regional_result.corrected_solar_datetime,
         gender=case.input.gender,
+        tzid=region.tzid,
     )
     direction = get_luck_direction(calculation.pillars["year"].stem, case.input.gender)
-    boundary_dt = get_adjacent_month_boundary(corrected_dt, direction)
+    boundary_dt = get_adjacent_month_boundary(
+        corrected_dt,
+        direction,
+        target_standard_offset_minutes=STANDARD_OFFSET_BY_TZ.get(region.tzid),
+    )
     delta_days = abs((boundary_dt - corrected_dt).total_seconds()) / 86400
     exact_start_age_years = delta_days / 3.0
+    precise_start_age_years = delta_days * LUCK_CYCLE_YEAR_TO_DAY_FACTOR / TROPICAL_YEAR_DAYS
     date_diff = abs((boundary_dt.date() - corrected_dt.date()).days)
 
     q, r = divmod(date_diff, 3)
@@ -209,7 +229,10 @@ def _build_start_age_rule_context(case: GoldenKnownAnswerCase) -> Dict[str, obje
         ),
         "floor_exact": int(exact_start_age_years),
         "ceil_exact": int(-(-exact_start_age_years // 1)),
-        "round_exact": round(exact_start_age_years),
+        "round_exact": floor(exact_start_age_years + 0.5),
+        "floor_precise": int(precise_start_age_years),
+        "ceil_precise": int(-(-precise_start_age_years // 1)),
+        "round_precise": floor(precise_start_age_years + 0.5),
     }
     expected_first_age = case.expected.luck_cycles[0].start_age if case.expected.luck_cycles else None
     matched_rules = [
@@ -223,8 +246,9 @@ def _build_start_age_rule_context(case: GoldenKnownAnswerCase) -> Dict[str, obje
         "month_boundary_datetime": boundary_dt.strftime(SOLAR_DATETIME_FORMAT),
         "direction": direction,
         "year_pillar": calculation.pillars["year"].gan_zhi,
-        "month_pillar": calculation.pillars["month"].gan_zhi,
+        "month_pillar": to_korean_gan_zhi(calculation.pillars["month"].gan_zhi),
         "exact_start_age_years": exact_start_age_years,
+        "precise_start_age_years": precise_start_age_years,
         "date_diff_days": date_diff,
         "candidate_start_ages": candidate_start_ages,
         "matched_expected_start_age_rules": matched_rules,
@@ -251,6 +275,29 @@ def _build_case_diagnostics(*, case: GoldenKnownAnswerCase, actual: object, repo
     start_age_rule_context = _build_start_age_rule_context(case)
     expected_sequence_tags = expected_sequence_analysis["tags"]
     invalid_expected_cycles = expected_sequence_analysis["invalid_values"]
+    header = case.expected.luck_cycle_header
+    header_matches_actual_month_pillar = False
+    expected_matches_header_sequence = None
+    actual_matches_header_sequence = None
+    if header is not None:
+        header_matches_actual_month_pillar = (
+            header.reference_pillar == start_age_rule_context["month_pillar"]
+        )
+        direction_step = 1 if start_age_rule_context["direction"] == "forward" else -1
+        first_pillar_from_header = _shift_korean_ganzhi(header.reference_pillar, direction_step)
+        if first_pillar_from_header is not None:
+            expected_matches_header_sequence = True
+            actual_matches_header_sequence = True
+            for index, value in enumerate(expected_cycles):
+                expected_value = _shift_korean_ganzhi(first_pillar_from_header, direction_step * index)
+                if expected_value != value:
+                    expected_matches_header_sequence = False
+                    break
+            for index, value in enumerate(actual_cycles):
+                expected_value = _shift_korean_ganzhi(first_pillar_from_header, direction_step * index)
+                if expected_value != value:
+                    actual_matches_header_sequence = False
+                    break
 
     luck_cycle_paths = [path for path in mismatch_paths if path.startswith("luck_cycles")]
     basic_info_paths = [path for path in mismatch_paths if path.startswith("basic_info")]
@@ -378,6 +425,17 @@ def _build_case_diagnostics(*, case: GoldenKnownAnswerCase, actual: object, repo
             "Verify the answer sheet before changing the engine; the expected DaYun rows look non-standard while the engine output remains consecutive."
         )
 
+    if (
+        header is not None
+        and header_matches_actual_month_pillar
+        and actual_matches_header_sequence is True
+        and expected_matches_header_sequence is False
+    ):
+        tags.append("expected_luck_cycle_inconsistent_with_header")
+        recommended_actions.append(
+            "The answer-sheet DaYun rows do not follow the sequence implied by its own header month-pillar reference."
+        )
+
     if not tags and mismatch_path_set:
         tags.append("unclassified_mismatch")
 
@@ -407,6 +465,7 @@ def _build_case_diagnostics(*, case: GoldenKnownAnswerCase, actual: object, repo
             "actual_luck_cycle_direction": start_age_rule_context["direction"],
             "actual_month_boundary_datetime": start_age_rule_context["month_boundary_datetime"],
             "actual_exact_start_age_years": start_age_rule_context["exact_start_age_years"],
+            "actual_precise_start_age_years": start_age_rule_context["precise_start_age_years"],
             "actual_year_pillar": start_age_rule_context["year_pillar"],
             "actual_month_pillar": start_age_rule_context["month_pillar"],
             "start_age_rule_date_diff_days": start_age_rule_context["date_diff_days"],
@@ -414,6 +473,13 @@ def _build_case_diagnostics(*, case: GoldenKnownAnswerCase, actual: object, repo
             "matched_expected_start_age_rules": start_age_rule_context[
                 "matched_expected_start_age_rules"
             ],
+            "luck_cycle_header_reference_pillar": (
+                header.reference_pillar if header is not None else None
+            ),
+            "luck_cycle_header_start_age": header.start_age if header is not None else None,
+            "luck_cycle_header_matches_actual_month_pillar": header_matches_actual_month_pillar,
+            "expected_matches_header_sequence": expected_matches_header_sequence,
+            "actual_matches_header_sequence": actual_matches_header_sequence,
         },
     }
 
@@ -423,10 +489,17 @@ def _classify_case_status(*, report: object, diagnostics: Dict[str, object]) -> 
         return "match"
 
     mismatch_paths = [mismatch.path for mismatch in report.mismatches]
+    reviewable_answer_sheet_paths = (
+        "luck_cycles",
+        "luck_cycle_header",
+    )
     if (
         "expected_answer_sheet_suspect" in diagnostics["tags"]
         and mismatch_paths
-        and all(path.startswith("luck_cycles") for path in mismatch_paths)
+        and all(
+            path.startswith(reviewable_answer_sheet_paths)
+            for path in mismatch_paths
+        )
     ):
         return "answer_sheet_review"
 

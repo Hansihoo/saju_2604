@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from lunar_python import Solar
 
@@ -10,6 +10,7 @@ from app.domain.saju.engine import (
     SupplementaryPosition,
 )
 from app.domain.saju.services.calculate_luck_cycles import calculate_luck_cycles
+from app.domain.saju.time_correction import STANDARD_OFFSET_BY_TZ
 
 
 ELEMENT_KEY_BY_CHAR = {
@@ -35,6 +36,7 @@ class LunarPythonSajuEngine:
         *,
         corrected_solar_datetime: str,
         gender: Gender,
+        tzid: Optional[str] = None,
     ) -> SajuCalculationResult:
         try:
             dt = datetime.strptime(corrected_solar_datetime, "%Y-%m-%d %H:%M:%S")
@@ -124,6 +126,7 @@ class LunarPythonSajuEngine:
             month_pillar=pillars["month"].gan_zhi,
             day_pillar=pillars["day"].gan_zhi,
             cycle_count=10,
+            target_standard_offset_minutes=STANDARD_OFFSET_BY_TZ.get(tzid) if tzid else None,
         )
         first_luck_cycle = luck_cycles[0] if luck_cycles else None
 
@@ -171,6 +174,11 @@ class LunarPythonSajuEngine:
                 "luck_cycle_exact_start_age_years": (
                     f"{first_luck_cycle.exact_start_age_years:.6f}"
                     if first_luck_cycle and first_luck_cycle.exact_start_age_years is not None
+                    else ""
+                ),
+                "luck_cycle_precise_start_age_years": (
+                    f"{first_luck_cycle.precise_start_age_years:.6f}"
+                    if first_luck_cycle and first_luck_cycle.precise_start_age_years is not None
                     else ""
                 ),
             },
