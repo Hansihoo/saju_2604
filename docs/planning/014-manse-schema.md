@@ -239,3 +239,26 @@
 1. 사용자 결과 화면에 `table_rows`를 어떻게 보여줄지 정한다.
 2. 대운 노출 범위를 전부 보여줄지 일부만 보여줄지 정한다.
 3. `{지역, 경도}`가 준비되면 시간 보정 결과가 `meta`에 더 들어갈지 검토한다.
+## 2026-04-09 Analysis Schema Addendum
+
+The `manse` object now also includes an `analysis` block for deterministic summary values.
+
+### Included fields
+- `visible_element_total`
+- `imbalance_gap`
+- `element_percentages`
+- `visible_ten_god_distribution`
+- `balance_score`
+- `internal_grade`
+- `charm_score`
+- `wealth_score`
+- `career_score`
+- `leadership_score`
+- `first_luck_cycle_direction`
+- `first_luck_cycle_exact_start_age_years`
+- `first_luck_cycle_precise_start_age_years`
+- `first_luck_cycle_boundary_datetime`
+
+### Intent
+- `elements` remains the raw count block.
+- `analysis` becomes the reusable reasoning block for diagnostics and future interpretation.

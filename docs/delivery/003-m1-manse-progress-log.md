@@ -384,3 +384,49 @@ python -m app.tools.run_golden_validation
 1. Finish the region-data normalization step in planning docs
 2. Stabilize the user-facing result contract as the M1 exit shape
 3. Prepare the M2 LLM payload on top of the new result signals
+
+## 2026-04-09 M2 Interpretation Payload Prep
+
+### Completed
+- Added an internal M2 interpretation payload model.
+- Added a builder that converts preview facts into an LLM-ready facts-only payload.
+- Added a developer CLI to dump the payload for a specific input.
+- Added unit tests for normal and estimated-time cases.
+
+### Why this matters
+- The future LLM layer can now depend on a stable internal contract.
+- The interpretation layer will not need to read developer-style response prose.
+
+## 2026-04-09 M2 Fallback Formatter
+
+### Completed
+- Added a provider-agnostic fallback formatter on top of the M2 payload.
+- Added a narrative schema separate from the preview response contract.
+- Added a developer CLI that renders both payload and fallback interpretation for a single input.
+- Added tests for Korean fallback output and estimated-time limitation propagation.
+
+### Validation
+- Backend unit tests passed
+- Golden validation remained fully matched
+- Frontend build remained healthy
+
+### Next
+1. Freeze the fallback formatter as the regression-safe baseline
+2. Add the future provider interface above the payload and formatter boundary
+
+## 2026-04-09 Manse Analysis Snapshot Completion
+
+### Completed
+- Added a deterministic `manse.analysis` block inside the backend manse payload.
+- The analysis block now carries:
+  - visible element total
+  - element percentages
+  - imbalance gap
+  - visible ten-god distribution
+  - score summary and first luck-cycle diagnostics
+- Added a developer CLI to dump the full canonical manse snapshot without going through the browser UI.
+
+### Validation
+- Backend tests pass
+- Golden validation remains `7/7`
+- Frontend build remains healthy

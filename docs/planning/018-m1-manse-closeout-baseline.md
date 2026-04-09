@@ -63,6 +63,12 @@
 - Keep the current region boundary stable
 - Keep user-facing result output summary-only
 - Do not re-open manse or DaYun formulas unless a new verified answer sheet fails
+- Treat `response.manse` as the stable backend/debug contract for:
+  - raw pillars
+  - table rows
+  - supplementary positions
+  - luck cycles
+  - code-driven analysis summary
 
 ## Next Step
 - M2 should build LLM input payloads on top of:
@@ -70,3 +76,4 @@
   - `result.limitations`
   - `manse` backend data
   - selected evidence summaries
+- 만세력 응답은 raw table만이 아니라 analysis block까지 포함해, 후속 해석 단계가 점수 근거와 첫 대운 메타를 직접 재사용할 수 있다.

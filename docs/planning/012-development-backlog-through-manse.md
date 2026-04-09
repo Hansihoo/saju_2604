@@ -324,3 +324,29 @@
 1. Finish region-data normalization documentation and code boundary review
 2. Keep the user result contract stable for M1 closeout
 3. Prepare M2 LLM payloads using result signals instead of developer-style copy
+
+## 2026-04-09 M2 Payload Status
+
+### Done
+- Internal interpretation payload schema added
+- Facts-only payload builder added
+- Developer dump tool added
+
+### Current Order
+1. Finalize the M1 closeout baseline
+2. Keep the new fallback formatter stable as the pre-LLM interpretation layer
+3. Define the external provider interface on top of the payload
+4. Keep preview and interpretation layers separated
+
+## 2026-04-09 M1 Manse Completion Snapshot
+
+### Baseline now considered complete
+- Region normalization boundary is stable enough for the current seed dataset.
+- Four pillars, manse schema, and DaYun rules are all covered by the current golden suite.
+- Golden validation is `7/7` matched.
+- `response.manse` now includes both raw manse fields and a deterministic `analysis` block.
+- A developer CLI can dump the full canonical manse snapshot for a single input.
+
+### What this means
+- M1 no longer needs additional raw manse fields before M2.
+- New work should now focus on interpretation payloads and narrative generation on top of the stable manse contract.

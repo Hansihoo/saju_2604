@@ -49,6 +49,11 @@ def analyze_saju(
     max_count = max(counts.values())
     min_count = min(counts.values())
     imbalance_gap = max_count - min_count
+    visible_element_total = sum(counts.values())
+    element_percentages = {
+        key: round((value / visible_element_total) * 100, 1) if visible_element_total else 0.0
+        for key, value in counts.items()
+    }
     missing_elements = [key for key, value in counts.items() if value == 0]
     dominant_elements = [key for key, value in counts.items() if value == max_count and value > 0]
     balance_score = _clamp_score(100 - (imbalance_gap * 15) - (len(missing_elements) * 10))
@@ -84,6 +89,9 @@ def analyze_saju(
 
     return AnalysisResult(
         visible_element_counts=counts,
+        visible_element_total=visible_element_total,
+        element_percentages=element_percentages,
+        imbalance_gap=imbalance_gap,
         dominant_elements=dominant_elements,
         missing_elements=missing_elements,
         balance_score=balance_score,

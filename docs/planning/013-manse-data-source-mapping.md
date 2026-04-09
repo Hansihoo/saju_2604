@@ -152,3 +152,24 @@
 2. `{지역, 경도}` 데이터가 준비되면 시간 보정 모듈에 연결한다.
 3. golden test에 `만세력 표 행 단위 비교`를 추가한다.
 4. M2에서 LLM은 이 만세력 응답을 입력으로만 사용하고, 판단 로직은 추가하지 않는다.
+## 2026-04-09 Analysis Block Update
+
+### Added to current manse output
+- `analysis.visible_element_total`
+- `analysis.imbalance_gap`
+- `analysis.element_percentages`
+- `analysis.visible_ten_god_distribution`
+- `analysis.balance_score`
+- `analysis.internal_grade`
+- `analysis.charm_score`
+- `analysis.wealth_score`
+- `analysis.career_score`
+- `analysis.leadership_score`
+- `analysis.first_luck_cycle_direction`
+- `analysis.first_luck_cycle_exact_start_age_years`
+- `analysis.first_luck_cycle_precise_start_age_years`
+- `analysis.first_luck_cycle_boundary_datetime`
+
+### Why this matters
+- The backend now carries both raw manse values and their deterministic analysis basis together.
+- Future interpretation layers no longer need to reconstruct score rationale from scattered fields.

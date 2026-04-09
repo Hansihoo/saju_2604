@@ -164,6 +164,14 @@ class ManseElementSummary(BaseModel):
     water: int
 
 
+class ManseElementPercentageSummary(BaseModel):
+    wood: float
+    fire: float
+    earth: float
+    metal: float
+    water: float
+
+
 class ManseMeta(BaseModel):
     schema_version: Literal["v1"] = "v1"
     day_master: str
@@ -172,11 +180,31 @@ class ManseMeta(BaseModel):
     hour_pillar_enabled: bool
 
 
+class ManseAnalysisSummary(BaseModel):
+    visible_element_total: int
+    imbalance_gap: int
+    dominant_elements: List[ElementKey]
+    missing_elements: List[ElementKey]
+    element_percentages: ManseElementPercentageSummary
+    visible_ten_god_distribution: Dict[str, int]
+    balance_score: int
+    internal_grade: InternalGrade
+    charm_score: int
+    wealth_score: int
+    career_score: int
+    leadership_score: int
+    first_luck_cycle_direction: Optional[Literal["forward", "backward"]] = None
+    first_luck_cycle_exact_start_age_years: Optional[float] = None
+    first_luck_cycle_precise_start_age_years: Optional[float] = None
+    first_luck_cycle_boundary_datetime: Optional[str] = None
+
+
 class ManseData(BaseModel):
     meta: ManseMeta
     pillars: MansePillarSet
     table_rows: List[ManseTableRow]
     elements: ManseElementSummary
+    analysis: ManseAnalysisSummary
     luck_cycles_enabled: bool
     luck_cycles: List[ManseLuckCycle]
     supplementary_positions: ManseSupplementaryPositionSet

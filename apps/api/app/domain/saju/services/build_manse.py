@@ -3,8 +3,10 @@ from typing import Dict, List, Optional
 from app.domain.saju.analysis import AnalysisResult
 from app.domain.saju.engine import PillarData, SajuCalculationResult, SupplementaryPosition
 from app.domain.saju.schemas import (
+    ManseAnalysisSummary,
     ManseData,
     ManseElementSummary,
+    ManseElementPercentageSummary,
     ManseMeta,
     MansePillar,
     MansePillarSet,
@@ -310,6 +312,62 @@ def _build_table_rows(pillars: Dict[str, MansePillar]) -> List[ManseTableRow]:
     ]
 
 
+def _build_visible_ten_god_distribution(
+    pillars: Dict[str, MansePillar],
+    visible_pillar_keys: List[str],
+) -> Dict[str, int]:
+    distribution: Dict[str, int] = {}
+    for pillar_key in visible_pillar_keys:
+        pillar = pillars[pillar_key]
+        for value in [pillar.stem_ten_god, pillar.branch_ten_god]:
+            if value:
+                distribution[value] = distribution.get(value, 0) + 1
+    return distribution
+
+
+def _build_analysis_summary(
+    *,
+    analysis_result: AnalysisResult,
+    pillars: Dict[str, MansePillar],
+    visible_pillar_keys: List[str],
+    first_luck_cycle,
+    luck_cycles_enabled: bool,
+) -> ManseAnalysisSummary:
+    return ManseAnalysisSummary(
+        visible_element_total=analysis_result.visible_element_total,
+        imbalance_gap=analysis_result.imbalance_gap,
+        dominant_elements=analysis_result.dominant_elements,
+        missing_elements=analysis_result.missing_elements,
+        element_percentages=ManseElementPercentageSummary(**analysis_result.element_percentages),
+        visible_ten_god_distribution=_build_visible_ten_god_distribution(
+            pillars=pillars,
+            visible_pillar_keys=visible_pillar_keys,
+        ),
+        balance_score=analysis_result.balance_score,
+        internal_grade=analysis_result.internal_grade,
+        charm_score=analysis_result.charm_score,
+        wealth_score=analysis_result.wealth_score,
+        career_score=analysis_result.career_score,
+        leadership_score=analysis_result.leadership_score,
+        first_luck_cycle_direction=(
+            first_luck_cycle.direction if luck_cycles_enabled and first_luck_cycle else None
+        ),
+        first_luck_cycle_exact_start_age_years=(
+            first_luck_cycle.exact_start_age_years
+            if luck_cycles_enabled and first_luck_cycle and first_luck_cycle.exact_start_age_years is not None
+            else None
+        ),
+        first_luck_cycle_precise_start_age_years=(
+            first_luck_cycle.precise_start_age_years
+            if luck_cycles_enabled and first_luck_cycle and first_luck_cycle.precise_start_age_years is not None
+            else None
+        ),
+        first_luck_cycle_boundary_datetime=(
+            first_luck_cycle.month_boundary_datetime if luck_cycles_enabled and first_luck_cycle else None
+        ),
+    )
+
+
 def _build_supplementary_positions(
     *,
     supplementary_positions: Dict[str, SupplementaryPosition],
@@ -333,6 +391,7 @@ def build_manse_data(
     birth_time_policy: BirthTimePolicyResult,
 ) -> ManseData:
     visible_luck_cycles = [cycle for cycle in saju_calculation.luck_cycles if cycle.gan_zhi]
+    first_luck_cycle = visible_luck_cycles[0] if visible_luck_cycles else None
     pillar_enabled_map = {
         "year": True,
         "month": True,
@@ -368,6 +427,13 @@ def build_manse_data(
         pillars=pillars,
         table_rows=_build_table_rows(pillar_dict),
         elements=ManseElementSummary(**analysis_result.visible_element_counts),
+        analysis=_build_analysis_summary(
+            analysis_result=analysis_result,
+            pillars=pillar_dict,
+            visible_pillar_keys=list(birth_time_policy.visible_pillar_keys),
+            first_luck_cycle=first_luck_cycle,
+            luck_cycles_enabled=birth_time_policy.hour_pillar_enabled,
+        ),
         luck_cycles_enabled=birth_time_policy.hour_pillar_enabled,
         luck_cycles=(
             [

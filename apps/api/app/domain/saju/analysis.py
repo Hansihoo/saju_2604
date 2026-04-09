@@ -8,6 +8,9 @@ InternalGrade = Literal["S", "A", "B", "C"]
 @dataclass
 class AnalysisResult:
     visible_element_counts: Dict[str, int]
+    visible_element_total: int
+    element_percentages: Dict[str, float]
+    imbalance_gap: int
     dominant_elements: List[str]
     missing_elements: List[str]
     balance_score: int

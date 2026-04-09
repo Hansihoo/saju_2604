@@ -142,6 +142,14 @@ export type ManseElementSummary = {
   water: number;
 };
 
+export type ManseElementPercentageSummary = {
+  wood: number;
+  fire: number;
+  earth: number;
+  metal: number;
+  water: number;
+};
+
 export type ManseMeta = {
   schema_version: "v1";
   day_master: string;
@@ -150,11 +158,31 @@ export type ManseMeta = {
   hour_pillar_enabled: boolean;
 };
 
+export type ManseAnalysisSummary = {
+  visible_element_total: number;
+  imbalance_gap: number;
+  dominant_elements: Array<"wood" | "fire" | "earth" | "metal" | "water">;
+  missing_elements: Array<"wood" | "fire" | "earth" | "metal" | "water">;
+  element_percentages: ManseElementPercentageSummary;
+  visible_ten_god_distribution: Record<string, number>;
+  balance_score: number;
+  internal_grade: "S" | "A" | "B" | "C";
+  charm_score: number;
+  wealth_score: number;
+  career_score: number;
+  leadership_score: number;
+  first_luck_cycle_direction?: "forward" | "backward" | null;
+  first_luck_cycle_exact_start_age_years?: number | null;
+  first_luck_cycle_precise_start_age_years?: number | null;
+  first_luck_cycle_boundary_datetime?: string | null;
+};
+
 export type ManseData = {
   meta: ManseMeta;
   pillars: MansePillarSet;
   table_rows: ManseTableRow[];
   elements: ManseElementSummary;
+  analysis: ManseAnalysisSummary;
   luck_cycles_enabled: boolean;
   luck_cycles: ManseLuckCycle[];
   supplementary_positions: ManseSupplementaryPositionSet;
