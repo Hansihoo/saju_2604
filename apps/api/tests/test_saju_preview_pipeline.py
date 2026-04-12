@@ -39,6 +39,8 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         self.assertEqual(response.debug_trace.checkpoints[5].status, "passed")
         self.assertEqual(response.debug_trace.checkpoints[6].stage, "analysis_engine")
         self.assertEqual(response.debug_trace.checkpoints[6].status, "passed")
+        self.assertEqual(response.debug_trace.checkpoints[7].stage, "llm_formatting")
+        self.assertEqual(response.debug_trace.checkpoints[7].status, "passed")
         self.assertIn("Internal grade", response.debug_trace.checkpoints[6].note)
         self.assertIn("\u7532\u8fb0", response.debug_trace.checkpoints[5].note)
         self.assertEqual(response.region.longitude, 126.991824)
@@ -85,10 +87,35 @@ class SajuPreviewPipelineTests(unittest.TestCase):
             response.manse.supplementary_positions.tai_yuan.gan_zhi,
             "\u4e01\u5df3",
         )
+        special_star_map = {star.key: star for star in response.manse.special_stars}
+        self.assertEqual(len(response.manse.special_stars), 34)
+        self.assertFalse(special_star_map["cheoneul-gwiin"].active)
+        self.assertEqual(special_star_map["woldeok-gwiin"].tier, "S")
+        self.assertEqual(special_star_map["cheonmun-seong"].tier, "B")
+        self.assertEqual(special_star_map["cheonmun-seong"].scope, "optional")
+        self.assertEqual(special_star_map["wangji-dohwa"].tier, "B")
+        self.assertEqual(special_star_map["mokyok-dohwa"].tier, "A")
+        self.assertEqual(
+            special_star_map["gwimungwan"].method_id,
+            "day-branch-pair-common-kr",
+        )
+        self.assertTrue(special_star_map["yeokma-year-branch"].active)
+        self.assertEqual(
+            [match.pillar_key for match in special_star_map["yeokma-year-branch"].matches],
+            ["month"],
+        )
+        self.assertTrue(special_star_map["gongmang"].active)
         self.assertEqual(len(response.manse.luck_cycles), 10)
         self.assertTrue(all(cycle.gan_zhi for cycle in response.manse.luck_cycles))
         self.assertEqual(response.manse.luck_cycles[0].gan_zhi, "\u4e01\u536f")
         self.assertEqual(response.manse.luck_cycles[0].start_age, 8)
+        self.assertEqual(response.pipeline_status.llm_formatting, "passed")
+        self.assertIsNotNone(response.result.interpretation)
+        self.assertEqual(response.result.interpretation.provider, "fallback")
+        self.assertEqual(response.result.interpretation.prompt_version, "saju-report-v2")
+        self.assertTrue(response.result.interpretation.summary.evidence_ids)
+        self.assertTrue(response.result.interpretation.love.risks)
+        self.assertTrue(response.result.overview)
 
     def test_estimated_birth_time_hides_hour_pillar_outputs(self) -> None:
         request = SimpleNamespace(
@@ -126,6 +153,7 @@ class SajuPreviewPipelineTests(unittest.TestCase):
             response.manse.notes,
             ["\ucd9c\uc0dd\uc2dc\uac04 \ubbf8\uc0c1\uc73c\ub85c \uc2dc\uc8fc\uc640 \uc2dc\uc8fc \uae30\ubc18 \ub300\uc6b4 \uc815\ubcf4\ub294 \ube44\ud65c\uc131\ud654\ub418\uc5c8\uc2b5\ub2c8\ub2e4."],
         )
+        self.assertEqual(response.result.interpretation.provider, "fallback")
 
     def test_preview_pipeline_uses_explicit_luck_cycle_formula(self) -> None:
         request = SimpleNamespace(
