@@ -30,6 +30,7 @@ export type RegionSearchResponse = {
 };
 
 export type SajuPreviewRequest = {
+  locale: "ko" | "en";
   calendar_type: "solar" | "lunar";
   birth_date: string;
   birth_time: string;
@@ -111,6 +112,41 @@ export type ManseTableRow = {
   time: string;
 };
 
+export type ManseSpecialStarMatch = {
+  pillar_key: "year" | "month" | "day" | "time";
+  pillar_label: string;
+  gan_zhi: string;
+  stem: string;
+  branch: string;
+  matched_field: "stem" | "branch" | "gan_zhi" | "pair";
+  matched_value: string;
+  counterpart_pillar_key?: "year" | "month" | "day" | "time" | null;
+  counterpart_pillar_label?: string | null;
+  counterpart_gan_zhi?: string | null;
+  counterpart_branch?: string | null;
+};
+
+export type ManseSpecialStar = {
+  key: string;
+  family: string;
+  label: string;
+  category: "auspicious" | "sinsal";
+  tier: "S" | "A" | "B";
+  scope: "core" | "expanded" | "optional";
+  weight: number;
+  method_id: string;
+  basis_key: string;
+  basis: string;
+  anchor_value: string;
+  target_values: string[];
+  usage_summary: string;
+  usage_keywords: string[];
+  note?: string | null;
+  active: boolean;
+  count: number;
+  matches: ManseSpecialStarMatch[];
+};
+
 export type ManseLuckCycle = {
   index: number;
   gan_zhi: string;
@@ -118,6 +154,8 @@ export type ManseLuckCycle = {
   end_year: number;
   start_age: number;
   end_age: number;
+  start_datetime?: string | null;
+  change_datetime?: string | null;
 };
 
 export type ManseSupplementaryPosition = {
@@ -186,6 +224,7 @@ export type ManseData = {
   luck_cycles_enabled: boolean;
   luck_cycles: ManseLuckCycle[];
   supplementary_positions: ManseSupplementaryPositionSet;
+  special_stars: ManseSpecialStar[];
   notes: string[];
 };
 
@@ -200,6 +239,60 @@ export type SajuResultSignals = {
   career_score: number;
   leadership_score: number;
   internal_grade: "S" | "A" | "B" | "C";
+};
+
+export type InterpretationNarrativeSection = {
+  title: string;
+  body: string;
+  evidence_ids: string[];
+};
+
+export type InterpretationSummaryBlock = {
+  headline: string;
+  overview: string;
+  confidence: "low" | "medium" | "high";
+  evidence_ids: string[];
+};
+
+export type InterpretationAttemptDiagnostic = {
+  attempt_index: number;
+  mode: "generate" | "repair";
+  token_budget: number;
+  status: "success" | "json_invalid" | "validation_error" | "provider_error" | "skipped";
+  response_id?: string | null;
+  output_chars: number;
+  output_excerpt?: string | null;
+  error_type?: string | null;
+  error_message?: string | null;
+  issues: string[];
+};
+
+export type InterpretationDiagnostics = {
+  configured_provider: string;
+  final_provider: "openai" | "fallback";
+  model?: string | null;
+  prompt_version: string;
+  payload_chars: number;
+  duration_ms: number;
+  final_response_id?: string | null;
+  fallback_reason?: string | null;
+  validation_issues: string[];
+  attempts: InterpretationAttemptDiagnostic[];
+};
+
+export type InterpretationReport = {
+  schema_version: "m2-llm-v5";
+  provider: "openai" | "fallback";
+  model?: string | null;
+  prompt_version: string;
+  summary: InterpretationSummaryBlock;
+  core_analysis: InterpretationNarrativeSection;
+  love: InterpretationNarrativeSection;
+  career: InterpretationNarrativeSection;
+  wealth: InterpretationNarrativeSection;
+  luck_flow: InterpretationNarrativeSection;
+  warnings: string[];
+  diagnostics?: InterpretationDiagnostics | null;
 };
 
 export type SajuPreviewResponse = {
@@ -234,6 +327,7 @@ export type SajuPreviewResponse = {
     career: string;
     wealth: string;
     action_advice: string;
+    interpretation?: InterpretationReport | null;
     limitations: string[];
     disabled_sections: string[];
     evidence_sections: Record<string, EvidenceSection>;

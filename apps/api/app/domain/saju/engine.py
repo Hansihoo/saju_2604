@@ -1,3 +1,5 @@
+"""이 파일은 사주 엔진이 사용하는 내부 모델과 interface를 정의한다."""
+
 from dataclasses import dataclass
 from typing import Dict, List, Literal, Optional, Protocol
 
@@ -41,6 +43,8 @@ class LuckCycle:
     exact_start_age_years: Optional[float] = None
     precise_start_age_years: Optional[float] = None
     month_boundary_datetime: Optional[str] = None
+    start_datetime: Optional[str] = None
+    change_datetime: Optional[str] = None
 
 
 @dataclass
@@ -61,4 +65,5 @@ class SajuEngine(Protocol):
         gender: Gender,
         tzid: Optional[str] = None,
     ) -> SajuCalculationResult:
+        """계산 결과를 반환한다."""
         ...

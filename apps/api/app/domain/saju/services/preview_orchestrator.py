@@ -1,3 +1,5 @@
+"""이 파일은 사주 미리보기 파이프라인 전체 순서를 지휘한다."""
+
 from app.diagnostics import log_stage
 from app.domain.saju.adapters import SajuCalculationError
 from app.domain.saju.calendar_normalization import CalendarNormalizationError, normalize_calendar
@@ -22,6 +24,7 @@ def create_saju_preview_response(
     debug_requested: bool,
     service_name: str,
 ) -> SajuPreviewResponse:
+    """사주 미리보기 파이프라인 전단계를 실행하고 최종 응답을 만든다."""
     region = find_region_by_id(payload.region_id)
     log_stage(
         service=service_name,

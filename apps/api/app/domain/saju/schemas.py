@@ -1,9 +1,12 @@
+"""이 파일은 API 요청과 응답에 사용하는 Pydantic schema를 정의한다."""
+
 from datetime import date
 from typing import Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field, constr
 
 from app.domain.saju.analysis import InternalGrade
+from app.domain.saju.interpretation import InterpretationReport
 
 
 PipelineState = Literal["passed", "failed", "skipped", "disabled"]
@@ -35,6 +38,7 @@ class RegionSearchResponse(BaseModel):
 
 
 class SajuPreviewRequest(BaseModel):
+    locale: Literal["ko", "en"] = "ko"
     calendar_type: Literal["solar", "lunar"] = "solar"
     birth_date: date
     birth_time: BirthTimeStr = Field(default="00:00")
@@ -133,6 +137,41 @@ class ManseTableRow(BaseModel):
     time: str
 
 
+class ManseSpecialStarMatch(BaseModel):
+    pillar_key: Literal["year", "month", "day", "time"]
+    pillar_label: str
+    gan_zhi: str
+    stem: str
+    branch: str
+    matched_field: Literal["stem", "branch", "gan_zhi", "pair"]
+    matched_value: str
+    counterpart_pillar_key: Optional[Literal["year", "month", "day", "time"]] = None
+    counterpart_pillar_label: Optional[str] = None
+    counterpart_gan_zhi: Optional[str] = None
+    counterpart_branch: Optional[str] = None
+
+
+class ManseSpecialStar(BaseModel):
+    key: str
+    family: str
+    label: str
+    category: Literal["auspicious", "sinsal"]
+    tier: Literal["S", "A", "B"]
+    scope: Literal["core", "expanded", "optional"]
+    weight: float
+    method_id: str
+    basis_key: str
+    basis: str
+    anchor_value: str
+    target_values: List[str] = Field(default_factory=list)
+    usage_summary: str
+    usage_keywords: List[str] = Field(default_factory=list)
+    note: Optional[str] = None
+    active: bool
+    count: int
+    matches: List[ManseSpecialStarMatch] = Field(default_factory=list)
+
+
 class ManseLuckCycle(BaseModel):
     index: int
     gan_zhi: str
@@ -140,6 +179,8 @@ class ManseLuckCycle(BaseModel):
     end_year: int
     start_age: int
     end_age: int
+    start_datetime: Optional[str] = None
+    change_datetime: Optional[str] = None
 
 
 class ManseSupplementaryPosition(BaseModel):
@@ -208,6 +249,7 @@ class ManseData(BaseModel):
     luck_cycles_enabled: bool
     luck_cycles: List[ManseLuckCycle]
     supplementary_positions: ManseSupplementaryPositionSet
+    special_stars: List[ManseSpecialStar] = Field(default_factory=list)
     notes: List[str]
 
 
@@ -232,6 +274,7 @@ class SajuPreviewResult(BaseModel):
     career: str
     wealth: str
     action_advice: str
+    interpretation: Optional[InterpretationReport] = None
     limitations: List[str]
     disabled_sections: List[str]
     evidence_sections: Dict[str, EvidenceSection]

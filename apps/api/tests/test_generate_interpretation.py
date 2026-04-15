@@ -1,21 +1,28 @@
 import unittest
+import re
 from unittest.mock import patch
 
 from app.domain.saju.interpretation import (
-    InterpretationActionBlock,
-    InterpretationDomainBlock,
-    InterpretationListBlock,
+    InterpretationDiagnostics,
+    InterpretationNarrativeSection,
     InterpretationReport,
     InterpretationSummaryBlock,
 )
 from app.domain.saju.llm_payload import (
+    InterpretationCareerFacts,
+    InterpretationCountMetric,
+    InterpretationCurrentFlowContext,
     InterpretationEvidenceItem,
     InterpretationInputProfile,
+    InterpretationLoveFacts,
+    InterpretationLuckCycle,
     InterpretationPayload,
     InterpretationSignalBlock,
     InterpretationSpecialStar,
+    InterpretationSupplementaryPosition,
     InterpretationTimeContext,
     InterpretationVisiblePillar,
+    InterpretationWealthFacts,
 )
 from app.domain.saju.services.generate_interpretation import (
     _validate_report,
@@ -24,66 +31,199 @@ from app.domain.saju.services.generate_interpretation import (
 )
 
 
-def make_payload(*, estimated: bool = False) -> InterpretationPayload:
+def make_body() -> str:
+    return """
+현재 구조는 강점과 약점의 대비가 비교적 선명하게 보이는 편입니다. 그래서 환경이 맞으면 강점이 빨리 살아나고, 맞지 않으면 피로도 함께 커질 가능성이 있습니다.
+
+### 1. 핵심 구조
+- 현재 보이는 신호를 먼저 정리하는 편이 좋습니다.
+- 강한 기운은 장점이 되지만, 약한 기운을 늦게 보완하면 기복이 생길 수 있습니다.
+- 그래서 방향을 단순하게 잡는 태도가 중요합니다.
+
+### 2. 관리 포인트
+- 장점만 밀기보다 약한 부분을 함께 보완하는 편이 좋습니다.
+- 사람, 일, 돈의 기준을 분리해서 보면 흔들림을 줄일 수 있습니다.
+- 현재 흐름을 같이 읽으면 실전 판단이 더 쉬워집니다.
+""".strip()
+
+
+def make_payload(locale: str = "ko", estimated: bool = False) -> InterpretationPayload:
     return InterpretationPayload(
-        output_sections=["summary", "strengths", "cautions", "love", "career", "wealth", "action_advice"],
+        output_sections=["core_analysis", "love", "career", "wealth", "luck_flow"],
         profile=InterpretationInputProfile(
+            locale=locale,
             calendar_type="solar",
-            birth_date="2024-02-10",
-            birth_time="00:00" if estimated else "10:30",
+            birth_date="1996-06-19",
+            birth_time="00:00" if estimated else "15:03",
             is_birth_time_estimated=estimated,
             is_lunar_leap_month=False,
-            gender="male",
-            region_id="kr-seoul",
-            region_display_name="서울특별시",
+            gender="female",
+            region_id="kr-seoul-special",
+            region_display_name="서울특별시" if locale == "ko" else "Seoul, South Korea",
             tzid="Asia/Seoul",
         ),
         time_context=InterpretationTimeContext(
-            normalized_local_datetime="2024-02-10 10:30:00",
-            normalized_utc_datetime="2024-02-10 01:30:00",
-            corrected_solar_datetime="2024-02-10 09:57:58",
+            normalized_local_datetime="1996-06-19 15:03:00",
+            normalized_utc_datetime="1996-06-19 06:03:00",
+            corrected_solar_datetime="1996-06-19 14:31:00",
             regional_time_offset_minutes=-32.02,
             daylight_saving_offset_minutes=0,
             correction_basis="local_mean_time",
         ),
         visible_pillars=[
-            InterpretationVisiblePillar(key="year", label="연주", gan_zhi="甲辰", stem="甲", branch="辰"),
-            InterpretationVisiblePillar(key="month", label="월주", gan_zhi="丙寅", stem="丙", branch="寅"),
-            InterpretationVisiblePillar(key="day", label="일주", gan_zhi="甲辰", stem="甲", branch="辰"),
-            InterpretationVisiblePillar(key="time", label="시주", gan_zhi="己巳", stem="己", branch="巳"),
+            InterpretationVisiblePillar(
+                key="year",
+                label="연주",
+                gan_zhi="丙子",
+                stem="丙",
+                branch="子",
+                display_label="연주" if locale == "ko" else "Year pillar",
+                display_gan_zhi="병자" if locale == "ko" else "Byeong-Ja",
+                display_stem="병" if locale == "ko" else "Byeong",
+                display_branch="자" if locale == "ko" else "Ja",
+            ),
+            InterpretationVisiblePillar(
+                key="month",
+                label="월주",
+                gan_zhi="甲午",
+                stem="甲",
+                branch="午",
+                display_label="월주" if locale == "ko" else "Month pillar",
+                display_gan_zhi="갑오" if locale == "ko" else "Gap-O",
+                display_stem="갑" if locale == "ko" else "Gap",
+                display_branch="오" if locale == "ko" else "O",
+            ),
+            InterpretationVisiblePillar(
+                key="day",
+                label="일주",
+                gan_zhi="丁酉",
+                stem="丁",
+                branch="酉",
+                display_label="일주" if locale == "ko" else "Day pillar",
+                display_gan_zhi="정유" if locale == "ko" else "Jeong-Yu",
+                display_stem="정" if locale == "ko" else "Jeong",
+                display_branch="유" if locale == "ko" else "Yu",
+            ),
         ],
-        day_master="甲",
-        element_counts={"wood": 3, "fire": 2, "earth": 3, "metal": 0, "water": 0},
-        ten_god_stems={"year": "비견", "month": "식신", "day": "", "time": "정재"},
+        day_master="정" if locale == "ko" else "Jeong",
+        element_counts={"wood": 1, "fire": 3, "earth": 1, "metal": 2, "water": 1},
+        ten_god_stems={"year": "겁재", "month": "정관", "day": "", "time": ""},
         signals=InterpretationSignalBlock(
             internal_grade="B",
-            balance_score=35,
-            charm_score=42,
-            wealth_score=58,
-            career_score=63,
-            leadership_score=49,
-            dominant_elements=["wood", "earth"],
-            missing_elements=["metal", "water"],
+            balance_score=57,
+            charm_score=67,
+            wealth_score=54,
+            career_score=71,
+            leadership_score=48,
+            dominant_elements=["fire", "metal"],
+            missing_elements=["earth"],
         ),
         evidence=[
             InterpretationEvidenceItem(key="elements", title="Five Elements", status="ready", summary="elements"),
             InterpretationEvidenceItem(key="ten_gods", title="Ten Gods", status="ready", summary="ten gods"),
             InterpretationEvidenceItem(key="luck_cycles", title="Luck Cycles", status="ready", summary="luck cycles"),
         ],
-        luck_cycles=[],
-        supplementary_positions=[],
-        special_stars=[
-            InterpretationSpecialStar(
-                key="wangji-dohwa",
-                label="왕지도화",
-                tier="B",
-                category="sinsal",
-                usage_summary="도화 계열 보조 지표",
-                matched_pillars=["year"],
-                evidence_id="star:wangji-dohwa",
+        luck_cycles=[
+            InterpretationLuckCycle(
+                start_age=5,
+                end_age=14,
+                start_year=2000,
+                end_year=2009,
+                gan_zhi="癸巳",
+                display_gan_zhi="계사" if locale == "ko" else "Gye-Sa",
+            ),
+            InterpretationLuckCycle(
+                start_age=25,
+                end_age=34,
+                start_year=2020,
+                end_year=2029,
+                gan_zhi="辛卯",
+                display_gan_zhi="신묘" if locale == "ko" else "Sin-Myo",
+            ),
+            InterpretationLuckCycle(
+                start_age=35,
+                end_age=44,
+                start_year=2030,
+                end_year=2039,
+                gan_zhi="庚寅",
+                display_gan_zhi="경인" if locale == "ko" else "Gyeong-In",
+            ),
+        ],
+        current_flow=InterpretationCurrentFlowContext(
+            current_year=2026,
+            current_age=29,
+            active_luck_cycle=InterpretationLuckCycle(
+                start_age=25,
+                end_age=34,
+                start_year=2020,
+                end_year=2029,
+                gan_zhi="辛卯",
+                display_gan_zhi="신묘" if locale == "ko" else "Sin-Myo",
+            ),
+            next_luck_cycle=InterpretationLuckCycle(
+                start_age=35,
+                end_age=44,
+                start_year=2030,
+                end_year=2039,
+                gan_zhi="庚寅",
+                display_gan_zhi="경인" if locale == "ko" else "Gyeong-In",
+            ),
+        ),
+        love_facts=InterpretationLoveFacts(
+            score=67,
+            spouse_house_label="배우자궁" if locale == "ko" else "Spouse house",
+            spouse_house_branch="유" if locale == "ko" else "Yu",
+            spouse_house_ten_god="편재" if locale == "ko" else "Indirect Wealth",
+            partner_star_label="관성" if locale == "ko" else "Officer star",
+            partner_star_count=2,
+            active_star_labels=["도화", "홍염"] if locale == "ko" else ["Peach Blossom", "Red Charm"],
+        ),
+        career_facts=InterpretationCareerFacts(
+            score=71,
+            month_pillar_label="월주" if locale == "ko" else "Month pillar",
+            month_pillar_gan_zhi="갑오" if locale == "ko" else "Gap-O",
+            month_stem_ten_god="정관" if locale == "ko" else "Direct Officer",
+            key_ten_gods=[
+                InterpretationCountMetric(key="officer", label="관성" if locale == "ko" else "Officer stars", count=2),
+                InterpretationCountMetric(key="resource", label="인성" if locale == "ko" else "Resource stars", count=1),
+                InterpretationCountMetric(key="output", label="식상" if locale == "ko" else "Output stars", count=2),
+            ],
+            active_star_labels=["문창귀인", "학당"] if locale == "ko" else ["Literary Star", "Study Hall"],
+        ),
+        wealth_facts=InterpretationWealthFacts(
+            score=54,
+            key_ten_gods=[
+                InterpretationCountMetric(key="wealth", label="재성" if locale == "ko" else "Wealth stars", count=1),
+                InterpretationCountMetric(key="output", label="식상" if locale == "ko" else "Output stars", count=2),
+                InterpretationCountMetric(key="peer", label="비겁" if locale == "ko" else "Peer stars", count=1),
+            ],
+            active_star_labels=["월덕귀인"] if locale == "ko" else ["Monthly Virtue"],
+            missing_elements=["earth"] if locale == "ko" else ["earth"],
+        ),
+        supplementary_positions=[
+            InterpretationSupplementaryPosition(
+                key="tai_yuan",
+                label="태원",
+                gan_zhi="丙申",
+                display_label="태원" if locale == "ko" else "Tai Yuan",
+                display_gan_zhi="병신" if locale == "ko" else "Byeong-Sin",
             )
         ],
-        limitations=["출생시간 미상으로 시주 해석 제한"] if estimated else [],
+        special_stars=[
+            InterpretationSpecialStar(
+                key="dohwa-day-branch",
+                label="도화",
+                tier="S",
+                category="sinsal",
+                usage_summary="relationship signal",
+                matched_pillars=["day"],
+                evidence_id="star:dohwa-day-branch",
+                display_label="도화" if locale == "ko" else "Peach Blossom",
+            )
+        ],
+        limitations=["출생시간 미상으로 시주 기반 해석을 제한합니다."] if estimated and locale == "ko" else (
+            ["Hour-pillar-based interpretation is limited because the birth time is estimated."] if estimated else []
+        ),
         disabled_sections=["time_pillar"] if estimated else [],
         notes=[],
         narrative_rules=[],
@@ -91,59 +231,23 @@ def make_payload(*, estimated: bool = False) -> InterpretationPayload:
     )
 
 
-def make_report(*, confidence: str = "medium", advice_text: str = "1. 속도를 조절하세요. 2. 기대치를 먼저 맞추세요.") -> InterpretationReport:
+def make_report(confidence: str = "medium") -> InterpretationReport:
+    body = make_body()
     return InterpretationReport(
         provider="openai",
         model="gpt-5.4",
-        prompt_version="saju-report-v2",
+        prompt_version="saju-report-v7",
         summary=InterpretationSummaryBlock(
-            headline="관계의 속도 조절이 중요한 흐름",
-            core_theme="호감은 생기지만 리듬을 맞추는 과정이 중요합니다.",
+            headline="현재 흐름을 함께 보는 사주",
+            overview="현재 기준 흐름과 원국 구조를 함께 반영해 장점과 주의점을 읽는 해석입니다. 연애, 직장, 금전 모두 현재 대운과 다음 대운의 연결을 같이 보도록 구성했습니다.",
             confidence=confidence,
             evidence_ids=["elements"],
         ),
-        strengths=InterpretationListBlock(
-            items=["감정의 반응은 분명한 편입니다."],
-            analysis="호감이 생기면 관계의 방향을 비교적 빨리 잡는 편입니다.",
-            evidence_ids=["elements"],
-        ),
-        cautions=InterpretationListBlock(
-            items=["속도 차이를 놓치면 피로가 쌓일 수 있습니다."],
-            analysis="관계의 온도 차이를 관리하지 않으면 오해가 커질 수 있습니다.",
-            evidence_ids=["elements"],
-        ),
-        love=InterpretationDomainBlock(
-            score=42,
-            tone="mixed",
-            strengths=["호감 신호를 알아차리는 편입니다."],
-            risks=["표현 속도가 상대보다 빠르면 부담이 생길 수 있습니다."],
-            conditions=["반응을 확인하며 표현 강도를 조절하는 편이 좋습니다."],
-            analysis="호감은 분명하지만 속도를 조절할수록 관계가 안정됩니다.",
-            evidence_ids=["elements", "star:wangji-dohwa"],
-        ),
-        career=InterpretationDomainBlock(
-            score=63,
-            tone="mixed",
-            strengths=["일에서는 추진력이 비교적 살아 있습니다."],
-            risks=["균형이 깨지면 집중력이 흔들릴 수 있습니다."],
-            conditions=["일정 리듬을 고르게 유지하는 편이 좋습니다."],
-            analysis="무리하지 않으면 강점을 유지하기 좋습니다.",
-            evidence_ids=["elements"],
-        ),
-        wealth=InterpretationDomainBlock(
-            score=58,
-            tone="mixed",
-            strengths=["기본 흐름은 무난한 편입니다."],
-            risks=["기분에 따라 지출이 흔들릴 수 있습니다."],
-            conditions=["지출 기준을 먼저 정하면 안정적입니다."],
-            analysis="크게 몰아가기보다 균형이 중요합니다.",
-            evidence_ids=["elements"],
-        ),
-        action_advice=InterpretationActionBlock(
-            text=advice_text,
-            evidence_ids=["elements"],
-        ),
-        luck_cycles=[],
+        core_analysis=InterpretationNarrativeSection(title="내 사주의 특징", body=body, evidence_ids=["elements"]),
+        love=InterpretationNarrativeSection(title="연애운과 결혼운", body=body, evidence_ids=["ten_gods"]),
+        career=InterpretationNarrativeSection(title="직장운", body=body, evidence_ids=["ten_gods"]),
+        wealth=InterpretationNarrativeSection(title="금전운", body=body, evidence_ids=["elements"]),
+        luck_flow=InterpretationNarrativeSection(title="현재와 다음 흐름", body=body, evidence_ids=["luck_cycles"]),
         warnings=[],
     )
 
@@ -153,26 +257,79 @@ class GenerateInterpretationTests(unittest.TestCase):
         report = build_fallback_interpretation_report(make_payload(estimated=True))
         self.assertEqual(report.summary.confidence, "low")
 
-    def test_validator_blocks_relative_wording_without_percentile_support(self) -> None:
+    def test_fallback_does_not_expose_numeric_scores(self) -> None:
+        report = build_fallback_interpretation_report(make_payload())
+        combined = "\n".join(
+            [
+                report.summary.overview,
+                report.core_analysis.body,
+                report.love.body,
+                report.career.body,
+                report.wealth.body,
+            ]
+        )
+        self.assertIsNone(re.search(r"\d+\s*점", combined))
+        self.assertNotIn("/100", combined)
+
+    def test_validator_blocks_numeric_relative_wording(self) -> None:
         payload = make_payload()
         report = make_report()
-        report.love.analysis = "상위 10% 수준의 끌림이 보입니다."
+        report.core_analysis.body += "\n- 상위 10% 수준으로 강합니다.\n"
         issues = _validate_report(report, payload)
-        self.assertTrue(any(issue.startswith("relative_wording_without_percentile") for issue in issues))
+        self.assertIn("relative_wording_without_percentile:numeric", issues)
 
     def test_validator_blocks_banned_phrases(self) -> None:
         payload = make_payload()
         report = make_report()
-        report.summary.core_theme = "운명의 상대를 반드시 만나는 흐름입니다."
+        report.love.body += "\n- 운명의 상대를 반드시 만납니다.\n"
         issues = _validate_report(report, payload)
         self.assertTrue(any(issue.startswith("banned_phrase:") for issue in issues))
+
+    def test_validator_requires_heading_and_bullets(self) -> None:
+        payload = make_payload()
+        report = make_report()
+        report.career.body = "짧은 본문만 있습니다."
+        issues = _validate_report(report, payload)
+        self.assertIn("career.body:too_short", issues)
+        self.assertIn("career.body:missing_subheadings", issues)
+        self.assertIn("career.body:missing_bullets", issues)
+
+    def test_validator_blocks_hanja_in_korean_output(self) -> None:
+        payload = make_payload(locale="ko")
+        report = make_report()
+        report.summary.overview += " 甲"
+        issues = _validate_report(report, payload)
+        self.assertIn("language:contains_hanja", issues)
+
+    def test_validator_blocks_exposed_scores(self) -> None:
+        payload = make_payload()
+        report = make_report()
+        report.summary.overview += " 균형 점수는 57점입니다."
+        issues = _validate_report(report, payload)
+        self.assertIn("score_exposed_in_user_text", issues)
 
     def test_generate_interpretation_falls_back_when_validation_fails(self) -> None:
         payload = make_payload(estimated=True)
         invalid_report = make_report(confidence="high")
+        invalid_report.summary.overview = "짧음"
         with patch(
             "app.domain.saju.services.generate_interpretation._call_openai_structured_interpretation",
-            return_value=(invalid_report, "resp_test"),
+            return_value=(
+                invalid_report,
+                InterpretationDiagnostics(
+                    configured_provider="openai",
+                    final_provider="openai",
+                    model="gpt-5.4-mini",
+                    prompt_version="saju-report-v7",
+                    payload_chars=123,
+                    duration_ms=999,
+                    final_response_id="resp_test",
+                    attempts=[],
+                ),
+            ),
+        ), patch(
+            "app.domain.saju.services.generate_interpretation.settings.llm_provider",
+            "openai",
         ), patch(
             "app.domain.saju.services.generate_interpretation.settings.openai_api_key",
             "test-key",
@@ -184,6 +341,8 @@ class GenerateInterpretationTests(unittest.TestCase):
             )
         self.assertEqual(report.provider, "fallback")
         self.assertTrue(report.warnings)
+        self.assertIsNotNone(report.diagnostics)
+        self.assertEqual(report.diagnostics.fallback_reason, "validation_failed")
 
 
 if __name__ == "__main__":

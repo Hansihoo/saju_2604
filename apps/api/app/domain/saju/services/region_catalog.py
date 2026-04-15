@@ -1,3 +1,5 @@
+"""이 파일은 지역 검색과 선택 검증 로직을 제공한다."""
+
 import re
 import unicodedata
 from typing import Dict, Iterable, List
@@ -10,11 +12,13 @@ from app.domain.saju.schemas import RegionSuggestion
 
 
 def _normalize_text(value: str) -> str:
+    """텍스트를 정규화한다."""
     normalized = unicodedata.normalize("NFKC", value).strip().lower()
     return re.sub(r"[\s,]+", "", normalized)
 
 
 def _candidate_terms(region: RegionRecord) -> Iterable[str]:
+    """terms 관련 값을 반환하거나 처리한다."""
     values = [
         region.display_name,
         region.country,
@@ -28,6 +32,7 @@ def _candidate_terms(region: RegionRecord) -> Iterable[str]:
 
 
 def search_regions(*, query: str, limit: int) -> List[Dict[str, object]]:
+    """검색어에 맞는 지역 후보를 찾아 반환한다."""
     normalized = _normalize_text(query)
     if not normalized:
         return []
@@ -45,6 +50,7 @@ def search_regions(*, query: str, limit: int) -> List[Dict[str, object]]:
 
 
 def find_region_by_id(region_id: str) -> RegionSuggestion:
+    """선택된 region_id를 검증하고 해당 지역 모델을 반환한다."""
     region = get_region_by_id(region_id)
     if region is not None:
         return RegionSuggestion(**region.to_public_dict())

@@ -362,3 +362,85 @@
 1. Keep the current testing output stable while M2 is wired
 2. Add the actual LLM/provider interpretation boundary
 3. Replace temporary testing emphasis with final user-facing interpretation once M2 is ready
+
+## 2026-04-11 Developer Verification Screen
+
+### Done
+- The developer page now has its own input-and-inspection workflow.
+- Browser-based human verification of manse output is now possible without switching to Swagger or raw CLI output.
+
+## 2026-04-11 Special Stars Block
+
+### Done
+- Added deterministic Manse output for major special stars and auspicious stars.
+- The current scope includes 천을귀인, 도화, 역마, 화개, 장성, 양인, 공망, 괴강.
+- Service test output and developer verification output now expose the same star payload.
+- Golden validation stayed green after the schema expansion.
+
+### Next
+1. Keep the developer workbench stable for golden-answer review
+2. Decide which special-star fields remain debug-only and which survive into the final user-facing interpretation layer
+3. Add the actual LLM/provider interpretation boundary
+
+## 2026-04-11 Special Stars Validation Scope
+
+### Now enforced by golden automation
+- `cheoneul-gwiin`
+- `yangin`
+- `gwaegang`
+
+### Kept as diagnostic-only for now
+- `dohwa`
+- `yeokma`
+- `hwagae`
+- `jangseong`
+- `gongmang`
+
+### Why the split exists
+- The answer sheets clearly contain star information, so the project now parses that section automatically.
+- However, only the three enforced stars currently match the implemented deterministic rules across all golden cases.
+- The diagnostic-only stars need a follow-up convention review before they should block CI.
+
+### Follow-up order
+1. Freeze the current automated subset so regressions are caught immediately
+2. Research and document the exact source convention for the remaining stars
+3. Move each remaining star from diagnostic-only to strict golden validation once its rule is confirmed
+
+## 2026-04-11 Special-Star Registry Direction
+
+### Current shape
+- `response.manse.special_stars` is now a registry-style payload instead of a minimal hit list.
+- Each entry carries both calculation data and interpretation metadata for later LLM use.
+
+### Metadata now available to downstream interpretation
+- `family`
+- `tier`
+- `scope`
+- `weight`
+- `method_id`
+- `basis_key`
+- `basis`
+- `usage_summary`
+- `usage_keywords`
+- `count`
+- pair-aware `matches`
+
+### Supported tiers
+- S/core:
+  - 천을귀인, 월덕귀인, 문창귀인, 태극귀인, 학당, 사관
+  - 도화, 역마, 화개, 장성
+  - 양인, 공망, 괴강
+- A/expanded:
+  - 천덕귀인
+  - 현침살
+  - 백호대살 classic / modern_kr
+  - 고진, 과숙, 원진
+- B/optional:
+  - 홍염살
+  - 문곡귀인
+  - 귀문관
+
+### Next
+1. Decide which metadata fields are surfaced in final user UI versus kept developer/LLM-only
+2. Expand golden answer coverage if future answer sheets start including more stable star references
+3. Revisit ambiguous A/B formulas if a stronger source convention is chosen later

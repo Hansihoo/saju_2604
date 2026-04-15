@@ -1,3 +1,5 @@
+"""이 파일은 FastAPI app을 생성하고 공통 미들웨어와 예외 처리기를 등록한다."""
+
 from time import perf_counter
 
 from fastapi import FastAPI, Request
@@ -32,6 +34,7 @@ app.add_middleware(
 
 @app.exception_handler(RequestValidationError)
 async def handle_validation_error(request: Request, exc: RequestValidationError):
+    """입력 schema 검증 실패를 공통 API 오류 응답 형식으로 변환한다."""
     return JSONResponse(
         status_code=422,
         content={
@@ -46,6 +49,7 @@ async def handle_validation_error(request: Request, exc: RequestValidationError)
 
 @app.exception_handler(TimeCorrectionError)
 async def handle_time_correction_error(request: Request, exc: TimeCorrectionError):
+    """시간 보정 단계 오류를 공통 API 오류 응답 형식으로 변환한다."""
     return JSONResponse(
         status_code=400,
         content={
@@ -60,6 +64,7 @@ async def handle_time_correction_error(request: Request, exc: TimeCorrectionErro
 
 @app.exception_handler(CalendarNormalizationError)
 async def handle_calendar_normalization_error(request: Request, exc: CalendarNormalizationError):
+    """달력 정규화 오류를 공통 API 오류 응답 형식으로 변환한다."""
     return JSONResponse(
         status_code=400,
         content={
@@ -74,6 +79,7 @@ async def handle_calendar_normalization_error(request: Request, exc: CalendarNor
 
 @app.exception_handler(SajuCalculationError)
 async def handle_saju_calculation_error(request: Request, exc: SajuCalculationError):
+    """사주 계산 오류를 공통 API 오류 응답 형식으로 변환한다."""
     return JSONResponse(
         status_code=400,
         content={
@@ -88,6 +94,7 @@ async def handle_saju_calculation_error(request: Request, exc: SajuCalculationEr
 
 @app.exception_handler(StarletteHTTPException)
 async def handle_http_exception(request: Request, exc: StarletteHTTPException):
+    """일반 HTTP 예외를 공통 API 오류 응답 형식으로 변환한다."""
     detail = exc.detail if isinstance(exc.detail, dict) else {"message": str(exc.detail)}
     return JSONResponse(
         status_code=exc.status_code,
@@ -102,6 +109,7 @@ async def handle_http_exception(request: Request, exc: StarletteHTTPException):
 
 @app.middleware("http")
 async def trace_middleware(request: Request, call_next):
+    """각 요청에 trace 정보를 부여하고 처리 결과를 로깅한다."""
     started_at = perf_counter()
     trace_id = request.headers.get("X-Trace-Id") or create_trace_id()
     request.state.trace_id = trace_id

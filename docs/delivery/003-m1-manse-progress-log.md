@@ -446,3 +446,95 @@ python -m app.tools.run_golden_validation
 - five-element counts and percentages
 - luck cycles
 - supplementary positions
+
+## 2026-04-11 Developer Manse Workbench
+
+### Completed
+- Refactored shared input behavior into a reusable hook.
+- Added a developer-only input panel with the same validation and autocomplete flow as the service page.
+- Added a browser-based manse inspector for human verification.
+- Split the developer result into readable review sections instead of a single raw debug dump.
+- Switched visible Manse output from Hanja-first rendering to Hangul-first rendering in both the service result and developer inspector.
+
+### Review focus
+- meta first
+- canonical manse table second
+- smaller comparison tables after that
+- raw JSON last
+
+## 2026-04-11 Special Stars Extension
+
+### Completed
+- Added a chart-level `special_stars` block to the Manse schema.
+- Added the following rules into the deterministic backend layer:
+  - 천을귀인
+  - 도화: 연지 기준, 일지 기준
+  - 역마: 연지 기준, 일지 기준
+  - 화개: 연지 기준, 일지 기준
+  - 장성: 연지 기준, 일지 기준
+  - 양인
+  - 공망: 일주 기준
+  - 괴강
+- Kept estimated-time policy intact so hidden time pillars are excluded from visible matches.
+- Added readable review tables for the new star block in both the service testing view and the developer inspector.
+
+### Validation
+- `python -m unittest discover -s tests -p "test_*.py"`: `52 passed`, `1 skipped`
+- `python -m app.tools.run_golden_validation`: `7/7 match`
+- `pnpm --dir "D:\\5_project\\SaJu(2)\\apps\\web" build`: passed
+
+## 2026-04-11 Special Stars Golden Validation
+
+### Completed
+- Extended the golden parser and actual snapshot builder so answer sheets can participate in automatic `special_stars` validation.
+- Added strict golden comparison for the stable subset:
+  - `cheoneul-gwiin`
+  - `yangin`
+  - `gwaegang`
+- Normalized matched-pillar ordering so answer-sheet row order no longer creates false mismatches.
+- Regenerated canonical expected JSON files from the source answer sheets.
+
+### Notes
+- `dohwa`, `yeokma`, `hwagae`, `jangseong`, and `gongmang` remain in the live API payload.
+- They are not yet part of strict golden pass/fail because the current answer sheets and the implemented deterministic rules still use different reference conventions.
+- Once that convention is fixed, they can be added to the same golden path without restructuring the test system.
+
+### Validation
+- `python -X utf8 -m unittest tests.test_golden_case_tools tests.test_special_stars`: passed
+- `python -X utf8 -m unittest discover -s tests -p "test_*.py"`: `52 passed`, `1 skipped`
+- `python -X utf8 -m app.tools.run_golden_validation`: `7/7 match`
+- `pnpm --dir "D:\\5_project\\SaJu(2)\\apps\\web" build`: passed
+
+## 2026-04-11 Extended Special-Star Registry
+
+### Completed
+- Rebuilt `special_stars` from a small fixed list into a metadata-rich registry.
+- Each star payload now carries LLM-friendly metadata:
+  - `family`
+  - `tier`
+  - `scope`
+  - `weight`
+  - `method_id`
+  - `basis_key`
+  - `usage_summary`
+  - `usage_keywords`
+  - `count`
+- Added pair-aware match data so relation-based stars can explain counterpart pillars instead of only listing a single hit.
+- Expanded the deterministic set to cover:
+  - S tier: 천을귀인, 월덕귀인, 문창귀인, 태극귀인, 학당, 사관, 도화, 역마, 화개, 장성, 양인, 공망, 괴강
+  - A tier: 천덕귀인, 현침살, 백호대살 classic/modern_kr, 고진, 과숙, 원진
+  - B tier: 홍염살, 문곡귀인, 귀문관
+
+### Method handling
+- Kept method-sensitive stars explicit instead of pretending there is only one formula.
+- `baekho-daesal` is split by method id:
+  - `day-pillar-classic`
+  - `day-pillar-modern-kr`
+- `cheondeok-gwiin` records the trigram-to-branch conversion rule in `method_id` and `note`.
+- `hyeonchim` uses a conservative pattern rule and marks that choice in its note.
+
+### Validation
+- `python -X utf8 -m unittest tests.test_special_stars tests.test_saju_preview_pipeline`: passed
+- `python -X utf8 -m unittest discover -s tests -p "test_*.py"`: `53 passed`, `1 skipped`
+- `python -X utf8 -m app.tools.run_golden_validation`: `7/7 match`
+- `pnpm --dir "D:\\5_project\\SaJu(2)\\apps\\web" build`: passed

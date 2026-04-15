@@ -1,3 +1,5 @@
+"""이 파일은 CSV 시드 데이터를 읽어 지역 목록으로 변환한다."""
+
 import csv
 from functools import lru_cache
 from pathlib import Path
@@ -164,17 +166,20 @@ MANUAL_REGION_OVERRIDES: List[Dict[str, object]] = [
 
 
 def _display_name(province: str, city: str) -> str:
+    """name 관련 값을 반환하거나 처리한다."""
     if province == city:
         return city
     return f"{city}, {province}"
 
 
 def _fallback_region_id(province: str, city: str) -> str:
+    """지역 ID 관련 값을 반환하거나 처리한다."""
     encoded = f"{province}-{city}".encode("utf-8").hex()
     return f"kr-{encoded}"
 
 
 def _trim_locality_suffix(locality: str) -> Optional[str]:
+    """locality suffix을 다듬는다."""
     for suffix in ("특별자치시", "특별시", "광역시", "특별자치도", "자치시", "시"):
         if locality.endswith(suffix) and len(locality) > len(suffix):
             return locality[: -len(suffix)]
@@ -182,6 +187,7 @@ def _trim_locality_suffix(locality: str) -> Optional[str]:
 
 
 def _make_aliases(province: str, city: str) -> List[str]:
+    """aliases 관련 값을 반환하거나 처리한다."""
     province_aliases = [province, *PROVINCE_ALIASES.get(province, [])]
     city_aliases = [city, *SPECIAL_LOCALITY_ALIASES.get((province, city), [])]
     trimmed_city = _trim_locality_suffix(city)
@@ -218,6 +224,7 @@ def _make_aliases(province: str, city: str) -> List[str]:
 
 
 def _row_to_region(row: Dict[str, str]) -> Dict[str, object]:
+    """to 지역 관련 값을 반환하거나 처리한다."""
     province = row["시도"].strip()
     city = row["시"].strip()
     region_id = REGION_ID_BY_LOCALITY.get((province, city), _fallback_region_id(province, city))
@@ -237,6 +244,7 @@ def _row_to_region(row: Dict[str, str]) -> Dict[str, object]:
 
 @lru_cache(maxsize=1)
 def load_region_options() -> List[Dict[str, object]]:
+    """지역 options을 불러온다."""
     with DATA_PATH.open("r", encoding="utf-8-sig", newline="") as file:
         reader = csv.DictReader(file)
         return [_row_to_region(row) for row in reader] + list(MANUAL_REGION_OVERRIDES)

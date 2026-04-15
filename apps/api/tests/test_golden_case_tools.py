@@ -33,6 +33,16 @@ class GoldenCaseToolTests(unittest.TestCase):
         self.assertEqual(case.expected.luck_cycle_header.start_age, 10)
         self.assertEqual(case.expected.luck_cycles[0].gan_zhi, "경자")
 
+        aru_case = load_golden_answer_text(
+            SOURCE_DIR / "aru.txt",
+            case_id="aru",
+            source_name="아르",
+        )
+        special_star_map = {star.key: star for star in aru_case.expected.special_stars}
+        self.assertEqual(sorted(special_star_map.keys()), ["cheoneul-gwiin", "gwaegang", "yangin"])
+        self.assertTrue(special_star_map["gwaegang"].active)
+        self.assertEqual(special_star_map["gwaegang"].matched_pillars, ["day"])
+
     def test_builds_actual_golden_snapshot(self) -> None:
         case = GoldenKnownAnswerCase.model_validate_json(
             (EXPECTED_DIR / "pororo.json").read_text(encoding="utf-8")
@@ -45,6 +55,9 @@ class GoldenCaseToolTests(unittest.TestCase):
         self.assertEqual(actual.pillar_table["year"].gan_zhi, "병자")
         self.assertEqual(actual.luck_cycle_header.reference_pillar, "신축")
         self.assertGreater(len(actual.luck_cycles), 0)
+        special_star_map = {star.key: star for star in actual.special_stars}
+        self.assertEqual(sorted(special_star_map.keys()), ["cheoneul-gwiin", "gwaegang", "yangin"])
+        self.assertIsInstance(special_star_map["gwaegang"].matched_pillars, list)
 
     def test_reports_mismatch_paths_in_structured_form(self) -> None:
         case = GoldenKnownAnswerCase.model_validate_json(

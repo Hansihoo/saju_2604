@@ -1,3 +1,5 @@
+"""이 파일은 만세력을 조립하는 로직을 담는다."""
+
 from typing import Dict, List, Optional
 
 from app.domain.saju.analysis import AnalysisResult
@@ -15,6 +17,7 @@ from app.domain.saju.schemas import (
     ManseTableRow,
 )
 from app.domain.saju.services.birth_time_policy import BirthTimePolicyResult
+from app.domain.saju.services.calculate_special_stars import build_special_stars
 
 
 PILLAR_LABELS = {
@@ -203,6 +206,7 @@ def _twelve_shinsal_for_pillar(
     # Golden answers align with the convention where:
     # - the year pillar's 12신살 is anchored on the day branch
     # - the month/day/time pillar 12신살 are anchored on the year branch
+    """shinsal for 기둥 관련 값을 반환하거나 처리한다."""
     anchor_branch = pillars["day"].branch if pillar_key == "year" else pillars["year"].branch
     group_key = SAMHAP_GROUP_BY_BRANCH.get(anchor_branch)
     if not group_key:
@@ -211,28 +215,34 @@ def _twelve_shinsal_for_pillar(
 
 
 def _mask_value(value: str, enabled: bool) -> Optional[str]:
+    """값을 숨긴다."""
     return value if enabled else None
 
 
 def _mask_list(values: List[str], enabled: bool) -> List[str]:
+    """list을 숨긴다."""
     return list(values) if enabled else []
 
 
 def _normalize_ten_god(value: str, *, pillar_key: str, role: str) -> str:
+    """ten god를 정규화한다."""
     if pillar_key == "day" and role == "stem":
         return "비견"
     return TEN_GOD_KO_BY_VALUE.get(value, value)
 
 
 def _normalize_twelve_fortune(value: str) -> str:
+    """twelve fortune를 정규화한다."""
     return TWELVE_FORTUNE_KO_BY_VALUE.get(value, value)
 
 
 def _normalize_twelve_shinsal(value: str) -> str:
+    """twelve shinsal를 정규화한다."""
     return TWELVE_SHINSAL_KO_BY_VALUE.get(value, value)
 
 
 def _normalize_hidden_stems(branch: str, fallback_values: List[str]) -> List[str]:
+    """지장간 stems를 정규화한다."""
     if branch in HIDDEN_STEMS_BY_BRANCH:
         return list(HIDDEN_STEMS_BY_BRANCH[branch])
     return [value for value in fallback_values if value]
@@ -245,6 +255,7 @@ def _build_pillar(
     enabled: bool,
     twelve_shinsal: str,
 ) -> MansePillar:
+    """기둥을 조립한다."""
     return MansePillar(
         key=pillar_key,
         label=PILLAR_LABELS[pillar_key],
@@ -279,6 +290,7 @@ def _build_pillar(
 
 
 def _row_value(pillars: Dict[str, MansePillar], pillar_key: str, field_name: str) -> str:
+    """값 관련 값을 반환하거나 처리한다."""
     value = getattr(pillars[pillar_key], field_name)
     if value is None:
         return ""
@@ -288,6 +300,7 @@ def _row_value(pillars: Dict[str, MansePillar], pillar_key: str, field_name: str
 
 
 def _build_table_rows(pillars: Dict[str, MansePillar]) -> List[ManseTableRow]:
+    """표 rows을 조립한다."""
     row_specs = [
         ("천간", "stem"),
         ("천간 십성", "stem_ten_god"),
@@ -316,6 +329,7 @@ def _build_visible_ten_god_distribution(
     pillars: Dict[str, MansePillar],
     visible_pillar_keys: List[str],
 ) -> Dict[str, int]:
+    """표시 대상 ten god distribution을 조립한다."""
     distribution: Dict[str, int] = {}
     for pillar_key in visible_pillar_keys:
         pillar = pillars[pillar_key]
@@ -333,6 +347,7 @@ def _build_analysis_summary(
     first_luck_cycle,
     luck_cycles_enabled: bool,
 ) -> ManseAnalysisSummary:
+    """분석 요약을 조립한다."""
     return ManseAnalysisSummary(
         visible_element_total=analysis_result.visible_element_total,
         imbalance_gap=analysis_result.imbalance_gap,
@@ -372,6 +387,7 @@ def _build_supplementary_positions(
     *,
     supplementary_positions: Dict[str, SupplementaryPosition],
 ) -> ManseSupplementaryPositionSet:
+    """보조 위치 목록을 조립한다."""
     positions: Dict[str, ManseSupplementaryPosition] = {}
     for key in ["tai_yuan", "ming_gong", "shen_gong", "tai_xi"]:
         position = supplementary_positions[key]
@@ -390,6 +406,7 @@ def build_manse_data(
     analysis_result: AnalysisResult,
     birth_time_policy: BirthTimePolicyResult,
 ) -> ManseData:
+    """계산 결과와 분석 결과를 만세력 응답 모델로 조립한다."""
     visible_luck_cycles = [cycle for cycle in saju_calculation.luck_cycles if cycle.gan_zhi]
     first_luck_cycle = visible_luck_cycles[0] if visible_luck_cycles else None
     pillar_enabled_map = {
@@ -444,6 +461,8 @@ def build_manse_data(
                     "end_year": cycle.end_year,
                     "start_age": cycle.start_age,
                     "end_age": cycle.end_age,
+                    "start_datetime": cycle.start_datetime,
+                    "change_datetime": cycle.change_datetime,
                 }
                 for cycle in visible_luck_cycles
             ]
@@ -452,6 +471,10 @@ def build_manse_data(
         ),
         supplementary_positions=_build_supplementary_positions(
             supplementary_positions=saju_calculation.supplementary_positions,
+        ),
+        special_stars=build_special_stars(
+            pillars=saju_calculation.pillars,
+            visible_pillar_keys=list(birth_time_policy.visible_pillar_keys),
         ),
         notes=notes,
     )

@@ -5,6 +5,9 @@ import { Locale, getCopy } from "../../../shared/copy";
 
 type SajuFormProps = {
   locale: Locale;
+  className?: string;
+  submitLabel?: string;
+  loadingLabel?: string;
   birthDate: string;
   birthTime: string;
   isBirthTimeEstimated: boolean;
@@ -34,6 +37,9 @@ type SajuFormProps = {
 
 export function SajuForm({
   locale,
+  className,
+  submitLabel,
+  loadingLabel,
   birthDate,
   birthTime,
   isBirthTimeEstimated,
@@ -64,12 +70,16 @@ export function SajuForm({
   const showRegionSuggestions = isRegionFocused && regionQuery.trim().length > 0;
 
   return (
-    <form className="service-form" onSubmit={onSubmit}>
+    <form className={className ?? "service-form"} onSubmit={onSubmit}>
       <div className="form-field">
         <label htmlFor="birth-date">{texts.birthDate}</label>
         <input
           id="birth-date"
-          type="date"
+          type="text"
+          inputMode="numeric"
+          autoComplete="bday"
+          placeholder={texts.birthDatePlaceholder}
+          maxLength={10}
           value={birthDate}
           onChange={(event) => onBirthDateChange(event.target.value)}
         />
@@ -80,7 +90,11 @@ export function SajuForm({
         <div className="time-field-row">
           <input
             id="birth-time"
-            type="time"
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            placeholder={texts.birthTimePlaceholder}
+            maxLength={5}
             value={birthTime}
             disabled={isBirthTimeEstimated}
             onChange={(event) => onBirthTimeChange(event.target.value)}
@@ -197,7 +211,7 @@ export function SajuForm({
       {error ? <p className="form-error">{error}</p> : null}
 
       <button className="submit-button" type="submit" disabled={loading}>
-        {loading ? texts.loading : texts.submit}
+        {loading ? loadingLabel ?? texts.loading : submitLabel ?? texts.submit}
       </button>
     </form>
   );

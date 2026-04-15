@@ -1,5 +1,6 @@
 import { SajuPreviewResponse } from "../../shared/api/contracts";
 import { Locale } from "../../shared/copy";
+import { formatManseText } from "../shared/manseDisplay";
 
 const elementLabels = {
   ko: {
@@ -80,7 +81,7 @@ export function buildResultNarrative(
   const dominant = getElementList(locale, signals.dominant_elements);
   const missing = getElementList(locale, signals.missing_elements);
   const pillars = response.manse.meta.visible_pillar_keys
-    .map((key) => response.manse.pillars[key].gan_zhi)
+    .map((key) => formatManseText(response.manse.pillars[key].gan_zhi, locale))
     .filter(Boolean)
     .join(" / ");
 

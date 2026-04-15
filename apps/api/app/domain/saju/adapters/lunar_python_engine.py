@@ -1,3 +1,5 @@
+"""이 파일은 lunar_python 라이브러리를 내부 사주 엔진 interface에 맞게 감싼다."""
+
 from datetime import datetime
 from typing import Dict, List, Optional
 
@@ -24,6 +26,7 @@ ELEMENT_KEY_BY_CHAR = {
 
 class SajuCalculationError(ValueError):
     def __init__(self, *, error_code: str, message: str, meta: Dict[str, str]) -> None:
+        """해당 오류 유형에 필요한 정보를 저장하도록 객체를 초기화한다."""
         super().__init__(message)
         self.error_code = error_code
         self.message = message
@@ -38,6 +41,7 @@ class LunarPythonSajuEngine:
         gender: Gender,
         tzid: Optional[str] = None,
     ) -> SajuCalculationResult:
+        """lunar_python 엔진으로 사주를 계산하고 내부 모델로 변환한다."""
         try:
             dt = datetime.strptime(corrected_solar_datetime, "%Y-%m-%d %H:%M:%S")
         except ValueError as exc:
@@ -199,6 +203,7 @@ class LunarPythonSajuEngine:
         xun: str,
         xun_kong: str,
     ) -> PillarData:
+        """기둥을 조립한다."""
         stem_five_element = five_elements[0] if len(five_elements) >= 1 else ""
         branch_five_element = five_elements[1] if len(five_elements) >= 2 else ""
         return PillarData(
@@ -219,6 +224,7 @@ class LunarPythonSajuEngine:
         )
 
     def _count_elements(self, pillars: Dict[str, PillarData]) -> Dict[str, int]:
+        """오행 목록를 센다."""
         counts = {key: 0 for key in ELEMENT_KEY_BY_CHAR.values()}
         for pillar in pillars.values():
             for char in pillar.five_elements:

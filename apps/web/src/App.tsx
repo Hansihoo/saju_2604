@@ -36,6 +36,7 @@ export default function App() {
           onLocaleChange={setLocale}
           apiHealth={apiHealth}
           result={result}
+          onResultChange={setResult}
           onNavigateToService={() => navigate("service")}
         />
       ) : (

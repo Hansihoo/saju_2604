@@ -1,3 +1,5 @@
+"""이 파일은 골든 케이스 cases을 가져오는 로직을 담는다."""
+
 from __future__ import annotations
 
 import argparse
@@ -20,6 +22,7 @@ CASE_NAME_BY_FILE = {
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """이 도구에 필요한 CLI 인자 파서를 구성한다."""
     parser = argparse.ArgumentParser(description="Convert golden saju answer texts into canonical JSON fixtures.")
     parser.add_argument(
         "--source-dir",
@@ -35,6 +38,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def import_golden_cases(*, source_dir: Path, output_dir: Path) -> List[Path]:
+    """골든 케이스 케이스 목록을 가져온다."""
     output_dir.mkdir(parents=True, exist_ok=True)
     generated_paths: List[Path] = []
 
@@ -57,6 +61,7 @@ def import_golden_cases(*, source_dir: Path, output_dir: Path) -> List[Path]:
 
 
 def main() -> int:
+    """이 모듈의 CLI 진입점을 실행한다."""
     args = build_parser().parse_args()
     source_dir = Path(args.source_dir)
     output_dir = Path(args.output_dir)

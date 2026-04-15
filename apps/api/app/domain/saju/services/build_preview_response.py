@@ -1,5 +1,8 @@
+"""이 파일은 미리보기 응답을 조립하는 로직을 담는다."""
+
 from typing import List
 
+from app.config import settings
 from app.domain.saju.analysis import AnalysisResult
 from app.domain.saju.calendar_normalization import CalendarNormalizationResult
 from app.domain.saju.engine import SajuCalculationResult
@@ -17,7 +20,9 @@ from app.domain.saju.schemas import (
     TimeCorrectionSummary,
 )
 from app.domain.saju.services.birth_time_policy import resolve_birth_time_policy
+from app.domain.saju.services.build_interpretation_payload import build_interpretation_payload
 from app.domain.saju.services.build_manse import build_manse_data
+from app.domain.saju.services.generate_interpretation import generate_interpretation_report
 from app.domain.saju.time_correction import RegionalSolarCorrectionResult, TimeCorrectionResult
 
 
@@ -25,6 +30,7 @@ def _summarize_visible_pillars(
     saju_calculation: SajuCalculationResult,
     visible_pillar_keys: List[str],
 ) -> str:
+    """표시 대상 기둥 목록 관련 값을 반환하거나 처리한다."""
     return " / ".join(saju_calculation.pillars[key].gan_zhi for key in visible_pillar_keys)
 
 
@@ -34,6 +40,7 @@ def _build_result_signals(
     analysis_result: AnalysisResult,
     visible_pillar_keys: List[str],
 ) -> SajuResultSignals:
+    """결과 신호 목록을 조립한다."""
     return SajuResultSignals(
         visible_pillar_keys=visible_pillar_keys,
         visible_pillar_values=[saju_calculation.pillars[key].gan_zhi for key in visible_pillar_keys],
@@ -60,6 +67,7 @@ def build_preview_response(
     trace_id: str,
     debug_requested: bool,
 ) -> SajuPreviewResponse:
+    """파이프라인 결과들을 모아 최종 preview API 응답으로 조립한다."""
     birth_time_policy = resolve_birth_time_policy(payload)
     hour_pillar_enabled = birth_time_policy.hour_pillar_enabled
     manse = build_manse_data(
@@ -133,7 +141,7 @@ def build_preview_response(
         ),
     }
 
-    result = SajuPreviewResult(
+    preview_result = SajuPreviewResult(
         overview=(
             f"Visible pillars for {region.city}: {visible_pillar_summary}. "
             f"Current balance score is {analysis_result.balance_score}/100 with grade {analysis_result.internal_grade}."
@@ -161,6 +169,80 @@ def build_preview_response(
         signals=signals,
     )
 
+    interpretation_payload = build_interpretation_payload(request=payload, response=SajuPreviewResponse(
+        trace_id=trace_id,
+        pipeline_status=PipelineStatus(
+            time_correction="passed",
+            calendar_normalization="passed",
+            regional_solar_correction="passed",
+            saju_calculation="passed",
+            analysis_engine="passed",
+            llm_formatting="skipped",
+        ),
+        region=region,
+        time_correction=TimeCorrectionSummary(
+            tzid=time_correction.tzid,
+            source_local_datetime=time_correction.source_local_datetime,
+            normalized_local_datetime=time_correction.normalized_local_datetime,
+            normalized_utc_datetime=time_correction.normalized_utc_datetime,
+            offset_minutes=time_correction.offset_minutes,
+            ambiguous=time_correction.ambiguous,
+            fold=time_correction.fold,
+        ),
+        regional_solar_correction=RegionalSolarCorrectionSummary(
+            source_solar_datetime=regional_solar_correction.source_solar_datetime,
+            corrected_solar_datetime=regional_solar_correction.corrected_solar_datetime,
+            longitude=regional_solar_correction.longitude,
+            regional_time_offset_minutes=regional_solar_correction.regional_time_offset_minutes,
+            daylight_saving_offset_minutes=regional_solar_correction.daylight_saving_offset_minutes,
+            correction_basis=regional_solar_correction.correction_basis,
+        ),
+        calendar_normalization=CalendarNormalizationSummary(
+            calendar_type=calendar_normalization.calendar_type,
+            is_lunar_leap_month=calendar_normalization.is_lunar_leap_month,
+            input_date=calendar_normalization.input_date,
+            input_time=calendar_normalization.input_time,
+            normalized_solar_datetime=calendar_normalization.normalized_solar_datetime,
+            normalized_lunar_datetime=calendar_normalization.normalized_lunar_datetime,
+            solar_year=calendar_normalization.solar_year,
+            solar_month=calendar_normalization.solar_month,
+            solar_day=calendar_normalization.solar_day,
+            solar_hour=calendar_normalization.solar_hour,
+            solar_minute=calendar_normalization.solar_minute,
+            lunar_year=calendar_normalization.lunar_year,
+            lunar_month=calendar_normalization.lunar_month,
+            lunar_day=calendar_normalization.lunar_day,
+        ),
+        manse=manse,
+        result=preview_result,
+        debug_trace=None,
+    ))
+    interpretation = generate_interpretation_report(
+        payload=interpretation_payload,
+        trace_id=trace_id,
+        service_name=settings.app_name,
+    )
+    llm_status = "passed" if interpretation.provider == "openai" else "failed"
+    overview_text = interpretation.summary.headline.strip()
+    if interpretation.summary.overview.strip():
+        overview_text = f"{overview_text} {interpretation.summary.overview}".strip()
+
+    result = SajuPreviewResult(
+        overview=overview_text,
+        strengths=preview_result.strengths,
+        cautions=preview_result.cautions,
+        love=preview_result.love,
+        career=preview_result.career,
+        wealth=preview_result.wealth,
+        action_advice=preview_result.action_advice,
+        interpretation=interpretation,
+        limitations=limitations,
+        disabled_sections=birth_time_policy.disabled_sections,
+        evidence_sections=evidence_sections,
+        hour_pillar_enabled=hour_pillar_enabled,
+        signals=signals,
+    )
+
     debug_trace = None
     if debug_requested:
         debug_trace = DebugTrace(
@@ -174,6 +256,7 @@ def build_preview_response(
                 "analysis_engine",
                 "llm_formatting",
             ],
+            failed_stage="llm_formatting" if interpretation.provider == "fallback" else None,
             checkpoints=[
                 DebugCheckpoint(stage="input_validation", status="passed"),
                 DebugCheckpoint(
@@ -229,8 +312,21 @@ def build_preview_response(
                 ),
                 DebugCheckpoint(
                     stage="llm_formatting",
-                    status="skipped",
-                    note="The LLM formatter is still mocked in this phase.",
+                    status=llm_status,
+                    note=(
+                        "Structured interpretation finished via "
+                        f"{interpretation.provider}."
+                        + (
+                            f" Fallback reason: {interpretation.diagnostics.fallback_reason}."
+                            if interpretation.provider == "fallback" and interpretation.diagnostics
+                            else f" Model {interpretation.model}."
+                        )
+                    ),
+                    error_code=(
+                        interpretation.diagnostics.fallback_reason
+                        if interpretation.provider == "fallback" and interpretation.diagnostics
+                        else None
+                    ),
                 ),
             ],
             request_echo={
@@ -251,7 +347,7 @@ def build_preview_response(
             regional_solar_correction="passed",
             saju_calculation="passed",
             analysis_engine="passed",
-            llm_formatting="skipped",
+            llm_formatting=llm_status,
         ),
         region=region,
         time_correction=TimeCorrectionSummary(

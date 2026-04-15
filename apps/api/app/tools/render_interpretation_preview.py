@@ -1,3 +1,5 @@
+"""이 파일은 해석 미리보기을 렌더링하는 로직을 담는다."""
+
 import argparse
 import json
 import sys
@@ -14,6 +16,7 @@ if hasattr(sys.stdout, "reconfigure"):
 
 
 def parse_args() -> argparse.Namespace:
+    """이 도구에 필요한 CLI 인자를 파싱한다."""
     parser = argparse.ArgumentParser(description="Render a fallback interpretation from preview data.")
     parser.add_argument("--calendar-type", choices=["solar", "lunar"], default="solar")
     parser.add_argument("--birth-date", required=True)
@@ -28,6 +31,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """이 모듈의 CLI 진입점을 실행한다."""
     args = parse_args()
     payload = SajuPreviewRequest(
         calendar_type=args.calendar_type,

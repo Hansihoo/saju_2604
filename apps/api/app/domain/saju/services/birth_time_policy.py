@@ -1,3 +1,5 @@
+"""이 파일은 birth 시간 policy 관련 로직을 담는다."""
+
 from dataclasses import dataclass
 from typing import List
 
@@ -14,6 +16,7 @@ class BirthTimePolicyResult:
 
 
 def resolve_birth_time_policy(payload: SajuPreviewRequest) -> BirthTimePolicyResult:
+    """출생 시간 정책을 해석하거나 결정한다."""
     if payload.is_birth_time_estimated:
         return BirthTimePolicyResult(
             is_birth_time_estimated=True,

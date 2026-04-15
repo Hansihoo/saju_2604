@@ -1,5 +1,6 @@
 import unittest
 from types import SimpleNamespace
+from unittest.mock import patch
 
 from app.api.routes import create_saju_preview
 from app.domain.saju.schemas import SajuPreviewRequest
@@ -8,6 +9,14 @@ from app.domain.saju.services.format_interpretation_fallback import format_inter
 
 
 class InterpretationFormatterTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._llm_provider_patch = patch(
+            "app.domain.saju.services.generate_interpretation.settings.llm_provider",
+            "fallback",
+        )
+        self._llm_provider_patch.start()
+        self.addCleanup(self._llm_provider_patch.stop)
+
     def test_formats_korean_interpretation_from_payload(self) -> None:
         request = SimpleNamespace(
             state=SimpleNamespace(

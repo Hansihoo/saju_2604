@@ -1,5 +1,6 @@
 import { SajuPreviewResponse } from "../../../shared/api/contracts";
 import { Locale } from "../../../shared/copy";
+import { formatManseList, formatManseText } from "../../shared/manseDisplay";
 
 type ManseTestPanelProps = {
   locale: Locale;
@@ -27,6 +28,20 @@ const ui = {
     startAge: "시작 나이",
     period: "구간",
     supplementary: "보조 위치",
+    specialStars: "신살 / 길성",
+    auspicious: "길성",
+    sinsal: "신살",
+    starLabel: "항목",
+    tier: "등급",
+    method: "메서드",
+    weight: "가중치",
+    starCount: "매칭 수",
+    usage: "용도",
+    basis: "기준",
+    anchor: "기준값",
+    target: "목표",
+    matches: "적중 기둥",
+    inactive: "해당 없음",
     noLuckCycles: "출생시간 미상으로 대운 정보가 비활성화되었습니다.",
   },
   en: {
@@ -49,6 +64,20 @@ const ui = {
     startAge: "Start age",
     period: "Period",
     supplementary: "Supplementary positions",
+    specialStars: "Special stars",
+    auspicious: "Auspicious",
+    sinsal: "Shinsal",
+    starLabel: "Star",
+    tier: "Tier",
+    method: "Method",
+    weight: "Weight",
+    starCount: "Match count",
+    usage: "Usage",
+    basis: "Basis",
+    anchor: "Anchor",
+    target: "Target",
+    matches: "Matches",
+    inactive: "No match",
     noLuckCycles: "Luck-cycle data is disabled because the birth time is estimated.",
   },
 } as const;
@@ -73,6 +102,17 @@ const elementLabels = {
 export function ManseTestPanel({ locale, result }: ManseTestPanelProps) {
   const text = ui[locale];
   const elementText = elementLabels[locale];
+  const pillarLabels = {
+    year: text.year,
+    month: text.month,
+    day: text.day,
+    time: text.time,
+  } as const;
+
+  const specialStarGroups = [
+    { category: "auspicious" as const, title: text.auspicious },
+    { category: "sinsal" as const, title: text.sinsal },
+  ];
 
   return (
     <section className="result-test-panel" aria-label={text.title}>
@@ -94,7 +134,7 @@ export function ManseTestPanel({ locale, result }: ManseTestPanelProps) {
           </div>
           <div className="result-meta-item">
             <span>{text.dayMaster}</span>
-            <strong>{result.manse.meta.day_master}</strong>
+            <strong>{formatManseText(result.manse.meta.day_master, locale)}</strong>
           </div>
           <div className="result-meta-item">
             <span>{text.grade}</span>
@@ -120,10 +160,10 @@ export function ManseTestPanel({ locale, result }: ManseTestPanelProps) {
               {result.manse.table_rows.map((row) => (
                 <tr key={row.label}>
                   <th>{row.label}</th>
-                  <td>{row.year || "-"}</td>
-                  <td>{row.month || "-"}</td>
-                  <td>{row.day || "-"}</td>
-                  <td>{row.time || "-"}</td>
+                  <td>{formatManseText(row.year, locale)}</td>
+                  <td>{formatManseText(row.month, locale)}</td>
+                  <td>{formatManseText(row.day, locale)}</td>
+                  <td>{formatManseText(row.time, locale)}</td>
                 </tr>
               ))}
             </tbody>
@@ -171,7 +211,7 @@ export function ManseTestPanel({ locale, result }: ManseTestPanelProps) {
                 {result.manse.luck_cycles.map((cycle) => (
                   <tr key={`${cycle.index}-${cycle.gan_zhi}`}>
                     <td>{cycle.start_age}</td>
-                    <td>{cycle.gan_zhi}</td>
+                    <td>{formatManseText(cycle.gan_zhi, locale)}</td>
                     <td>
                       {cycle.start_year} - {cycle.end_year}
                     </td>
@@ -191,10 +231,68 @@ export function ManseTestPanel({ locale, result }: ManseTestPanelProps) {
           {Object.values(result.manse.supplementary_positions).map((position) => (
             <div className="result-meta-item" key={position.key}>
               <span>{position.label}</span>
-              <strong>{position.gan_zhi}</strong>
+              <strong>{formatManseText(position.gan_zhi, locale)}</strong>
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="result-test-section">
+        <h4>{text.specialStars}</h4>
+        {specialStarGroups.map((group) => {
+          const items = result.manse.special_stars.filter((star) => star.category === group.category);
+
+          return (
+            <div key={group.category} className="result-table-wrap">
+              <table className="result-table compact">
+                <thead>
+                  <tr>
+                    <th colSpan={10}>{group.title}</th>
+                  </tr>
+                  <tr>
+                    <th>{text.starLabel}</th>
+                    <th>{text.tier}</th>
+                    <th>{text.method}</th>
+                    <th>{text.weight}</th>
+                    <th>{text.starCount}</th>
+                    <th>{text.usage}</th>
+                    <th>{text.basis}</th>
+                    <th>{text.anchor}</th>
+                    <th>{text.target}</th>
+                    <th>{text.matches}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((star) => (
+                    <tr key={star.key}>
+                      <th>{star.label}</th>
+                      <td>{star.tier}</td>
+                      <td>{star.method_id}</td>
+                      <td>{star.weight}</td>
+                      <td>{star.count}</td>
+                      <td>{star.usage_summary}</td>
+                      <td>{star.basis}</td>
+                      <td>{formatManseText(star.anchor_value, locale)}</td>
+                      <td>{formatManseList(star.target_values, locale)}</td>
+                      <td>
+                        {star.matches.length
+                          ? star.matches
+                              .map(
+                                (match) =>
+                                  match.counterpart_pillar_key
+                                    ? `${pillarLabels[match.pillar_key]} ${formatManseText(match.gan_zhi, locale)} ↔ ${pillarLabels[match.counterpart_pillar_key]} ${formatManseText(match.counterpart_gan_zhi ?? "", locale)}`
+                                    : `${pillarLabels[match.pillar_key]} ${formatManseText(match.gan_zhi, locale)}`,
+                              )
+                              .join(", ")
+                          : text.inactive}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+        })}
       </div>
     </section>
   );

@@ -1,3 +1,5 @@
+"""이 파일은 골든 케이스 validation을 실행하는 로직을 담는다."""
+
 from __future__ import annotations
 
 import argparse
@@ -8,6 +10,7 @@ from app.tools.import_golden_cases import import_golden_cases
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """이 도구에 필요한 CLI 인자 파서를 구성한다."""
     parser = argparse.ArgumentParser(
         description="Refresh canonical golden fixtures from source answers and compare them against current output."
     )
@@ -35,6 +38,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> int:
+    """이 모듈의 CLI 진입점을 실행한다."""
     args = build_parser().parse_args()
     source_dir = Path(args.source_dir)
     expected_dir = Path(args.expected_dir)

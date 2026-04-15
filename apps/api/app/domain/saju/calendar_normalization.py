@@ -1,3 +1,5 @@
+"""이 파일은 양력과 음력 입력을 공통 계산 형식으로 정규화한다."""
+
 from dataclasses import dataclass
 from datetime import date
 from typing import Any, Dict, Literal, Optional
@@ -10,6 +12,7 @@ CalendarType = Literal["solar", "lunar"]
 
 class CalendarNormalizationError(ValueError):
     def __init__(self, *, error_code: str, message: str, meta: Optional[Dict[str, Any]] = None) -> None:
+        """해당 오류 유형에 필요한 정보를 저장하도록 객체를 초기화한다."""
         super().__init__(message)
         self.error_code = error_code
         self.message = message
@@ -35,6 +38,7 @@ class CalendarNormalizationResult:
 
 
 def _format_lunar_datetime(lunar: Lunar) -> str:
+    """음력 시각을 포맷한다."""
     return (
         f"{lunar.getYear():04d}-{abs(lunar.getMonth()):02d}-{lunar.getDay():02d} "
         f"{lunar.getHour():02d}:{lunar.getMinute():02d}:{lunar.getSecond():02d}"
@@ -48,6 +52,7 @@ def normalize_calendar(
     birth_time: str,
     is_lunar_leap_month: bool,
 ) -> CalendarNormalizationResult:
+    """양력 또는 음력 입력을 공통 계산 형식으로 정규화한다."""
     try:
         hour_str, minute_str = birth_time.split(":")
         hour = int(hour_str)

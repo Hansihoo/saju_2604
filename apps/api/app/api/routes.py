@@ -1,3 +1,5 @@
+"""이 파일은 HTTP endpoint를 정의하고 service 계층으로 요청을 전달한다."""
+
 from datetime import datetime, timezone
 from typing import Any, Dict
 
@@ -18,6 +20,7 @@ router = APIRouter()
 
 @router.get("/")
 def read_root() -> Dict[str, str]:
+    """루트 경로에서 API 기본 정보를 반환한다."""
     return {
         "service": settings.app_name,
         "message": "suju-insight API is running",
@@ -26,6 +29,7 @@ def read_root() -> Dict[str, str]:
 
 @router.get("/health")
 def read_health() -> Dict[str, Any]:
+    """헬스 체크에 사용할 서비스 상태 정보를 반환한다."""
     return {
         "status": "ok",
         "service": settings.app_name,
@@ -42,6 +46,7 @@ def search_regions_endpoint(
     q: str = Query(default="", min_length=0),
     limit: int = Query(default=5, ge=1, le=10),
 ) -> RegionSearchResponse:
+    """검색어에 맞는 지역 후보를 API 응답으로 반환한다."""
     items = [RegionSuggestion(**region) for region in search_regions(query=q, limit=limit)]
     return RegionSearchResponse(
         trace_id=request.state.trace_id,
@@ -55,6 +60,7 @@ def create_saju_preview(
     payload: SajuPreviewRequest,
     request: Request,
 ) -> SajuPreviewResponse:
+    """사주 미리보기 요청을 받아 파이프라인을 실행한다."""
     return create_saju_preview_response(
         payload=payload,
         trace_id=request.state.trace_id,

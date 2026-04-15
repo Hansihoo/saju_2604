@@ -1,3 +1,5 @@
+"""이 파일은 analyze 사주 관련 로직을 담는다."""
+
 from typing import Dict, List
 
 from app.domain.saju.analysis import AnalysisResult
@@ -22,6 +24,7 @@ ELEMENT_LABELS = {
 
 
 def _clamp_score(value: int) -> int:
+    """score를 제한한다."""
     return max(0, min(100, value))
 
 
@@ -29,6 +32,7 @@ def _count_visible_elements(
     saju_calculation: SajuCalculationResult,
     visible_pillar_keys: List[str],
 ) -> Dict[str, int]:
+    """표시 대상 오행 목록를 센다."""
     counts = {key: 0 for key in ELEMENT_LABELS.keys()}
     for pillar_key in visible_pillar_keys:
         for char in saju_calculation.pillars[pillar_key].five_elements:
@@ -42,6 +46,7 @@ def analyze_saju(
     saju_calculation: SajuCalculationResult,
     visible_pillar_keys: List[str],
 ) -> AnalysisResult:
+    """사주 계산 결과를 분석해 균형과 점수 요약을 만든다."""
     counts = _count_visible_elements(
         saju_calculation=saju_calculation,
         visible_pillar_keys=visible_pillar_keys,

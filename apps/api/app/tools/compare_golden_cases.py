@@ -1,3 +1,5 @@
+"""이 파일은 골든 케이스 cases을 비교하는 로직을 담는다."""
+
 from __future__ import annotations
 
 import argparse
@@ -92,12 +94,14 @@ ENGINE = LunarPythonSajuEngine()
 
 
 def _group_path(path: str) -> str:
+    """경로 관련 값을 반환하거나 처리한다."""
     if "[" in path:
         return path.split("[", 1)[0]
     return path.split(".", 1)[0]
 
 
 def _field_path(path: str) -> str:
+    """경로 관련 값을 반환하거나 처리한다."""
     if path.startswith("luck_cycles["):
         if "." in path:
             return "luck_cycles." + path.split(".", 1)[1]
@@ -110,6 +114,7 @@ def _field_path(path: str) -> str:
 
 
 def _gan_zhi_index(value: str) -> int | None:
+    """zhi index 관련 값을 반환하거나 처리한다."""
     try:
         return JIA_ZI_KO.index(value)
     except ValueError:
@@ -117,6 +122,7 @@ def _gan_zhi_index(value: str) -> int | None:
 
 
 def _branch_index(value: str) -> int | None:
+    """index 관련 값을 반환하거나 처리한다."""
     try:
         return BRANCHES_KO.index(value)
     except ValueError:
@@ -124,6 +130,7 @@ def _branch_index(value: str) -> int | None:
 
 
 def _shift_korean_ganzhi(value: str, steps: int) -> str | None:
+    """korean ganzhi을 이동한다."""
     index = _gan_zhi_index(value)
     if index is None:
         return None
@@ -131,6 +138,7 @@ def _shift_korean_ganzhi(value: str, steps: int) -> str | None:
 
 
 def _analyze_branch_sequence(values: List[str]) -> Dict[str, object]:
+    """branch sequence 관련 값을 반환하거나 처리한다."""
     if len(values) < 2:
         return {"tags": [], "invalid_values": [], "deltas": []}
 
@@ -165,6 +173,7 @@ def _analyze_branch_sequence(values: List[str]) -> Dict[str, object]:
 
 
 def _analyze_expected_luck_cycle_sequence(expected_cycles: List[str]) -> Dict[str, object]:
+    """expected 대운 대운 sequence 관련 값을 반환하거나 처리한다."""
     if len(expected_cycles) < 2:
         return {"tags": [], "invalid_values": []}
 
@@ -191,6 +200,7 @@ def _analyze_expected_luck_cycle_sequence(expected_cycles: List[str]) -> Dict[st
 
 
 def _build_start_age_rule_context(case: GoldenKnownAnswerCase) -> Dict[str, object]:
+    """start age rule context을 조립한다."""
     region = find_region_by_id(case.input.region_id)
     normalized_solar_datetime = f"{case.input.birth_date} {case.input.birth_time}:00"
     regional_result = apply_regional_solar_correction(
@@ -256,6 +266,7 @@ def _build_start_age_rule_context(case: GoldenKnownAnswerCase) -> Dict[str, obje
 
 
 def _build_case_diagnostics(*, case: GoldenKnownAnswerCase, actual: object, report: object) -> Dict[str, object]:
+    """케이스 진단 로깅을 조립한다."""
     mismatch_paths = [mismatch.path for mismatch in report.mismatches]
     mismatch_path_set = set(mismatch_paths)
     tags: List[str] = []
@@ -485,6 +496,7 @@ def _build_case_diagnostics(*, case: GoldenKnownAnswerCase, actual: object, repo
 
 
 def _classify_case_status(*, report: object, diagnostics: Dict[str, object]) -> str:
+    """케이스 상태 관련 값을 반환하거나 처리한다."""
     if report.success:
         return "match"
 
@@ -507,6 +519,7 @@ def _classify_case_status(*, report: object, diagnostics: Dict[str, object]) -> 
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """이 도구에 필요한 CLI 인자 파서를 구성한다."""
     parser = argparse.ArgumentParser(
         description="Compare canonical golden fixtures against current saju output."
     )
@@ -534,6 +547,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def compare_golden_cases(*, expected_dir: Path, report_dir: Path, summary_file: Path) -> Dict[str, object]:
+    """주어진 golden case 디렉터리를 순회하면서 기대값과 실제 결과를 비교한다."""
     actual_dir = report_dir / "actual"
     diff_dir = report_dir / "diff"
     actual_dir.mkdir(parents=True, exist_ok=True)
@@ -610,6 +624,7 @@ def compare_golden_cases(*, expected_dir: Path, report_dir: Path, summary_file: 
 
 
 def main() -> int:
+    """이 모듈의 CLI 진입점을 실행한다."""
     args = build_parser().parse_args()
     expected_dir = Path(args.expected_dir)
     report_dir = Path(args.report_dir)

@@ -1,3 +1,5 @@
+"""이 파일은 지역 정보를 담는 불변 도메인 모델을 정의한다."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -23,6 +25,7 @@ class RegionRecord:
 
     @classmethod
     def from_mapping(cls, payload: Mapping[str, Any]) -> "RegionRecord":
+        """mapping 관련 값을 반환하거나 처리한다."""
         aliases = tuple(str(alias) for alias in payload.get("aliases", []))
         latitude = payload.get("latitude")
         return cls(
@@ -43,6 +46,7 @@ class RegionRecord:
         )
 
     def to_public_dict(self) -> Dict[str, object]:
+        """공개용 dict 관련 값을 반환하거나 처리한다."""
         return {
             "id": self.id,
             "display_name": self.display_name,

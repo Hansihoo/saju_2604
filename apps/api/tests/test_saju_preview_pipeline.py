@@ -1,11 +1,20 @@
 import unittest
 from types import SimpleNamespace
+from unittest.mock import patch
 
 from app.api.routes import create_saju_preview
 from app.domain.saju.schemas import SajuPreviewRequest
 
 
 class SajuPreviewPipelineTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._llm_provider_patch = patch(
+            "app.domain.saju.services.generate_interpretation.settings.llm_provider",
+            "fallback",
+        )
+        self._llm_provider_patch.start()
+        self.addCleanup(self._llm_provider_patch.stop)
+
     def test_preview_pipeline_includes_real_saju_calculation_stage(self) -> None:
         request = SimpleNamespace(
             state=SimpleNamespace(
@@ -40,7 +49,8 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         self.assertEqual(response.debug_trace.checkpoints[6].stage, "analysis_engine")
         self.assertEqual(response.debug_trace.checkpoints[6].status, "passed")
         self.assertEqual(response.debug_trace.checkpoints[7].stage, "llm_formatting")
-        self.assertEqual(response.debug_trace.checkpoints[7].status, "passed")
+        self.assertEqual(response.debug_trace.checkpoints[7].status, "failed")
+        self.assertEqual(response.debug_trace.failed_stage, "llm_formatting")
         self.assertIn("Internal grade", response.debug_trace.checkpoints[6].note)
         self.assertIn("\u7532\u8fb0", response.debug_trace.checkpoints[5].note)
         self.assertEqual(response.region.longitude, 126.991824)
@@ -109,12 +119,26 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         self.assertTrue(all(cycle.gan_zhi for cycle in response.manse.luck_cycles))
         self.assertEqual(response.manse.luck_cycles[0].gan_zhi, "\u4e01\u536f")
         self.assertEqual(response.manse.luck_cycles[0].start_age, 8)
-        self.assertEqual(response.pipeline_status.llm_formatting, "passed")
+        self.assertRegex(
+            response.manse.luck_cycles[0].start_datetime or "",
+            r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$",
+        )
+        self.assertRegex(
+            response.manse.luck_cycles[0].change_datetime or "",
+            r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$",
+        )
+        self.assertEqual(response.pipeline_status.llm_formatting, "failed")
         self.assertIsNotNone(response.result.interpretation)
         self.assertEqual(response.result.interpretation.provider, "fallback")
-        self.assertEqual(response.result.interpretation.prompt_version, "saju-report-v2")
+        self.assertEqual(response.result.interpretation.prompt_version, "saju-report-v7")
+        self.assertIsNotNone(response.result.interpretation.diagnostics)
+        self.assertEqual(
+            response.result.interpretation.diagnostics.fallback_reason,
+            "provider_not_openai",
+        )
         self.assertTrue(response.result.interpretation.summary.evidence_ids)
-        self.assertTrue(response.result.interpretation.love.risks)
+        self.assertTrue(response.result.interpretation.core_analysis.evidence_ids)
+        self.assertTrue(response.result.interpretation.love.body)
         self.assertTrue(response.result.overview)
 
     def test_estimated_birth_time_hides_hour_pillar_outputs(self) -> None:
@@ -155,6 +179,33 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         )
         self.assertEqual(response.result.interpretation.provider, "fallback")
 
+    def test_preview_pipeline_respects_requested_output_language(self) -> None:
+        request = SimpleNamespace(
+            state=SimpleNamespace(
+                trace_id="test-trace-language",
+                debug_requested=False,
+            )
+        )
+        payload = SajuPreviewRequest(
+            locale="en",
+            calendar_type="solar",
+            birth_date="1996-06-19",
+            birth_time="15:03",
+            is_birth_time_estimated=False,
+            is_lunar_leap_month=False,
+            gender="female",
+            region_id="kr-seoul-special",
+            debug=False,
+        )
+
+        response = create_saju_preview(payload=payload, request=request)
+
+        self.assertEqual(response.result.interpretation.provider, "fallback")
+        self.assertNotIn("\u4e19", response.result.interpretation.summary.overview)
+        self.assertNotIn("\uc11c\uc6b8", response.result.interpretation.summary.overview)
+        self.assertNotIn("\uc5f0\uc560\uc6b4", response.result.interpretation.love.title)
+        self.assertIn("Love", response.result.interpretation.love.title)
+
     def test_preview_pipeline_uses_explicit_luck_cycle_formula(self) -> None:
         request = SimpleNamespace(
             state=SimpleNamespace(
@@ -180,6 +231,14 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         self.assertEqual(response.manse.luck_cycles[0].gan_zhi, "\u7678\u5df3")
         self.assertEqual(response.manse.luck_cycles[1].start_age, 15)
         self.assertEqual(response.manse.luck_cycles[1].gan_zhi, "\u58ec\u8fb0")
+        self.assertRegex(
+            response.manse.luck_cycles[0].start_datetime or "",
+            r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$",
+        )
+        self.assertRegex(
+            response.manse.luck_cycles[0].change_datetime or "",
+            r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$",
+        )
         self.assertIn("\u7678\u5df3", response.result.evidence_sections["luck_cycles"].summary)
 
 

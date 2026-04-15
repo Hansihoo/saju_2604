@@ -1,3 +1,5 @@
+"""이 파일은 사주 분석 결과 데이터 모델을 정의한다."""
+
 from dataclasses import dataclass
 from typing import Dict, List, Literal
 

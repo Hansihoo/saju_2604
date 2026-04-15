@@ -1,3 +1,5 @@
+"""이 파일은 대운 대운 목록를 계산하는 로직을 담는다."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -20,10 +22,12 @@ LUCK_CYCLE_YEAR_TO_DAY_FACTOR = 120.0
 
 
 def is_yang_stem(stem: str) -> bool:
+    """yang stem 여부를 판별한다."""
     return stem in YANG_STEMS
 
 
 def get_luck_direction(year_stem: str, gender: Gender) -> LuckDirection:
+    """대운 방향을 반환한다."""
     if (gender == "male" and is_yang_stem(year_stem)) or (
         gender == "female" and not is_yang_stem(year_stem)
     ):
@@ -36,6 +40,7 @@ def get_adjacent_month_boundary(
     direction: LuckDirection,
     target_standard_offset_minutes: int | None = None,
 ) -> datetime:
+    """adjacent month 경계을 반환한다."""
     solar = Solar.fromYmdHms(
         normalized_birth_dt.year,
         normalized_birth_dt.month,
@@ -67,6 +72,7 @@ def get_display_start_age(
     boundary_dt: datetime,
     direction: LuckDirection,
 ) -> int:
+    """표시용 start age을 반환한다."""
     del direction  # Kept to make the helper interface explicit for tests/debugging.
     delta_days = abs((boundary_dt - birth_dt).total_seconds()) / 86400
     precise_start_age_years = delta_days * LUCK_CYCLE_YEAR_TO_DAY_FACTOR / TROPICAL_YEAR_DAYS
@@ -74,6 +80,7 @@ def get_display_start_age(
 
 
 def shift_ganzhi(pillar: str, steps: int) -> str:
+    """ganzhi을 이동한다."""
     if pillar not in SEXAGENARY_CYCLE:
         raise ValueError(f"Unsupported pillar for sexagenary shift: {pillar}")
     index = SEXAGENARY_CYCLE.index(pillar)
@@ -90,6 +97,7 @@ def calculate_luck_cycles(
     cycle_count: int = 10,
     target_standard_offset_minutes: int | None = None,
 ) -> List[LuckCycle]:
+    """대운 방향과 시작 나이를 계산해 대운 목록을 만든다."""
     del day_pillar  # Reserved for downstream rule extensions and debug reporting.
 
     year_stem = year_pillar[:1]
@@ -121,10 +129,16 @@ def calculate_luck_cycles(
     )
 
     luck_cycles: List[LuckCycle] = []
+    first_cycle_start_dt = normalized_birth_dt + timedelta(
+        days=delta_days * LUCK_CYCLE_YEAR_TO_DAY_FACTOR
+    )
+    decade_duration = timedelta(days=TROPICAL_YEAR_DAYS * 10)
     for index in range(cycle_count):
         pillar = shift_ganzhi(first_pillar, index * step_sign)
         start_age = display_start_age + (10 * index)
         start_year = normalized_birth_dt.year + start_age
+        cycle_start_dt = first_cycle_start_dt + timedelta(days=TROPICAL_YEAR_DAYS * 10 * index)
+        cycle_change_dt = cycle_start_dt + decade_duration
         luck_cycles.append(
             LuckCycle(
                 index=index + 1,
@@ -137,6 +151,8 @@ def calculate_luck_cycles(
                 exact_start_age_years=exact_start_age_years,
                 precise_start_age_years=precise_start_age_years,
                 month_boundary_datetime=boundary_dt.strftime("%Y-%m-%d %H:%M:%S"),
+                start_datetime=cycle_start_dt.strftime("%Y-%m-%d %H:%M:%S"),
+                change_datetime=cycle_change_dt.strftime("%Y-%m-%d %H:%M:%S"),
             )
         )
 

@@ -1,3 +1,5 @@
+"""이 파일은 해석 payload을 출력하는 로직을 담는다."""
+
 import argparse
 import json
 import sys
@@ -9,6 +11,7 @@ from app.domain.saju.services.build_interpretation_payload import build_interpre
 
 
 def main() -> None:
+    """이 모듈의 CLI 진입점을 실행한다."""
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
 

@@ -1,3 +1,5 @@
+"""이 파일은 해석 fallback을 포맷하는 로직을 담는다."""
+
 from typing import Dict, List, Tuple
 
 from app.domain.saju.interpretation import InterpretationLocale, InterpretationNarrative
@@ -39,15 +41,18 @@ DOMAIN_LABELS: Dict[InterpretationLocale, Dict[str, str]] = {
 
 
 def _join_elements(locale: InterpretationLocale, values: List[ElementKey]) -> str:
+    """오행 목록 관련 값을 반환하거나 처리한다."""
     labels = ELEMENT_LABELS[locale]
     return ", ".join(labels[value] for value in values)
 
 
 def _visible_pillar_text(payload: InterpretationPayload) -> str:
+    """기둥 텍스트 관련 값을 반환하거나 처리한다."""
     return " / ".join(item.gan_zhi for item in payload.visible_pillars)
 
 
 def _balance_tone(locale: InterpretationLocale, score: int) -> str:
+    """tone 관련 값을 반환하거나 처리한다."""
     if locale == "ko":
         if score >= 80:
             return "전체 흐름이 비교적 안정적입니다."
@@ -67,6 +72,7 @@ def _balance_tone(locale: InterpretationLocale, score: int) -> str:
 
 
 def _score_tone(locale: InterpretationLocale, score: int, domain_key: str) -> str:
+    """tone 관련 값을 반환하거나 처리한다."""
     label = DOMAIN_LABELS[locale][domain_key]
     if locale == "ko":
         if score >= 75:
@@ -83,6 +89,7 @@ def _score_tone(locale: InterpretationLocale, score: int, domain_key: str) -> st
 
 
 def _top_domain(payload: InterpretationPayload) -> Tuple[str, int]:
+    """domain 관련 값을 반환하거나 처리한다."""
     domain_scores = {
         "charm_score": payload.signals.charm_score,
         "career_score": payload.signals.career_score,
@@ -93,6 +100,7 @@ def _top_domain(payload: InterpretationPayload) -> Tuple[str, int]:
 
 
 def _format_summary(locale: InterpretationLocale, payload: InterpretationPayload) -> str:
+    """요약을 포맷한다."""
     pillars = _visible_pillar_text(payload)
     tone = _balance_tone(locale, payload.signals.balance_score)
     if locale == "ko":
@@ -116,6 +124,7 @@ def _format_summary(locale: InterpretationLocale, payload: InterpretationPayload
 
 
 def _format_strengths(locale: InterpretationLocale, payload: InterpretationPayload) -> List[str]:
+    """strengths을 포맷한다."""
     items: List[str] = []
     dominant = _join_elements(locale, payload.signals.dominant_elements)
     top_domain_key, top_domain_score = _top_domain(payload)
@@ -137,6 +146,7 @@ def _format_strengths(locale: InterpretationLocale, payload: InterpretationPaylo
 
 
 def _format_cautions(locale: InterpretationLocale, payload: InterpretationPayload) -> List[str]:
+    """cautions을 포맷한다."""
     items: List[str] = []
     missing = _join_elements(locale, payload.signals.missing_elements)
 
@@ -162,6 +172,7 @@ def _format_cautions(locale: InterpretationLocale, payload: InterpretationPayloa
 
 
 def _format_action(locale: InterpretationLocale, payload: InterpretationPayload) -> str:
+    """action을 포맷한다."""
     missing = _join_elements(locale, payload.signals.missing_elements)
     first_cycle = payload.luck_cycles[0] if payload.luck_cycles else None
 
@@ -196,6 +207,7 @@ def format_interpretation_fallback(
     payload: InterpretationPayload,
     locale: InterpretationLocale = "ko",
 ) -> InterpretationNarrative:
+    """구조화된 해석 payload로 fallback 서술문을 생성한다."""
     return InterpretationNarrative(
         locale=locale,
         summary=_format_summary(locale, payload),

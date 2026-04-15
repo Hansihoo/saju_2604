@@ -1,3 +1,5 @@
+"""이 파일은 golden case 검증에 사용하는 공통 모델과 helper를 담는다."""
+
 from __future__ import annotations
 
 import math
@@ -60,31 +62,53 @@ SUPPORTED_GOLDEN_SECTIONS = [
     "basic_info",
     "pillar_table",
     "luck_cycles",
+    "special_stars",
 ]
 
 IGNORED_GOLDEN_PATHS = {
     "basic_info.name",
 }
 
+# The answer sheets currently align consistently with only a subset of the
+# newly-added special star calculations. We keep the strict golden comparison
+# scoped to the stable subset and leave the remaining stars as diagnostics
+# until their reference convention is finalized.
+GOLDEN_SPECIAL_STAR_ORDER = [
+    ("cheoneul-gwiin", "천을귀인"),
+    ("yangin", "양인"),
+    ("gwaegang", "괴강"),
+]
+
+PILLAR_SORT_ORDER = {
+    "year": 0,
+    "month": 1,
+    "day": 2,
+    "time": 3,
+}
+
 
 def round_display_minutes(value: float) -> int:
+    """표시용 minutes을 반올림한다."""
     return int(round(value))
 
 
 def derive_display_minutes_from_longitude(longitude: float) -> int:
     # The provided answer sheets appear to display regional time offsets from
     # longitudes normalized to one decimal place before converting to minutes.
+    """표시용 minutes from longitude을 유도한다."""
     normalized_longitude = round(longitude, 1)
     return math.floor(((normalized_longitude - 135.0) * 4.0) + 0.5)
 
 
 def format_datetime_minute(value: Union[str, datetime]) -> str:
+    """시각 minute을 포맷한다."""
     if isinstance(value, datetime):
         return value.strftime("%Y-%m-%d %H:%M")
     return datetime.strptime(value, "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d %H:%M")
 
 
 def calculate_daylight_saving_correction(*, tzid: str, offset_minutes: int) -> Optional[int]:
+    """daylight saving 보정를 계산한다."""
     standard_offset = STANDARD_OFFSET_BY_TZ.get(tzid)
     if standard_offset is None:
         return None
@@ -98,12 +122,14 @@ def apply_display_time_correction(
     regional_time_offset_minutes: int,
     daylight_saving_offset_minutes: Optional[int],
 ) -> str:
+    """표시용 시간 보정을 적용한다."""
     base = datetime.strptime(solar_birth_datetime, "%Y-%m-%d %H:%M")
     total_correction = regional_time_offset_minutes + (daylight_saving_offset_minutes or 0)
     return (base + timedelta(minutes=total_correction)).strftime("%Y-%m-%d %H:%M")
 
 
 def to_korean_stem(value: str) -> str:
+    """korean stem 관련 값을 반환하거나 처리한다."""
     if not value:
         return ""
     for char in value:
@@ -116,6 +142,7 @@ def to_korean_stem(value: str) -> str:
 
 
 def to_korean_branch(value: str) -> str:
+    """korean branch 관련 값을 반환하거나 처리한다."""
     if not value:
         return ""
     for char in value:
@@ -128,6 +155,7 @@ def to_korean_branch(value: str) -> str:
 
 
 def to_korean_gan_zhi(value: str) -> str:
+    """korean gan zhi 관련 값을 반환하거나 처리한다."""
     if not value:
         return ""
     if len(value) >= 2 and value[0] in STEM_KO_BY_HANJA and value[1] in BRANCH_KO_BY_HANJA:
@@ -139,6 +167,7 @@ def to_korean_gan_zhi(value: str) -> str:
 
 
 def split_hidden_stems(value: str) -> List[str]:
+    """지장간 stems을 분리한다."""
     stems: List[str] = []
     for char in value:
         if char in STEM_KO_BY_HANJA:
@@ -196,11 +225,19 @@ class GoldenLuckCycleHeader(BaseModel):
     reference_pillar: str
 
 
+class GoldenSpecialStarRow(BaseModel):
+    key: str
+    label: str
+    active: bool
+    matched_pillars: List[Literal["year", "month", "day", "time"]] = Field(default_factory=list)
+
+
 class GoldenSnapshot(BaseModel):
     basic_info: GoldenBasicInfo
     pillar_table: Dict[Literal["year", "month", "day", "time"], GoldenPillarRow]
     luck_cycle_header: Optional[GoldenLuckCycleHeader] = None
     luck_cycles: List[GoldenLuckCycleRow] = Field(default_factory=list)
+    special_stars: List[GoldenSpecialStarRow] = Field(default_factory=list)
 
 
 class GoldenKnownAnswerCase(BaseModel):
@@ -229,6 +266,7 @@ class GoldenComparisonReport(BaseModel):
 
 
 def _count_leaves(value: Any, path: str = "") -> int:
+    """leaves를 센다."""
     if path and _is_ignored_path(path):
         return 0
     if isinstance(value, dict):
@@ -242,10 +280,12 @@ def _count_leaves(value: Any, path: str = "") -> int:
 
 
 def _is_ignored_path(path: str) -> bool:
+    """ignored 경로 여부를 판별한다."""
     return path in IGNORED_GOLDEN_PATHS
 
 
 def _diff_values(expected: Any, actual: Any, path: str, diffs: List[GoldenDiffEntry]) -> None:
+    """값 목록 관련 값을 반환하거나 처리한다."""
     if path and _is_ignored_path(path):
         return
 
@@ -318,6 +358,7 @@ def compare_golden_snapshots(
     case: GoldenKnownAnswerCase,
     actual: GoldenSnapshot,
 ) -> GoldenComparisonReport:
+    """기대 snapshot과 실제 snapshot을 비교해 diff report를 만든다."""
     expected_payload = case.expected.model_dump()
     actual_payload = actual.model_dump()
     diffs: List[GoldenDiffEntry] = []
