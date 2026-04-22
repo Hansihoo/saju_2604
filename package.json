@@ -4,9 +4,14 @@
   "packageManager": "pnpm@9.0.0",
   "scripts": {
     "dev": "powershell -ExecutionPolicy Bypass -File ./scripts/dev.ps1",
-    "dev:api": "powershell -ExecutionPolicy Bypass -File ./scripts/dev.ps1 -FrontendOnly",
-    "dev:web": "powershell -ExecutionPolicy Bypass -File ./scripts/dev.ps1 -BackendOnly",
-    "dev:web:direct": "pnpm --filter web dev",
+    "dev:bg:start": "powershell -ExecutionPolicy Bypass -File ./scripts/start-dev-background.ps1",
+    "dev:bg:stop": "powershell -ExecutionPolicy Bypass -File ./scripts/stop-dev-background.ps1",
+    "dev:bg:status": "powershell -ExecutionPolicy Bypass -File ./scripts/status-dev-background.ps1",
+    "dev:api": "powershell -ExecutionPolicy Bypass -File ./scripts/dev.ps1 -BackendOnly",
+    "dev:web": "powershell -ExecutionPolicy Bypass -File ./scripts/dev.ps1 -FrontendOnly",
+    "dev:api:direct": "powershell -ExecutionPolicy Bypass -File ./scripts/run-api.ps1",
+    "dev:api:reload": "powershell -ExecutionPolicy Bypass -File ./scripts/run-api.ps1 -Reload",
+    "dev:web:direct": "npm --prefix ./apps/web run dev -- --host 127.0.0.1 --port 5173",
     "build:web": "pnpm --filter web build",
     "preview:web": "pnpm --filter web preview",
     "test:api": "powershell -ExecutionPolicy Bypass -File ./scripts/test-api.ps1"

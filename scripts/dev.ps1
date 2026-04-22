@@ -1,51 +1,66 @@
 param(
     [switch]$BackendOnly,
     [switch]$FrontendOnly,
-    [switch]$DryRun
+    [switch]$DryRun,
+    [switch]$DisableReload
 )
 
 $ErrorActionPreference = "Stop"
 
-$repoRoot = Split-Path -Parent $PSScriptRoot
-$apiDir = Join-Path $repoRoot "apps\api"
-$webDir = Join-Path $repoRoot "apps\web"
-$venvPython = Join-Path $apiDir ".venv\Scripts\python.exe"
-$backendPython = if (Test-Path $venvPython) { $venvPython } else { "python" }
+. (Join-Path $PSScriptRoot "dev-common.ps1")
 
-$backendCommand = "$backendPython -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000"
-$frontendCommand = "pnpm --filter web dev -- --host 127.0.0.1 --port 5173"
+$apiDir = Get-ApiDirectory
+$webDir = Get-WebDirectory
+$backendPython = Get-BackendPython
+$npmCommand = Get-NpmCommand
 
-function Start-DevWindow {
+function Start-DetachedProcess {
     param(
         [string]$Title,
         [string]$WorkingDirectory,
-        [string]$Command
+        [string]$FilePath,
+        [string[]]$Arguments = @(),
+        [string[]]$PathEntries = @()
     )
 
-    $fullCommand = "Set-Location -LiteralPath '$WorkingDirectory'; `$Host.UI.RawUI.WindowTitle = '$Title'; $Command"
+    $formattedArguments = @($Arguments | ForEach-Object { Format-CommandArgument $_ })
+    $displayCommand = (@(Format-CommandArgument $FilePath) + $formattedArguments) -join " "
 
     if ($DryRun) {
         Write-Host "[$Title]"
-        Write-Host $fullCommand
+        Write-Host "Working directory: $WorkingDirectory"
+        Write-Host $displayCommand
         Write-Host ""
         return
     }
 
-    Start-Process powershell -ArgumentList @(
-        "-NoExit",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-Command",
-        $fullCommand
-    ) | Out-Null
+    Repair-ProcessPathEnvironment
+    foreach ($pathEntry in $PathEntries) {
+        Add-ProcessPathEntry $pathEntry
+    }
+
+    Start-Process -FilePath $FilePath -WorkingDirectory $WorkingDirectory -ArgumentList $Arguments | Out-Null
 }
 
+$runningInCodex = Test-IsCodexShell
+$useReload = -not $DisableReload -and -not $runningInCodex
+
 if (-not $FrontendOnly) {
-    Start-DevWindow -Title "SaJu API" -WorkingDirectory $apiDir -Command $backendCommand
+    $backendArguments = @("-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8000")
+    if ($useReload) {
+        $backendArguments += "--reload"
+    }
+
+    Start-DetachedProcess -Title "SaJu API" -WorkingDirectory $apiDir -FilePath $backendPython -Arguments $backendArguments
 }
 
 if (-not $BackendOnly) {
-    Start-DevWindow -Title "SaJu Web" -WorkingDirectory $repoRoot -Command $frontendCommand
+    $frontendArguments = @("run", "dev", "--", "--host", "127.0.0.1", "--port", "5173")
+    $frontendPathEntries = @()
+    if (Test-Path $npmCommand) {
+        $frontendPathEntries += (Split-Path $npmCommand -Parent)
+    }
+    Start-DetachedProcess -Title "SaJu Web" -WorkingDirectory $webDir -FilePath $npmCommand -Arguments $frontendArguments -PathEntries $frontendPathEntries
 }
 
 if (-not $DryRun) {
@@ -56,5 +71,8 @@ if (-not $DryRun) {
     }
     if (-not $BackendOnly) {
         Write-Host "Web: http://127.0.0.1:5173"
+    }
+    if ($runningInCodex -and -not $FrontendOnly) {
+        Write-Host "Codex shell detected: backend reload was disabled to avoid Windows named-pipe permission errors."
     }
 }

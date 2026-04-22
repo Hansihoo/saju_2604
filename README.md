@@ -13,6 +13,11 @@ docs/
   delivery/
 scripts/
   dev.ps1
+  dev-common.ps1
+  start-dev-background.ps1
+  stop-dev-background.ps1
+  status-dev-background.ps1
+  run-api.ps1
   test-api.ps1
 ```
 
@@ -36,6 +41,26 @@ This opens two PowerShell windows:
 - API docs: `http://127.0.0.1:8000/docs`
 - Web: `http://127.0.0.1:5173`
 
+`pnpm dev` now auto-detects Codex Desktop / sandbox shells and starts the backend without `--reload` to avoid the Windows named-pipe permission loop that can fill `uvicorn.stderr.log`.
+
+## Codex-safe background development
+
+From the repository root:
+
+```powershell
+pnpm dev:bg:start
+pnpm dev:bg:status
+pnpm dev:bg:stop
+```
+
+This is the recommended path for Codex Desktop and other restricted shells.
+
+- `pnpm dev:bg:start` starts API and web in managed background processes.
+- `pnpm dev:bg:status` shows whether the managed services are running and healthy.
+- `pnpm dev:bg:stop` stops only the managed services that were started by the background launcher.
+
+Managed logs and process metadata are stored in `.dev-runtime/`.
+
 You can also start only one side:
 
 ```powershell
@@ -43,11 +68,22 @@ pnpm dev:api
 pnpm dev:web
 ```
 
-If you only want the original direct Vite command:
+If you only want the original foreground Vite command:
 
 ```powershell
 pnpm dev:web:direct
 ```
+
+Direct API startup commands:
+
+```powershell
+pnpm dev:api:direct
+pnpm dev:api:reload
+```
+
+`pnpm dev:api:reload` is for a normal local terminal. In Codex / sandbox shells it fails fast instead of trying to start the unsafe reloader.
+
+For a Codex-safe runbook, see [docs/CODEX_RUNBOOK.md](docs/CODEX_RUNBOOK.md).
 
 ## API setup
 
