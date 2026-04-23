@@ -151,7 +151,7 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         payload = SajuPreviewRequest(
             calendar_type="solar",
             birth_date="2024-02-10",
-            birth_time="00:00",
+            birth_time="13:45",
             is_birth_time_estimated=True,
             is_lunar_leap_month=False,
             gender="male",
@@ -168,6 +168,8 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         self.assertIn("hidden by policy", response.debug_trace.checkpoints[5].note)
         self.assertFalse(response.manse.meta.hour_pillar_enabled)
         self.assertFalse(response.manse.pillars.time.enabled)
+        self.assertEqual(response.calendar_normalization.input_time, "00:00")
+        self.assertTrue(response.time_correction.source_local_datetime.endswith("00:00:00"))
         self.assertEqual(response.manse.analysis.visible_element_total, 6)
         self.assertIsNone(response.manse.analysis.first_luck_cycle_direction)
         self.assertEqual(response.manse.table_rows[0].time, "")

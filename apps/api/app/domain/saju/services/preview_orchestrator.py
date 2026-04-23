@@ -25,6 +25,7 @@ def create_saju_preview_response(
     service_name: str,
 ) -> SajuPreviewResponse:
     """사주 미리보기 파이프라인 전단계를 실행하고 최종 응답을 만든다."""
+    birth_time_policy = resolve_birth_time_policy(payload)
     region = find_region_by_id(payload.region_id)
     log_stage(
         service=service_name,
@@ -37,7 +38,7 @@ def create_saju_preview_response(
     try:
         time_correction = normalize_birth_datetime(
             birth_date=payload.birth_date,
-            birth_time=payload.birth_time,
+            birth_time=birth_time_policy.effective_birth_time,
             tzid=region.tzid,
         )
     except TimeCorrectionError as exc:
@@ -67,7 +68,7 @@ def create_saju_preview_response(
         calendar_normalization = normalize_calendar(
             calendar_type=payload.calendar_type,
             birth_date=payload.birth_date,
-            birth_time=payload.birth_time,
+            birth_time=birth_time_policy.effective_birth_time,
             is_lunar_leap_month=payload.is_lunar_leap_month,
         )
     except CalendarNormalizationError as exc:
@@ -160,7 +161,6 @@ def create_saju_preview_response(
         },
     )
 
-    birth_time_policy = resolve_birth_time_policy(payload)
     analysis_result = analyze_saju(
         saju_calculation=saju_calculation,
         visible_pillar_keys=birth_time_policy.visible_pillar_keys,

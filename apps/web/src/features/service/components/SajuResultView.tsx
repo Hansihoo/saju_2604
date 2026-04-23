@@ -123,15 +123,75 @@ const resultDataCopy: Record<
   },
 };
 
-function getVisiblePillarEntries(result: SajuPreviewResponse, locale: Locale) {
+const disabledStateCopy: Record<
+  Locale,
+  {
+    disabledBadge: string;
+    disabledValue: string;
+    unknownTimeNoticeTitle: string;
+    unknownTimeNoticeBody: string;
+    unknownTimeMetaLabel: string;
+    unknownTimeMetaValue: string;
+    timePillarDisabledNote: string;
+    luckTimelineDisabledNote: string;
+  }
+> = {
+  ko: {
+    disabledBadge: "비활성화",
+    disabledValue: "비활성화",
+    unknownTimeNoticeTitle: "출생시간을 몰라 시주 기반 항목을 비활성화했어요.",
+    unknownTimeNoticeBody:
+      "시주, 시주 기반 대운, 시간 의존 해석은 숨기지 않고 비활성 상태로 표시합니다. 정확한 시간이 확인되면 다시 계산해 전체 결과를 열 수 있어요.",
+    unknownTimeMetaLabel: "출생시간 상태",
+    unknownTimeMetaValue: "시간 모름",
+    timePillarDisabledNote: "시주는 정확한 출생시간이 확인되면 다시 열립니다.",
+    luckTimelineDisabledNote: "대운 시작 시점과 흐름은 출생시간이 확인되면 다시 계산됩니다.",
+  },
+  en: {
+    disabledBadge: "Disabled",
+    disabledValue: "Disabled",
+    unknownTimeNoticeTitle: "Birth time is unknown, so hour-based items are disabled.",
+    unknownTimeNoticeBody:
+      "The time pillar, hour-based luck-cycle details, and time-dependent interpretation stay visible in a disabled state until the real birth time is known.",
+    unknownTimeMetaLabel: "Birth-time status",
+    unknownTimeMetaValue: "Unknown time",
+    timePillarDisabledNote: "The time pillar will unlock after the birth time is confirmed.",
+    luckTimelineDisabledNote:
+      "Luck-cycle start points and transitions will be recalculated after the birth time is confirmed.",
+  },
+};
+
+type PillarEntry = {
+  key: VisiblePillarKey;
+  label: string;
+  pillar: SajuPreviewResponse["manse"]["pillars"][VisiblePillarKey];
+};
+
+function getPillarEntries(result: SajuPreviewResponse, locale: Locale): PillarEntry[] {
   const labels = resultDataCopy[locale].pillarColumns;
-  return visiblePillarKeys
-    .filter((key) => result.manse.pillars[key].enabled)
-    .map((key) => ({
-      key,
-      label: labels[key],
-      pillar: result.manse.pillars[key],
-    }));
+  return visiblePillarKeys.map((key) => ({
+    key,
+    label: labels[key],
+    pillar: result.manse.pillars[key],
+  }));
+}
+
+function getDisabledClassName(enabled: boolean) {
+  return enabled ? undefined : "is-disabled";
+}
+
+function renderPillarValue(
+  value: string | null | undefined,
+  options: {
+    locale: Locale;
+    enabled: boolean;
+  },
+) {
+  if (!options.enabled) {
+    return disabledStateCopy[options.locale].disabledValue;
+  }
+
+  return formatManseText(value, options.locale);
 }
 
 function formatYearMonth(value: string | null | undefined, locale: Locale) {
@@ -176,7 +236,9 @@ function CompactPillarTable({
   result: SajuPreviewResponse;
 }) {
   const ui = resultDataCopy[locale];
-  const pillars = getVisiblePillarEntries(result, locale);
+  const statusTexts = disabledStateCopy[locale];
+  const pillars = getPillarEntries(result, locale);
+  const isBirthTimeUnknown = !result.result.hour_pillar_enabled;
 
   return (
     <section className="result-pillar-overview">
@@ -185,9 +247,14 @@ function CompactPillarTable({
           <p className="result-panel-label">{ui.pillarTitle}</p>
           <p className="result-pillar-overview-note">{ui.pillarSubtitle}</p>
         </div>
-        <div className="result-pillar-overview-meta">
-          <span>{ui.correctedTimeLabel}</span>
-          <strong>{result.regional_solar_correction.corrected_solar_datetime}</strong>
+        <div className={`result-pillar-overview-meta${isBirthTimeUnknown ? " is-disabled" : ""}`}>
+          <span>{isBirthTimeUnknown ? statusTexts.unknownTimeMetaLabel : ui.correctedTimeLabel}</span>
+          <strong>
+            {isBirthTimeUnknown
+              ? statusTexts.unknownTimeMetaValue
+              : result.regional_solar_correction.corrected_solar_datetime}
+          </strong>
+          {isBirthTimeUnknown ? <small>{statusTexts.timePillarDisabledNote}</small> : null}
         </div>
       </div>
 
@@ -195,16 +262,23 @@ function CompactPillarTable({
         <table className="reading-table result-pillar-table compact">
           <thead>
             <tr>
-              {pillars.map(({ key, label }) => (
-                <th key={key}>{label}</th>
+              {pillars.map(({ key, label, pillar }) => (
+                <th key={key} className={getDisabledClassName(pillar.enabled)}>
+                  {label}
+                </th>
               ))}
             </tr>
           </thead>
           <tbody>
             <tr>
               {pillars.map(({ key, pillar }) => (
-                <td key={key}>
-                  <strong>{formatManseText(pillar.gan_zhi, locale)}</strong>
+                <td key={key} className={getDisabledClassName(pillar.enabled)}>
+                  <strong>
+                    {renderPillarValue(pillar.gan_zhi, {
+                      locale,
+                      enabled: pillar.enabled,
+                    })}
+                  </strong>
                 </td>
               ))}
             </tr>
@@ -223,7 +297,7 @@ function DetailedPillarTable({
   result: SajuPreviewResponse;
 }) {
   const ui = resultDataCopy[locale];
-  const pillars = getVisiblePillarEntries(result, locale);
+  const pillars = getPillarEntries(result, locale);
 
   return (
     <div className="reading-data-card">
@@ -239,8 +313,10 @@ function DetailedPillarTable({
           <thead>
             <tr>
               <th />
-              {pillars.map(({ key, label }) => (
-                <th key={key}>{label}</th>
+              {pillars.map(({ key, label, pillar }) => (
+                <th key={key} className={getDisabledClassName(pillar.enabled)}>
+                  {label}
+                </th>
               ))}
             </tr>
           </thead>
@@ -248,21 +324,36 @@ function DetailedPillarTable({
             <tr>
               <th>{ui.ganZhiRow}</th>
               {pillars.map(({ key, pillar }) => (
-                <td key={key}>
-                  <strong>{formatManseText(pillar.gan_zhi, locale)}</strong>
+                <td key={key} className={getDisabledClassName(pillar.enabled)}>
+                  <strong>
+                    {renderPillarValue(pillar.gan_zhi, {
+                      locale,
+                      enabled: pillar.enabled,
+                    })}
+                  </strong>
                 </td>
               ))}
             </tr>
             <tr>
               <th>{ui.stemRow}</th>
               {pillars.map(({ key, pillar }) => (
-                <td key={key}>{formatManseText(pillar.stem, locale)}</td>
+                <td key={key} className={getDisabledClassName(pillar.enabled)}>
+                  {renderPillarValue(pillar.stem, {
+                    locale,
+                    enabled: pillar.enabled,
+                  })}
+                </td>
               ))}
             </tr>
             <tr>
               <th>{ui.branchRow}</th>
               {pillars.map(({ key, pillar }) => (
-                <td key={key}>{formatManseText(pillar.branch, locale)}</td>
+                <td key={key} className={getDisabledClassName(pillar.enabled)}>
+                  {renderPillarValue(pillar.branch, {
+                    locale,
+                    enabled: pillar.enabled,
+                  })}
+                </td>
               ))}
             </tr>
           </tbody>
@@ -280,13 +371,11 @@ function LuckTimelineTable({
   result: SajuPreviewResponse;
 }) {
   const ui = resultDataCopy[locale];
-
-  if (!result.manse.luck_cycles_enabled || !result.manse.luck_cycles.length) {
-    return null;
-  }
+  const statusTexts = disabledStateCopy[locale];
+  const isDisabled = !result.manse.luck_cycles_enabled || !result.manse.luck_cycles.length;
 
   return (
-    <div className="reading-data-card">
+    <div className={`reading-data-card${isDisabled ? " is-disabled" : ""}`}>
       <div className="reading-data-card-head">
         <div>
           <p className="result-panel-label">{ui.luckTimelineTitle}</p>
@@ -304,18 +393,31 @@ function LuckTimelineTable({
             </tr>
           </thead>
           <tbody>
-            {result.manse.luck_cycles.map((cycle) => (
-              <tr key={`${cycle.index}-${cycle.gan_zhi}`}>
-                <td>
-                  <strong>{formatManseText(cycle.gan_zhi, locale)}</strong>
+            {isDisabled ? (
+              <tr>
+                <td className="is-disabled">
+                  <strong>{statusTexts.disabledValue}</strong>
                 </td>
-                <td>{formatYearMonth(cycle.start_datetime, locale)}</td>
-                <td>{formatYearMonth(cycle.change_datetime, locale)}</td>
+                <td className="is-disabled">{statusTexts.disabledValue}</td>
+                <td className="is-disabled">{statusTexts.disabledValue}</td>
               </tr>
-            ))}
+            ) : (
+              result.manse.luck_cycles.map((cycle) => (
+                <tr key={`${cycle.index}-${cycle.gan_zhi}`}>
+                  <td>
+                    <strong>{formatManseText(cycle.gan_zhi, locale)}</strong>
+                  </td>
+                  <td>{formatYearMonth(cycle.start_datetime, locale)}</td>
+                  <td>{formatYearMonth(cycle.change_datetime, locale)}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
+      {isDisabled ? (
+        <p className="reading-disabled-note">{statusTexts.luckTimelineDisabledNote}</p>
+      ) : null}
     </div>
   );
 }
@@ -513,6 +615,8 @@ function NarrativeSection({
 export function SajuResultView({ locale, result, onReset }: SajuResultViewProps) {
   const texts = getCopy(locale);
   const viewTexts = sectionViewCopy[locale];
+  const statusTexts = disabledStateCopy[locale];
+  const isBirthTimeUnknown = !result.result.hour_pillar_enabled;
   const visiblePillars = result.result.signals.visible_pillar_values
     .map((value) => formatManseText(value, locale))
     .join(" / ");
@@ -594,6 +698,16 @@ export function SajuResultView({ locale, result, onReset }: SajuResultViewProps)
 
       <div className="result-layout">
         <div className="result-main-column">
+          {isBirthTimeUnknown ? (
+            <section className="result-disabled-banner">
+              <div className="result-disabled-banner-head">
+                <span className="result-panel-label">{statusTexts.disabledBadge}</span>
+                <h3>{statusTexts.unknownTimeNoticeTitle}</h3>
+              </div>
+              <p>{statusTexts.unknownTimeNoticeBody}</p>
+            </section>
+          ) : null}
+
           <section className="reading-summary-card">
             <div className="reading-summary-head">
               <span className="result-panel-label">{viewTexts.summaryLabel}</span>

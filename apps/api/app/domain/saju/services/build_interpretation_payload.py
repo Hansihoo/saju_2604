@@ -380,6 +380,7 @@ def build_interpretation_payload(
     response: SajuPreviewResponse,
 ) -> InterpretationPayload:
     locale = _resolve_locale(request)
+    effective_birth_time = "00:00" if request.is_birth_time_estimated else request.birth_time
     visible_pillars = _build_visible_pillars(response, locale)
     luck_cycles = _build_luck_cycles(response, locale)
     special_stars = _build_special_stars(response, locale)
@@ -390,7 +391,7 @@ def build_interpretation_payload(
             locale=locale,
             calendar_type=request.calendar_type,
             birth_date=request.birth_date.isoformat(),
-            birth_time=request.birth_time,
+            birth_time=effective_birth_time,
             is_birth_time_estimated=request.is_birth_time_estimated,
             is_lunar_leap_month=request.is_lunar_leap_month,
             gender=request.gender,
