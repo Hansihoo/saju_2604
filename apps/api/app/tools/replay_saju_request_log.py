@@ -47,22 +47,31 @@ def iter_records(path: Path) -> Iterable[Dict[str, Any]]:
     if not path.exists():
         raise FileNotFoundError(f"Request log does not exist: {path}")
 
-    for line in path.read_text(encoding="utf-8").splitlines():
-        if not line.strip():
-            continue
-        yield json.loads(line)
+    with path.open("r", encoding="utf-8") as file:
+        for line in file:
+            if not line.strip():
+                continue
+            yield json.loads(line)
 
 
 def select_record(records: Iterable[Dict[str, Any]], *, trace_id: Optional[str], last: bool) -> Dict[str, Any]:
-    candidates = [record for record in records if record.get("path") == "/saju/preview"]
-    if trace_id:
-        candidates = [record for record in candidates if record.get("trace_id") == trace_id]
-    elif not last:
-        candidates = [record for record in candidates if int(record.get("status_code") or 0) >= 400]
+    selected: Optional[Dict[str, Any]] = None
+    for record in records:
+        if record.get("path") != "/saju/preview":
+            continue
+        if trace_id and record.get("trace_id") != trace_id:
+            continue
+        if not trace_id and not last and int(record.get("status_code") or 0) < 400:
+            continue
+        selected = record
 
-    if not candidates:
+    if selected is None:
         raise LookupError("No matching saju preview request log entry found.")
-    return candidates[-1]
+    return selected
+
+
+def get_record_payload(record: Dict[str, Any]) -> Dict[str, Any]:
+    return record.get("selected_parameters") or record.get("payload") or {}
 
 
 def main() -> None:
@@ -79,14 +88,14 @@ def main() -> None:
         generate_interpretation.settings.llm_provider = "fallback"
 
     try:
-        payload = SajuPreviewRequest(**(record.get("payload") or {}))
+        payload = SajuPreviewRequest(**get_record_payload(record))
     except ValidationError as exc:
         print(
             json.dumps(
                 {
                     "trace_id": record.get("trace_id"),
                     "status": "validation_error",
-                    "payload": record.get("payload"),
+                    "selected_parameters": get_record_payload(record),
                     "errors": exc.errors(),
                 },
                 ensure_ascii=False,
@@ -161,7 +170,7 @@ def print_error(
                 "stage": stage,
                 "error_code": error_code,
                 "message": message,
-                "payload": record.get("payload"),
+                "selected_parameters": get_record_payload(record),
                 "meta": meta,
             },
             ensure_ascii=False,

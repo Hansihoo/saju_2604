@@ -50,6 +50,18 @@ def _parse_cors_origins(raw_value: str) -> List[str]:
     return [item.strip() for item in raw_value.split(",") if item.strip()]
 
 
+def _parse_int_env(name: str, default: int, *, minimum: int = 0) -> int:
+    raw_value = os.getenv(name)
+    if raw_value is None:
+        return default
+
+    try:
+        value = int(raw_value)
+    except ValueError:
+        return default
+    return max(minimum, value)
+
+
 @dataclass
 class Settings:
     app_name: str = os.getenv("SAJU_APP_NAME", "suju-insight")
@@ -67,6 +79,8 @@ class Settings:
         "SAJU_REQUEST_LOG_PATH",
         str(REPO_ROOT / ".dev-runtime" / "saju-request-events.jsonl"),
     )
+    request_log_max_bytes: int = _parse_int_env("SAJU_REQUEST_LOG_MAX_BYTES", 10 * 1024 * 1024)
+    request_log_backup_count: int = _parse_int_env("SAJU_REQUEST_LOG_BACKUP_COUNT", 3)
     cors_origins: Optional[List[str]] = None
 
     def __post_init__(self) -> None:

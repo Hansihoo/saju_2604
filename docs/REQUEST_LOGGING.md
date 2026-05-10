@@ -31,6 +31,32 @@ export SAJU_REQUEST_LOG_PATH=/var/log/saju/saju-request-events.jsonl
 export SAJU_REQUEST_LOG_ENABLED=0
 ```
 
+## 로그 파일 크기와 회전
+기본값은 로그 파일 1개당 최대 `10MB`, 백업 파일 `3개` 보관입니다.
+
+```bash
+export SAJU_REQUEST_LOG_MAX_BYTES=10485760
+export SAJU_REQUEST_LOG_BACKUP_COUNT=3
+```
+
+현재 로그가 최대 크기를 넘으면 기존 파일은 아래처럼 밀려납니다.
+
+```text
+saju-request-events.jsonl
+saju-request-events.jsonl.1
+saju-request-events.jsonl.2
+saju-request-events.jsonl.3
+```
+
+`SAJU_REQUEST_LOG_MAX_BYTES=0`으로 설정하면 앱 내부 회전을 끄고, 운영체제의 `logrotate`나 로그 수집 서비스에 맡길 수 있습니다.
+
+로그 파일 경로 권한, 디스크 용량, 파일 잠금 문제로 쓰기에 실패해도 `/saju/preview` API 응답은 실패시키지 않습니다. 이 경우 서버 일반 로그에 `request_log` 단계의 `write_failed` 경고만 남깁니다.
+
+## 배포 환경 주의
+현재 파일 로그 방식은 베타 운영이나 단일 서버 환경에서 바로 재현 테스트를 하기 위한 기본 구현입니다.
+
+서버 인스턴스가 여러 대이면 각 서버의 로컬 파일에 로그가 나뉘어 남을 수 있습니다. 이 경우 `SAJU_REQUEST_LOG_PATH`를 공유 영구 볼륨으로 지정하거나, 운영 로그 수집 서비스/객체 스토리지/DB 중 하나로 모으는 구성이 필요합니다.
+
 ## 로그 형식
 한 요청이 JSON 한 줄로 기록된다. 주요 필드는 다음과 같다.
 

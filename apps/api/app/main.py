@@ -51,6 +51,8 @@ def _capture_failed_saju_request(
     capture_saju_request_event(
         enabled=settings.request_log_enabled,
         log_path=settings.request_log_path,
+        max_bytes=settings.request_log_max_bytes,
+        backup_count=settings.request_log_backup_count,
         service=settings.app_name,
         trace_id=getattr(request.state, "trace_id", "unknown"),
         method=request.method,

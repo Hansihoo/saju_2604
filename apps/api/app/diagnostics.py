@@ -67,6 +67,54 @@ def to_json_safe(value: Any) -> Any:
     return value
 
 
+def _request_log_backup_path(target: Path, index: int) -> Path:
+    return target.with_name(f"{target.name}.{index}")
+
+
+def _rotate_request_log_if_needed(
+    target: Path,
+    *,
+    incoming_bytes: int,
+    max_bytes: int,
+    backup_count: int,
+) -> None:
+    if max_bytes <= 0 or not target.exists():
+        return
+
+    if target.stat().st_size + incoming_bytes <= max_bytes:
+        return
+
+    if backup_count <= 0:
+        target.unlink(missing_ok=True)
+        return
+
+    oldest_backup = _request_log_backup_path(target, backup_count)
+    oldest_backup.unlink(missing_ok=True)
+
+    for index in range(backup_count - 1, 0, -1):
+        source = _request_log_backup_path(target, index)
+        if source.exists():
+            source.replace(_request_log_backup_path(target, index + 1))
+
+    target.replace(_request_log_backup_path(target, 1))
+
+
+def _warn_request_log_failure(*, service: str, trace_id: str, exc: Exception) -> None:
+    logging.getLogger(service).warning(
+        json.dumps(
+            {
+                "service": service,
+                "trace_id": trace_id,
+                "stage": "request_log",
+                "event": "write_failed",
+                "error_type": type(exc).__name__,
+                "message": "Saju request log write failed and was ignored.",
+            },
+            ensure_ascii=True,
+        )
+    )
+
+
 def capture_saju_request_event(
     *,
     enabled: bool,
@@ -82,29 +130,40 @@ def capture_saju_request_event(
     error_code: Optional[str] = None,
     message: Optional[str] = None,
     meta: Optional[Dict[str, Any]] = None,
+    max_bytes: int = 10 * 1024 * 1024,
+    backup_count: int = 3,
 ) -> None:
     """Append a structured saju request snapshot for local reproduction."""
     if not enabled or path.rstrip("/") != "/saju/preview":
         return
 
-    target = Path(log_path)
-    target.parent.mkdir(parents=True, exist_ok=True)
-    selected_parameters = to_json_safe(payload)
-    record = {
-        "logged_at": datetime.now(timezone.utc).isoformat(),
-        "service": service,
-        "trace_id": trace_id,
-        "method": method,
-        "path": path,
-        "status_code": status_code,
-        "stage": stage,
-        "error_code": error_code,
-        "message": message,
-        "debug_requested": debug_requested,
-        "selected_parameters": selected_parameters,
-        "payload": selected_parameters,
-        "meta": to_json_safe(meta or {}),
-        "replay_command": f"python -m app.tools.replay_saju_request_log --trace-id {trace_id}",
-    }
-    with target.open("a", encoding="utf-8") as file:
-        file.write(json.dumps(record, ensure_ascii=False) + "\n")
+    try:
+        target = Path(log_path)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        selected_parameters = to_json_safe(payload)
+        record = {
+            "logged_at": datetime.now(timezone.utc).isoformat(),
+            "service": service,
+            "trace_id": trace_id,
+            "method": method,
+            "path": path,
+            "status_code": status_code,
+            "stage": stage,
+            "error_code": error_code,
+            "message": message,
+            "debug_requested": debug_requested,
+            "selected_parameters": selected_parameters,
+            "meta": to_json_safe(meta or {}),
+            "replay_command": f"python -m app.tools.replay_saju_request_log --trace-id {trace_id}",
+        }
+        line = json.dumps(record, ensure_ascii=False) + "\n"
+        _rotate_request_log_if_needed(
+            target,
+            incoming_bytes=len(line.encode("utf-8")),
+            max_bytes=max(0, max_bytes),
+            backup_count=max(0, backup_count),
+        )
+        with target.open("a", encoding="utf-8") as file:
+            file.write(line)
+    except Exception as exc:
+        _warn_request_log_failure(service=service, trace_id=trace_id, exc=exc)
