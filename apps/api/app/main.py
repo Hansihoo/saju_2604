@@ -12,7 +12,13 @@ from app.api.routes import router
 from app.config import settings
 from app.domain.saju.adapters import SajuCalculationError
 from app.domain.saju.calendar_normalization import CalendarNormalizationError
-from app.diagnostics import configure_logging, create_trace_id, log_stage, parse_debug_header
+from app.diagnostics import (
+    capture_saju_request_event,
+    configure_logging,
+    create_trace_id,
+    log_stage,
+    parse_debug_header,
+)
 from app.domain.saju.time_correction import TimeCorrectionError
 
 app = FastAPI(
@@ -32,9 +38,45 @@ app.add_middleware(
 )
 
 
+def _capture_failed_saju_request(
+    *,
+    request: Request,
+    status_code: int,
+    stage: str,
+    error_code: str,
+    message: str,
+    payload=None,
+    meta=None,
+) -> None:
+    capture_saju_request_event(
+        enabled=settings.request_log_enabled,
+        log_path=settings.request_log_path,
+        service=settings.app_name,
+        trace_id=getattr(request.state, "trace_id", "unknown"),
+        method=request.method,
+        path=request.url.path,
+        status_code=status_code,
+        payload=payload if payload is not None else getattr(request.state, "saju_preview_payload", None),
+        debug_requested=getattr(request.state, "debug_requested", False),
+        stage=stage,
+        error_code=error_code,
+        message=message,
+        meta=meta,
+    )
+
+
 @app.exception_handler(RequestValidationError)
 async def handle_validation_error(request: Request, exc: RequestValidationError):
-    """입력 schema 검증 실패를 공통 API 오류 응답 형식으로 변환한다."""
+    """Return a structured response for request schema validation failures."""
+    _capture_failed_saju_request(
+        request=request,
+        status_code=422,
+        stage="input_validation",
+        error_code="INPUT_SCHEMA_ERROR",
+        message="Request validation failed.",
+        payload=getattr(exc, "body", None),
+        meta={"details": exc.errors()},
+    )
     return JSONResponse(
         status_code=422,
         content={
@@ -49,7 +91,15 @@ async def handle_validation_error(request: Request, exc: RequestValidationError)
 
 @app.exception_handler(TimeCorrectionError)
 async def handle_time_correction_error(request: Request, exc: TimeCorrectionError):
-    """시간 보정 단계 오류를 공통 API 오류 응답 형식으로 변환한다."""
+    """Return a structured response for time-correction failures."""
+    _capture_failed_saju_request(
+        request=request,
+        status_code=400,
+        stage=exc.stage,
+        error_code=exc.error_code,
+        message=exc.message,
+        meta=exc.meta,
+    )
     return JSONResponse(
         status_code=400,
         content={
@@ -64,7 +114,15 @@ async def handle_time_correction_error(request: Request, exc: TimeCorrectionErro
 
 @app.exception_handler(CalendarNormalizationError)
 async def handle_calendar_normalization_error(request: Request, exc: CalendarNormalizationError):
-    """달력 정규화 오류를 공통 API 오류 응답 형식으로 변환한다."""
+    """Return a structured response for calendar-normalization failures."""
+    _capture_failed_saju_request(
+        request=request,
+        status_code=400,
+        stage="calendar_normalization",
+        error_code=exc.error_code,
+        message=exc.message,
+        meta=exc.meta,
+    )
     return JSONResponse(
         status_code=400,
         content={
@@ -79,7 +137,15 @@ async def handle_calendar_normalization_error(request: Request, exc: CalendarNor
 
 @app.exception_handler(SajuCalculationError)
 async def handle_saju_calculation_error(request: Request, exc: SajuCalculationError):
-    """사주 계산 오류를 공통 API 오류 응답 형식으로 변환한다."""
+    """Return a structured response for saju calculation failures."""
+    _capture_failed_saju_request(
+        request=request,
+        status_code=400,
+        stage="saju_calculation",
+        error_code=exc.error_code,
+        message=exc.message,
+        meta=exc.meta,
+    )
     return JSONResponse(
         status_code=400,
         content={
@@ -94,8 +160,16 @@ async def handle_saju_calculation_error(request: Request, exc: SajuCalculationEr
 
 @app.exception_handler(StarletteHTTPException)
 async def handle_http_exception(request: Request, exc: StarletteHTTPException):
-    """일반 HTTP 예외를 공통 API 오류 응답 형식으로 변환한다."""
+    """Return a structured response for general HTTP exceptions."""
     detail = exc.detail if isinstance(exc.detail, dict) else {"message": str(exc.detail)}
+    _capture_failed_saju_request(
+        request=request,
+        status_code=exc.status_code,
+        stage=detail.get("stage", "request"),
+        error_code=detail.get("error_code", "HTTP_ERROR"),
+        message=detail.get("message", "The request failed."),
+        meta={"detail": detail},
+    )
     return JSONResponse(
         status_code=exc.status_code,
         content={
@@ -103,6 +177,28 @@ async def handle_http_exception(request: Request, exc: StarletteHTTPException):
             "stage": detail.get("stage", "request"),
             "error_code": detail.get("error_code", "HTTP_ERROR"),
             "message": detail.get("message", "The request failed."),
+        },
+    )
+
+
+@app.exception_handler(Exception)
+async def handle_unexpected_exception(request: Request, exc: Exception):
+    """Return a structured response for unexpected server errors."""
+    _capture_failed_saju_request(
+        request=request,
+        status_code=500,
+        stage="request",
+        error_code="INTERNAL_SERVER_ERROR",
+        message="Unexpected server error.",
+        meta={"error_type": type(exc).__name__},
+    )
+    return JSONResponse(
+        status_code=500,
+        content={
+            "trace_id": request.state.trace_id,
+            "stage": "request",
+            "error_code": "INTERNAL_SERVER_ERROR",
+            "message": "Unexpected server error.",
         },
     )
 

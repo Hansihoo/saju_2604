@@ -6,6 +6,7 @@ from typing import Any, Dict
 from fastapi import APIRouter, Query, Request
 
 from app.config import settings
+from app.diagnostics import capture_saju_request_event, to_json_safe
 from app.domain.saju.schemas import (
     RegionSearchResponse,
     RegionSuggestion,
@@ -16,6 +17,19 @@ from app.domain.saju.services.preview_orchestrator import create_saju_preview_re
 from app.domain.saju.services.region_catalog import search_regions
 
 router = APIRouter()
+
+
+def _request_method(request: Request) -> str:
+    return getattr(request, "method", "POST")
+
+
+def _request_path(request: Request) -> str:
+    request_url = getattr(request, "url", None)
+    return getattr(request_url, "path", "/saju/preview")
+
+
+def _is_http_request(request: Request) -> bool:
+    return hasattr(request, "method") and hasattr(request, "url")
 
 
 @router.get("/")
@@ -61,9 +75,26 @@ def create_saju_preview(
     request: Request,
 ) -> SajuPreviewResponse:
     """사주 미리보기 요청을 받아 파이프라인을 실행한다."""
-    return create_saju_preview_response(
+    payload_snapshot = to_json_safe(payload)
+    request.state.saju_preview_payload = payload_snapshot
+    response = create_saju_preview_response(
         payload=payload,
         trace_id=request.state.trace_id,
         debug_requested=request.state.debug_requested,
         service_name=settings.app_name,
     )
+    if _is_http_request(request):
+        capture_saju_request_event(
+            enabled=settings.request_log_enabled,
+            log_path=settings.request_log_path,
+            service=settings.app_name,
+            trace_id=request.state.trace_id,
+            method=_request_method(request),
+            path=_request_path(request),
+            status_code=200,
+            payload=payload_snapshot,
+            debug_requested=request.state.debug_requested,
+            stage="completed",
+            meta={"pipeline_status": response.pipeline_status},
+        )
+    return response

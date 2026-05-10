@@ -6,6 +6,9 @@ from pathlib import Path
 from typing import List, Optional
 
 PLACEHOLDER_OPENAI_API_KEY = "DEFINE_OPENAI_API_KEY"
+APP_DIR = Path(__file__).resolve().parent
+API_DIR = APP_DIR.parent
+REPO_ROOT = API_DIR.parent.parent
 
 
 def _load_env_file(path: Path) -> None:
@@ -32,13 +35,9 @@ def _load_env_file(path: Path) -> None:
 
 def _load_local_env_files() -> None:
     """repo root와 api 폴더의 로컬 env 파일을 순서대로 읽는다."""
-    app_dir = Path(__file__).resolve().parent
-    api_dir = app_dir.parent
-    repo_root = api_dir.parent.parent
-
     for candidate in (
-        repo_root / ".env.local",
-        api_dir / ".env.local",
+        REPO_ROOT / ".env.local",
+        API_DIR / ".env.local",
     ):
         _load_env_file(candidate)
 
@@ -63,6 +62,11 @@ class Settings:
     llm_reasoning_effort: str = os.getenv("SAJU_LLM_REASONING_EFFORT", "low")
     llm_store: bool = os.getenv("SAJU_LLM_STORE", "0") in {"1", "true", "TRUE", "yes", "YES"}
     llm_max_output_tokens: int = int(os.getenv("SAJU_LLM_MAX_OUTPUT_TOKENS", "7000"))
+    request_log_enabled: bool = os.getenv("SAJU_REQUEST_LOG_ENABLED", "1") in {"1", "true", "TRUE", "yes", "YES"}
+    request_log_path: str = os.getenv(
+        "SAJU_REQUEST_LOG_PATH",
+        str(REPO_ROOT / ".dev-runtime" / "saju-request-events.jsonl"),
+    )
     cors_origins: Optional[List[str]] = None
 
     def __post_init__(self) -> None:
