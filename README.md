@@ -111,6 +111,41 @@ This runs:
 - `python -m compileall app`
 - `python -m unittest discover -s tests -p "test_*.py"`
 
+## Vercel deployment
+
+This repository is configured as a Vercel Services project:
+
+- Web service: `apps/web`, mounted at `/`
+- API service: `apps/api/main.py`, mounted at `/api`
+- Production URL: `https://saju2604.vercel.app`
+
+When importing `https://github.com/Hansihoo/saju_2604.git` into Vercel, set the project Framework Preset to `Services`. Vercel reads the service routing from `vercel.json`, so the frontend can call the backend with the production value below:
+
+```powershell
+VITE_API_BASE_URL=/api
+```
+
+The backend routes are declared without the `/api` prefix because Vercel strips the service route prefix before forwarding requests. For example, the deployed health check is available at `/api/health`, while the FastAPI route remains `/health`.
+
+Recommended preflight before deploying:
+
+```powershell
+corepack pnpm install --frozen-lockfile
+corepack pnpm --filter web build
+powershell -ExecutionPolicy Bypass -File .\scripts\test-api.ps1
+```
+
+Optional production backend environment variables:
+
+```powershell
+OPENAI_API_KEY=...
+OPENAI_MODEL=gpt-5.4
+SAJU_LLM_PROVIDER=openai
+SAJU_CORS_ORIGINS=https://your-production-domain.example
+```
+
+`OPENAI_API_KEY` is only needed for the LLM phrasing layer. Without it, the API keeps returning the deterministic fallback interpretation.
+
 ## Environment
 
 Frontend:
@@ -144,4 +179,4 @@ Not finished yet:
 - LLM phrasing layer
 - final result UI polish
 - persistent storage
-- deployment automation
+- production domain wiring

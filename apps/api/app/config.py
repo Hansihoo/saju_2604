@@ -85,7 +85,7 @@ class Settings:
 
     def __post_init__(self) -> None:
         """초기화 직후 파생 값을 정리한다."""
-        raw_origins = os.getenv("SAJU_CORS_ORIGINS", "http://localhost:5173")
+        raw_origins = os.getenv("SAJU_CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
         self.cors_origins = _parse_cors_origins(raw_origins)
 
 

@@ -17,3 +17,4 @@ apps/api/tests/golden_reports/
 .env
 .env.local
 .DS_Store
+.vercel
