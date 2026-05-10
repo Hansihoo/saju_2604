@@ -236,7 +236,7 @@ def make_report(confidence: str = "medium") -> InterpretationReport:
     return InterpretationReport(
         provider="openai",
         model="gpt-5.4",
-        prompt_version="saju-report-v7",
+        prompt_version="saju-report-v8",
         summary=InterpretationSummaryBlock(
             headline="현재 흐름을 함께 보는 사주",
             overview="현재 기준 흐름과 원국 구조를 함께 반영해 장점과 주의점을 읽는 해석입니다. 연애, 직장, 금전 모두 현재 대운과 다음 대운의 연결을 같이 보도록 구성했습니다.",
@@ -320,7 +320,7 @@ class GenerateInterpretationTests(unittest.TestCase):
                     configured_provider="openai",
                     final_provider="openai",
                     model="gpt-5.4-mini",
-                    prompt_version="saju-report-v7",
+                    prompt_version="saju-report-v8",
                     payload_chars=123,
                     duration_ms=999,
                     final_response_id="resp_test",

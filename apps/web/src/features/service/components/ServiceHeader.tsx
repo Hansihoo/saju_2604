@@ -5,6 +5,7 @@ type ServiceHeaderProps = {
   subtitle: string;
   locale: Locale;
   languageLabel: string;
+  hideIntro?: boolean;
   onLocaleChange: (locale: Locale) => void;
 };
 
@@ -13,10 +14,11 @@ export function ServiceHeader({
   subtitle,
   locale,
   languageLabel,
+  hideIntro = false,
   onLocaleChange,
 }: ServiceHeaderProps) {
   return (
-    <header className="service-header">
+    <header className={`service-header${hideIntro ? " is-compact" : ""}`}>
       <div className="service-header-top">
         <span className="service-mark" aria-hidden="true">
           SAJU
@@ -29,8 +31,12 @@ export function ServiceHeader({
           </select>
         </label>
       </div>
-      <h1>{title}</h1>
-      <p>{subtitle}</p>
+      {hideIntro ? null : (
+        <>
+          <h1>{title}</h1>
+          <p>{subtitle}</p>
+        </>
+      )}
     </header>
   );
 }

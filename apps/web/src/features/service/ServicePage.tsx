@@ -45,6 +45,7 @@ export function ServicePage({
         subtitle={texts.subtitle}
         locale={locale}
         languageLabel={texts.language}
+        hideIntro={Boolean(result)}
         onLocaleChange={onLocaleChange}
       />
 

@@ -60,11 +60,19 @@ button {
   margin-bottom: 24px;
 }
 
+.service-header.is-compact {
+  margin-bottom: 12px;
+}
+
 .service-header-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 20px;
+}
+
+.service-header.is-compact .service-header-top {
+  margin-bottom: 0;
 }
 
 .service-mark {

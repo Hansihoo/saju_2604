@@ -32,14 +32,14 @@ class InterpretationNarrative(BaseModel):
 class InterpretationNarrativeSection(BaseModel):
     title: str = Field(max_length=64)
     body: str = Field(max_length=6000)
-    evidence_ids: List[str] = Field(min_length=1, max_length=6)
+    evidence_ids: List[str] = Field(min_items=1, max_items=6)
 
 
 class InterpretationSummaryBlock(BaseModel):
     headline: str = Field(max_length=64)
     overview: str = Field(max_length=900)
     confidence: InterpretationConfidence
-    evidence_ids: List[str] = Field(min_length=1, max_length=6)
+    evidence_ids: List[str] = Field(min_items=1, max_items=6)
 
 
 class InterpretationLLMOutput(BaseModel):
@@ -81,6 +81,6 @@ class InterpretationReport(InterpretationLLMOutput):
     schema_version: Literal["m2-llm-v5"] = "m2-llm-v5"
     provider: Literal["openai", "fallback"]
     model: Optional[str] = None
-    prompt_version: str = "saju-report-v7"
+    prompt_version: str = "saju-report-v8"
     warnings: List[str] = Field(default_factory=list)
     diagnostics: Optional[InterpretationDiagnostics] = None

@@ -130,7 +130,7 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         self.assertEqual(response.pipeline_status.llm_formatting, "failed")
         self.assertIsNotNone(response.result.interpretation)
         self.assertEqual(response.result.interpretation.provider, "fallback")
-        self.assertEqual(response.result.interpretation.prompt_version, "saju-report-v7")
+        self.assertEqual(response.result.interpretation.prompt_version, "saju-report-v8")
         self.assertIsNotNone(response.result.interpretation.diagnostics)
         self.assertEqual(
             response.result.interpretation.diagnostics.fallback_reason,

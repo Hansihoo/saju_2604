@@ -10,7 +10,10 @@ from app.domain.saju.interpretation import InterpretationReport
 
 
 PipelineState = Literal["passed", "failed", "skipped", "disabled"]
-BirthTimeStr = constr(pattern=r"^\d{2}:\d{2}$")
+try:
+    BirthTimeStr = constr(pattern=r"^\d{2}:\d{2}$")
+except TypeError:
+    BirthTimeStr = constr(regex=r"^\d{2}:\d{2}$")
 ElementKey = Literal["wood", "fire", "earth", "metal", "water"]
 
 

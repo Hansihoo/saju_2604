@@ -30,7 +30,31 @@ except Exception:  # pragma: no cover - import guard for local test envs
     OpenAI = None
 
 
-PROMPT_VERSION = "saju-report-v7"
+def _model_dump_json(model: Any) -> Dict[str, Any]:
+    if hasattr(model, "model_dump"):
+        return model.model_dump(mode="json")
+    return json.loads(model.json())
+
+
+def _model_copy(model: Any, *, update: Dict[str, Any]) -> Any:
+    if hasattr(model, "model_copy"):
+        return model.model_copy(update=update)
+    return model.copy(update=update, deep=True)
+
+
+def _model_validate(model_class: Any, data: Dict[str, Any]) -> Any:
+    if hasattr(model_class, "model_validate"):
+        return model_class.model_validate(data)
+    return model_class.parse_obj(data)
+
+
+def _model_json_schema(model_class: Any) -> Dict[str, Any]:
+    if hasattr(model_class, "model_json_schema"):
+        return model_class.model_json_schema()
+    return model_class.schema()
+
+
+PROMPT_VERSION = "saju-report-v8"
 MIN_SUMMARY_LENGTH = 90
 MIN_SECTION_LENGTH = 260
 OUTPUT_EXCERPT_LIMIT = 280
@@ -49,14 +73,20 @@ SCHEMA_NOISE_KEYS = {
     "maxItems",
 }
 BANNED_PHRASES = [
+    "반드시",
     "무조건",
-    "절대",
+    "운명적으로",
     "100%",
-    "천생연분",
-    "운명의 상대",
-    "반드시 헤어진다",
-    "대박 난다",
-    "꽃길만 걷는다",
+    "대박",
+    "큰돈을 번다",
+    "결혼한다",
+    "이혼한다",
+    "바람난다",
+    "사고가 난다",
+    "병이 생긴다",
+    "죽음",
+    "파산",
+    "망한다",
 ]
 ELEMENT_LABELS = {
     "ko": {"wood": "목", "fire": "화", "earth": "토", "metal": "금", "water": "수"},
@@ -70,26 +100,131 @@ ELEMENT_LABELS = {
 }
 
 DEVELOPER_PROMPT = """
-You are a modern Korean saju interpretation writer.
+You are a modern Korean saju interpretation writer for a fact-based saju web service.
 
-Rules:
-- The payload already contains computed manse and saju facts. Never recalculate them.
-- Use only the provided payload. Do not invent pillars, gods, timing, marriage outcomes, reunion, cheating, or destiny.
+Core role:
+- The payload already contains computed manse and saju facts.
+- You are not a calculator. You are a user-facing interpretation writer.
+- Never recalculate saju, manse, timing correction, pillars, ten gods, stars, luck cycles, or scores.
+- Use only the provided payload as the source of truth.
+
+Language rules:
 - Follow profile.locale strictly.
-- If locale is ko, write in Hangul only. Do not output Hanja.
+- If locale is ko, write in Korean Hangul only. Do not output Hanja.
 - If locale is en, write in English only. Do not output Korean or Hanja.
-- Keep the tone professional, readable, and grounded.
-- Every major section must be long-form prose with markdown subheadings and bullet points.
-- Keep the established long-form reading style instead of turning the output into score commentary.
-- Core analysis must include standout traits, comparison, strengths, cautions, and direction.
-- Love must include relationship style, marriage traits, good match, difficult match, advice, and one short current-period subsection.
-- Career must include work style, suitable environment, risks, strategy, and one short current-period subsection.
-- Wealth must include flow type, relative tendency, cautions, money management direction, and one short current-period subsection.
-- Luck flow must focus on current and next cycle only.
-- Do not use literal labels such as evidence or explanation.
-- Do not expose numeric scores, score labels, or point-based phrasing in user-facing text.
-- Avoid exaggerated certainty and banned phrases.
-- Return valid JSON that matches the schema.
+
+Truthfulness rules:
+- Do not invent pillars, ten gods, elements, special stars, luck cycles, marriage outcomes, reunion, cheating, illness, accident, death, destiny, or timing.
+- Do not make deterministic predictions.
+- Avoid exaggerated certainty.
+- Do not expose numeric scores, score labels, point-based phrasing, or internal scoring logic.
+- If a score or signal exists in the payload, use it only to adjust tone and strength.
+- If birth time is estimated or unknown, clearly mention the limitation and do not use hour-pillar-based interpretation as certain.
+- Special stars must be used only as supporting indicators, never as the sole basis for a conclusion.
+
+Style goal:
+- Make the result easy to read but visibly grounded.
+- The user should feel: "This is readable, but it is not random."
+- Use simple everyday Korean first.
+- Use saju terms only when useful, and immediately explain their meaning in plain language.
+- Do not overload the user with technical terms.
+
+Output structure:
+- Return valid JSON that matches the existing schema.
+- Do not add new top-level fields.
+- Keep the existing section keys:
+  summary, core_analysis, love, career, wealth, luck_flow.
+- Put user-facing basis chips and expert notes inside each section body using markdown text.
+
+Writing format for each major section body:
+1. Start with a short conclusion.
+2. Explain the interpretation in plain Korean.
+3. Add practical advice.
+4. Add a short "풀이 포인트" block with 2 to 4 basis chips.
+5. Add a short "전문가 노트" block with 1 to 2 sentences explaining why the interpretation was made.
+
+Use this section body pattern:
+
+### 핵심 결론
+Write 2 to 3 sentences.
+
+### 현실 해석
+Write 3 to 5 sentences.
+
+### 조언
+- Write 2 to 4 practical bullet points.
+
+### 풀이 포인트
+[일간] [십성] [오행] [대운] style chips.
+Use only terms that exist in the payload.
+
+### 전문가 노트
+Write 1 to 2 sentences.
+Explain the logic simply.
+Do not use raw evidence IDs.
+Do not use the English word "evidence".
+
+Section requirements:
+
+summary:
+- headline must be short and personalized.
+- overview must summarize the whole reading in 4 to 6 sentences.
+- Mention the strongest personality direction, current-period theme, and one caution.
+- Do not include raw pillar tables in the overview.
+
+core_analysis:
+- Include standout traits, comparison, strengths, cautions, and direction.
+- Use day master, element balance, ten gods, and major signals from the payload.
+- Avoid abstract repetition such as "흐름", "기운", "안정" too often.
+
+love:
+- Include relationship style, marriage tendency, good match, difficult match, advice, and current-period reading.
+- Use spouse house, partner star, love_facts, relevant ten gods, current_flow, and special stars if provided.
+- Do not promise marriage, reunion, breakup, cheating, or fate.
+- If 도화, 홍염, or similar stars appear, explain them as attraction or social attention indicators only.
+
+career:
+- Include work style, suitable environment, risks, strategy, and current-period reading.
+- Use month pillar, career_facts, officer/resource/output indicators, current_flow, and relevant special stars if provided.
+- Translate technical terms into practical work language such as planning, documentation, operations, responsibility, review, education, leadership, or execution.
+
+wealth:
+- Include money flow type, earning pattern, spending risk, management direction, and current-period reading.
+- Interpret wealth using wealth star, output star, peer star, element balance, missing elements, current_flow, and relevant special stars if provided.
+- If wealth star is weak or absent, do not say money luck is strong.
+- If output exists, explain income through results, productivity, skills, content, sales, or deliverables.
+- If peer is strong, explain competition, shared costs, relationship spending, or leakage risk.
+- Do not give investment instructions, stock advice, coin advice, or guaranteed profit predictions.
+
+luck_flow:
+- Focus only on the current luck cycle and the next luck cycle.
+- Explain the transition in practical life terms.
+- Do not list every luck cycle unless the schema or payload requires it.
+- Use current_flow as the main basis.
+
+Tone:
+- Professional, readable, calm, and grounded.
+- No fortune-teller exaggeration.
+- No fear-based writing.
+- No vague filler.
+- Prefer concrete situations and choices.
+
+Banned expressions:
+- 반드시
+- 무조건
+- 운명적으로
+- 대박
+- 큰돈을 번다
+- 결혼한다
+- 이혼한다
+- 바람난다
+- 사고가 난다
+- 병이 생긴다
+- 죽음
+- 파산
+- 망한다
+
+Return valid JSON only.
 """.strip()
 
 REPAIR_PROMPT = """
@@ -462,7 +597,8 @@ def _attach_diagnostics(
     provider: str | None = None,
 ) -> InterpretationReport:
     updated_warnings = list(dict.fromkeys((warnings if warnings is not None else report.warnings)))
-    return report.model_copy(
+    return _model_copy(
+        report,
         update={
             "provider": provider or report.provider,
             "warnings": updated_warnings,
@@ -489,7 +625,7 @@ def _build_openai_report(parsed: InterpretationLLMOutput) -> InterpretationRepor
 def _parse_interpretation_output(output_text: str) -> InterpretationLLMOutput:
     parsed_json = json.loads(output_text)
     normalized = _normalize_llm_output(parsed_json)
-    return InterpretationLLMOutput.model_validate(normalized)
+    return _model_validate(InterpretationLLMOutput, normalized)
 
 
 def _call_openai_repair_interpretation(
@@ -524,7 +660,7 @@ def _call_openai_repair_interpretation(
             text={
                 "format": _make_openai_json_schema_strict(
                     "saju_interpretation_repair",
-                    InterpretationLLMOutput.model_json_schema(),
+                    _model_json_schema(InterpretationLLMOutput),
                 )
             },
         )
@@ -600,7 +736,7 @@ def _call_openai_repair_interpretation(
 def _call_openai_structured_interpretation(
     payload: InterpretationPayload,
 ) -> Tuple[InterpretationReport | None, InterpretationDiagnostics]:
-    payload_json = json.dumps(payload.model_dump(mode="json"), ensure_ascii=False)
+    payload_json = json.dumps(_model_dump_json(payload), ensure_ascii=False)
     if OpenAI is None:
         return None, _make_diagnostics(
             final_provider="fallback",
@@ -635,7 +771,7 @@ def _call_openai_structured_interpretation(
                 text={
                     "format": _make_openai_json_schema_strict(
                         "saju_interpretation",
-                        InterpretationLLMOutput.model_json_schema(),
+                        _model_json_schema(InterpretationLLMOutput),
                     )
                 },
             )
@@ -879,7 +1015,7 @@ def generate_interpretation_report(
     service_name: str,
 ) -> InterpretationReport:
     started = time.perf_counter()
-    payload_json = json.dumps(payload.model_dump(mode="json"), ensure_ascii=False)
+    payload_json = json.dumps(_model_dump_json(payload), ensure_ascii=False)
     fallback_report = build_fallback_interpretation_report(payload)
 
     if settings.llm_provider != "openai":
@@ -946,7 +1082,7 @@ def generate_interpretation_report(
             error_code="interpretation_generation_failed",
             meta={
                 "reason": diagnostics.fallback_reason or "openai_response_invalid",
-                "attempts": [attempt.model_dump(mode="json") for attempt in diagnostics.attempts],
+                "attempts": [_model_dump_json(attempt) for attempt in diagnostics.attempts],
             },
         )
         return fallback_report
@@ -954,7 +1090,8 @@ def generate_interpretation_report(
     try:
         issues = _validate_report(report, payload)
         if issues:
-            diagnostics = diagnostics.model_copy(
+            diagnostics = _model_copy(
+                diagnostics,
                 update={
                     "final_provider": "fallback",
                     "fallback_reason": "validation_failed",
@@ -977,7 +1114,7 @@ def generate_interpretation_report(
                     "reason": "validation_failed",
                     "issues": issues,
                     "response_id": diagnostics.final_response_id,
-                    "attempts": [attempt.model_dump(mode="json") for attempt in diagnostics.attempts],
+                    "attempts": [_model_dump_json(attempt) for attempt in diagnostics.attempts],
                 },
             )
             return fallback_report
@@ -993,12 +1130,13 @@ def generate_interpretation_report(
                 "provider": "openai",
                 "response_id": diagnostics.final_response_id,
                 "prompt_version": PROMPT_VERSION,
-                "attempts": [attempt.model_dump(mode="json") for attempt in diagnostics.attempts],
+                "attempts": [_model_dump_json(attempt) for attempt in diagnostics.attempts],
             },
         )
         return report
     except Exception as exc:  # pragma: no cover - network/provider failure path
-        diagnostics = diagnostics.model_copy(
+        diagnostics = _model_copy(
+            diagnostics,
             update={
                 "final_provider": "fallback",
                 "fallback_reason": "post_validation_exception",
@@ -1020,7 +1158,7 @@ def generate_interpretation_report(
             error_code="interpretation_generation_failed",
             meta={
                 "reason": type(exc).__name__,
-                "attempts": [attempt.model_dump(mode="json") for attempt in diagnostics.attempts],
+                "attempts": [_model_dump_json(attempt) for attempt in diagnostics.attempts],
             },
         )
         return fallback_report

@@ -49,19 +49,27 @@ OUTPUT_SECTIONS = [
 
 NARRATIVE_RULES = [
     "Use only the provided facts and signals.",
-    "Do not recalculate saju, timing corrections, or luck cycles.",
+    "Do not recalculate saju, manse, timing corrections, pillars, ten gods, special stars, scores, or luck cycles.",
     "Use profile.locale as the only output language.",
     "If profile.locale is ko, write in Hangul only and do not use Hanja.",
     "If profile.locale is en, write in English only and do not use Korean or Hanja.",
+    "Do not expose numeric scores or point-based phrasing.",
+    "Use scores only as internal tone-strength signals.",
+    "Each section should be easy to read but include short user-facing basis chips.",
+    "Use the label 풀이 포인트 for short basis chips.",
+    "Use the label 전문가 노트 for a short explanation of the interpretation logic.",
+    "Do not use raw evidence IDs in user-facing text.",
+    "Do not use the English word evidence in user-facing text.",
     "Use current_flow for current-period commentary in love, career, wealth, and luck-flow sections.",
     "Use love_facts, career_facts, and wealth_facts when writing the matching sections.",
+    "Special stars are supporting indicators only, not sole proof.",
     "Keep the tone grounded and avoid exaggerated certainty.",
     "If the birth time is estimated, explicitly acknowledge the hidden hour-pillar limitations.",
-    "Do not use literal labels such as evidence or explanation.",
     "Core analysis must include standout traits, comparison, strengths, risks, and direction.",
     "Love must include relationship style, marriage traits, good match, difficult match, advice, and current timing.",
-    "Career must include work style, suitable environment, career strategy, and current timing.",
-    "Wealth must include flow type, timing, cautions, and management direction.",
+    "Career must include work style, suitable environment, risks, strategy, and current timing.",
+    "Wealth must include flow type, earning pattern, spending risk, cautions, and management direction.",
+    "Luck flow must focus on current and next cycle only.",
 ]
 
 LOVE_STAR_KEYWORDS = ("dohwa", "hongyeom", "mokyok", "wangji", "hamji", "yeokma")
