@@ -2,7 +2,7 @@
 
 from typing import Dict, List, Literal, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.domain.saju.analysis import InternalGrade
 from app.domain.saju.localization import OutputLocale
@@ -77,6 +77,8 @@ class InterpretationLuckCycle(BaseModel):
     end_year: int
     gan_zhi: str
     display_gan_zhi: str
+    start_datetime: Optional[str] = None
+    change_datetime: Optional[str] = None
 
 
 class InterpretationCountMetric(BaseModel):
@@ -90,6 +92,57 @@ class InterpretationCurrentFlowContext(BaseModel):
     current_age: int
     active_luck_cycle: Optional[InterpretationLuckCycle] = None
     next_luck_cycle: Optional[InterpretationLuckCycle] = None
+
+
+class InterpretationLuckCycleAnalysis(BaseModel):
+    display_gan_zhi: str
+    start_year: int
+    end_year: int
+    start_age: int
+    end_age: int
+    period: str
+    phase: str
+    phase_label: str
+    overall_tone: str
+    cycle_rank: int
+    overall_favorability: str
+    confidence: str
+    stem_ten_god: str
+    branch_element: Optional[ElementKey] = None
+    favorable_domains: List[str] = Field(default_factory=list)
+    caution_domains: List[str] = Field(default_factory=list)
+    good_for: List[str] = Field(default_factory=list)
+    watch_out: List[str] = Field(default_factory=list)
+    reason_tags: List[str] = Field(default_factory=list)
+    caution_tags: List[str] = Field(default_factory=list)
+    love_impact: str = "medium"
+    career_impact: str = "medium"
+    wealth_impact: str = "medium"
+    relationship_impact: str = "medium"
+    summary: str
+
+
+class InterpretationFavorablePeriod(BaseModel):
+    period: str
+    luck_cycle: str
+    favorable_for: List[str] = Field(default_factory=list)
+    reason_tags: List[str] = Field(default_factory=list)
+    caution_tags: List[str] = Field(default_factory=list)
+    confidence: str = "medium"
+
+
+class InterpretationLuckFlowFacts(BaseModel):
+    current_phase: str = ""
+    current_phase_label: str = ""
+    current_luck_cycle: str = ""
+    current_period: str = ""
+    next_luck_cycle: str = ""
+    next_period: str = ""
+    next_phase: str = ""
+    next_phase_label: str = ""
+    favorable_periods: List[InterpretationFavorablePeriod] = Field(default_factory=list)
+    transition_summary: str = ""
+    now_action_tags: List[str] = Field(default_factory=list)
 
 
 class InterpretationLoveFacts(BaseModel):
@@ -151,6 +204,8 @@ class InterpretationPayload(BaseModel):
     evidence: List[InterpretationEvidenceItem]
     luck_cycles: List[InterpretationLuckCycle]
     current_flow: InterpretationCurrentFlowContext
+    luck_cycle_analysis: List[InterpretationLuckCycleAnalysis] = Field(default_factory=list)
+    luck_flow_facts: InterpretationLuckFlowFacts = Field(default_factory=InterpretationLuckFlowFacts)
     love_facts: InterpretationLoveFacts
     career_facts: InterpretationCareerFacts
     wealth_facts: InterpretationWealthFacts

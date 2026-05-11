@@ -117,7 +117,7 @@ export const copy: Record<Locale, CopyDefinition> = {
     evidenceLabel: "근거",
     explanationLabel: "설명",
     overviewLabel: "특징",
-    differenceLabel: "평균과 다른 점",
+    differenceLabel: "내 사주의 특징",
     strengthsLabel: "장점",
     cautionsLabel: "단점 / 주의점",
     adviceLabel: "어떻게 해야 하는지",

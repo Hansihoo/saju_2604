@@ -15,6 +15,12 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 
+def _model_dump_json(model):
+    if hasattr(model, "model_dump"):
+        return model.model_dump(mode="json")
+    return json.loads(model.json())
+
+
 def parse_args() -> argparse.Namespace:
     """이 도구에 필요한 CLI 인자를 파싱한다."""
     parser = argparse.ArgumentParser(description="Render a fallback interpretation from preview data.")
@@ -52,8 +58,8 @@ def main() -> None:
     interpretation_payload = build_interpretation_payload(request=payload, response=response)
     narrative = format_interpretation_fallback(payload=interpretation_payload, locale=args.locale)
     rendered = {
-        "payload": interpretation_payload.model_dump(mode="json"),
-        "narrative": narrative.model_dump(mode="json"),
+        "payload": _model_dump_json(interpretation_payload),
+        "narrative": _model_dump_json(narrative),
     }
 
     if args.output:

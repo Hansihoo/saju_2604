@@ -763,6 +763,46 @@ button {
   line-height: 1.75;
 }
 
+.reading-bullet-paragraph {
+  display: block;
+}
+
+.reading-bullet-paragraph + .reading-bullet-paragraph {
+  margin-top: 8px;
+}
+
+.reading-support-block {
+  display: grid;
+  gap: 10px;
+  margin-top: 6px;
+  padding: 14px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #f8fafc;
+  color: #667085;
+}
+
+.reading-support-block .reading-subheading {
+  margin-top: 0;
+}
+
+.reading-support-heading {
+  color: #667085;
+  border-left-color: #cbd5e1;
+  font-size: 0.92rem;
+}
+
+.reading-support-block .reading-paragraph,
+.reading-support-block .reading-bullets li {
+  color: #667085;
+  font-size: 0.92rem;
+  line-height: 1.75;
+}
+
+.reading-support-block .reading-bullets {
+  gap: 6px;
+}
+
 .reading-table-wrap {
   overflow-x: auto;
 }
@@ -793,6 +833,200 @@ button {
 .reading-section-prelude {
   display: grid;
   gap: 12px;
+}
+
+.element-balance-card {
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid #e5eaf1;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.element-balance-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.element-balance-meta {
+  display: grid;
+  gap: 4px;
+  min-width: 104px;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #f8fafc;
+  color: #667085;
+  text-align: right;
+}
+
+.element-balance-meta span {
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.element-balance-meta strong {
+  color: #111111;
+  font-size: 1rem;
+}
+
+.element-balance-body {
+  display: grid;
+  grid-template-columns: minmax(190px, 0.8fr) minmax(0, 1.4fr);
+  gap: 22px;
+  align-items: center;
+}
+
+.element-radar-wrap {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.element-radar-wrap span {
+  color: #667085;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.element-radar {
+  width: min(100%, 230px);
+  aspect-ratio: 1;
+  overflow: visible;
+}
+
+.element-radar-outer {
+  fill: none;
+  stroke: #d7dde7;
+  stroke-width: 1.2;
+}
+
+.element-radar-average {
+  fill: #f8fafc;
+  stroke: #98a2b3;
+  stroke-dasharray: 4 4;
+  stroke-width: 1;
+}
+
+.element-radar-axis {
+  stroke: #e5e7eb;
+  stroke-width: 1;
+}
+
+.element-radar-data {
+  fill: rgba(17, 17, 17, 0.11);
+  stroke: #111111;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.element-radar-label {
+  fill: #344054;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+.element-balance-bars {
+  display: grid;
+  gap: 13px;
+  min-width: 0;
+}
+
+.element-balance-row {
+  display: grid;
+  gap: 7px;
+}
+
+.element-balance-row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.element-balance-row-head span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #111111;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.element-balance-row-head i {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+}
+
+.element-balance-row-head strong {
+  color: #111111;
+  font-size: 0.92rem;
+}
+
+.element-balance-track {
+  position: relative;
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #eef2f6;
+}
+
+.element-balance-fill {
+  display: block;
+  height: 100%;
+  min-width: 3px;
+  border-radius: inherit;
+}
+
+.element-balance-average-marker {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  left: 20%;
+  z-index: 1;
+  width: 1px;
+  background: rgba(17, 17, 17, 0.42);
+}
+
+.element-balance-row small {
+  color: #667085;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.element-balance-row.is-missing .element-balance-fill {
+  opacity: 0.35;
+}
+
+.element-balance-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.element-balance-chips span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 7px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #667085;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.element-balance-chips strong {
+  color: #111111;
 }
 
 .result-pillar-overview,
@@ -854,6 +1088,72 @@ button {
   padding: 0 18px 18px;
 }
 
+.luck-focus-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 16px 18px 14px;
+}
+
+.luck-focus-card {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid #d8e0ea;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ffffff 0%, #f7f9fc 100%);
+}
+
+.luck-focus-card.is-disabled {
+  background: #f8fafc;
+  color: #98a2b3;
+}
+
+.luck-focus-label {
+  color: #667085;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.luck-focus-card strong {
+  color: #22314a;
+  font-size: 1.08rem;
+}
+
+.luck-focus-card dl {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+
+.luck-focus-card dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.luck-focus-card dt {
+  color: #98a2b3;
+  font-size: 0.82rem;
+}
+
+.luck-focus-card dd {
+  margin: 0;
+  color: #475467;
+  font-size: 0.86rem;
+  text-align: right;
+}
+
+.luck-focus-card p {
+  margin: 0;
+  color: #667085;
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+
 .result-pillar-table,
 .result-luck-table {
   min-width: 100%;
@@ -891,6 +1191,14 @@ button {
 .result-pillar-table td,
 .result-luck-table td {
   background: #ffffff;
+}
+
+.result-luck-table tr.is-current td {
+  background: #f0f7ff;
+}
+
+.result-luck-table tr.is-next td {
+  background: #f8fafc;
 }
 
 .result-pillar-table strong,
@@ -1522,17 +1830,33 @@ button {
   }
 
   .result-pillar-overview-head,
-  .reading-data-card-head {
+  .reading-data-card-head,
+  .element-balance-head {
     flex-direction: column;
   }
 
-  .result-pillar-overview-meta {
+  .result-pillar-overview-meta,
+  .element-balance-meta {
     justify-items: start;
+    text-align: left;
+  }
+
+  .element-balance-body {
+    grid-template-columns: 1fr;
+  }
+
+  .element-radar {
+    width: min(100%, 210px);
   }
 
   .result-pillar-overview .reading-table-wrap,
   .reading-data-card .reading-table-wrap {
     padding: 0 14px 14px;
+  }
+
+  .luck-focus-grid {
+    grid-template-columns: 1fr;
+    padding: 14px;
   }
 
   .reading-summary-card,

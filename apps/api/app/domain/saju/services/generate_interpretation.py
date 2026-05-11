@@ -54,9 +54,9 @@ def _model_json_schema(model_class: Any) -> Dict[str, Any]:
     return model_class.schema()
 
 
-PROMPT_VERSION = "saju-report-v8"
-MIN_SUMMARY_LENGTH = 90
-MIN_SECTION_LENGTH = 260
+PROMPT_VERSION = "saju-report-v13"
+MIN_SUMMARY_LENGTH = 220
+MIN_SECTION_LENGTH = 850
 OUTPUT_EXCERPT_LIMIT = 280
 ERROR_MESSAGE_LIMIT = 280
 SCHEMA_NOISE_KEYS = {
@@ -87,6 +87,22 @@ BANNED_PHRASES = [
     "죽음",
     "파산",
     "망한다",
+]
+CORE_ANALYSIS_TECHNICAL_TERMS = [
+    "일간",
+    "십성",
+    "상관",
+    "인성",
+    "편관",
+    "정관",
+    "식신",
+    "재성",
+    "관성",
+    "신살",
+    "화개",
+    "귀문관",
+    "장성",
+    "괴강",
 ]
 ELEMENT_LABELS = {
     "ko": {"wood": "목", "fire": "화", "earth": "토", "metal": "금", "water": "수"},
@@ -125,9 +141,17 @@ Truthfulness rules:
 Style goal:
 - Make the result easy to read but visibly grounded.
 - The user should feel: "This is readable, but it is not random."
-- Use simple everyday Korean first.
-- Use saju terms only when useful, and immediately explain their meaning in plain language.
+- Use simple everyday Korean first, especially in the main explanatory paragraphs.
+- The main body should not read like a saju glossary.
+- Use the plain meaning first, then put technical saju terms in "풀이 포인트" or "전문가 노트".
+- If a saju term is necessary in the main body, explain it immediately in everyday language.
 - Do not overload the user with technical terms.
+- The result should feel substantial, not like a teaser.
+- Prefer concrete life situations, tradeoffs, and practical reading logic over short generic summaries.
+- Keep the reading scannable. Do not write long unbroken paragraphs.
+- Every paragraph should be 1 to 2 sentences.
+- If one idea needs more explanation, split it into separate short paragraphs instead of one long item.
+- Bullet items should be short. Use one sentence per bullet when possible, and never put several dense explanations into one bullet.
 
 Output structure:
 - Return valid JSON that matches the existing schema.
@@ -137,22 +161,32 @@ Output structure:
 - Put user-facing basis chips and expert notes inside each section body using markdown text.
 
 Writing format for each major section body:
-1. Start with a short conclusion.
-2. Explain the interpretation in plain Korean.
+1. Start with a clear conclusion.
+2. Explain the interpretation in plain Korean with enough detail.
 3. Add practical advice.
 4. Add a short "풀이 포인트" block with 2 to 4 basis chips.
 5. Add a short "전문가 노트" block with 1 to 2 sentences explaining why the interpretation was made.
 
+Length requirements:
+- summary.overview should be 6 to 8 sentences.
+- Each major section body must be substantial: about 900 to 1400 Korean characters for ko, or similarly detailed in English.
+- Do not satisfy a section with only three bullets. Give the user enough context to understand why the conclusion follows from the payload.
+- If a section feels short, expand with "how it appears in real life", "what to watch", and "how to use it well".
+
 Use this section body pattern:
 
 ### 핵심 결론
-Write 2 to 3 sentences.
+Write 3 to 4 sentences.
 
-### 현실 해석
-Write 3 to 5 sentences.
+### 쉽게 풀어보면
+Write 5 to 8 sentences.
+Split those sentences into 3 to 4 short paragraphs.
+For ko, use the exact heading "쉽게 풀어보면". Do not use "현실 해석".
+For en, use "Plain reading".
 
 ### 조언
-- Write 2 to 4 practical bullet points.
+- Write 4 to 6 practical bullet points.
+- Each bullet should be one short idea. If a bullet needs two ideas, split it into two bullets.
 
 ### 풀이 포인트
 [일간] [십성] [오행] [대운] style chips.
@@ -161,6 +195,7 @@ Use only terms that exist in the payload.
 ### 전문가 노트
 Write 1 to 2 sentences.
 Explain the logic simply.
+This is the proper place for technical basis such as 일간, 십성, 오행, 신살, 대운.
 Do not use raw evidence IDs.
 Do not use the English word "evidence".
 
@@ -168,13 +203,17 @@ Section requirements:
 
 summary:
 - headline must be short and personalized.
-- overview must summarize the whole reading in 4 to 6 sentences.
+- overview must summarize the whole reading in 6 to 8 sentences.
 - Mention the strongest personality direction, current-period theme, and one caution.
 - Do not include raw pillar tables in the overview.
 
 core_analysis:
 - Include standout traits, comparison, strengths, cautions, and direction.
-- Use day master, element balance, ten gods, and major signals from the payload.
+- Use day master, element balance, ten gods, and major signals from the payload as hidden basis, but translate them into plain user-facing traits.
+- In "핵심 결론", "쉽게 풀어보면", and "조언", avoid dense terms such as 일간, 십성, 상관, 인성, 편관, 정관, 화개, 귀문관, 장성, 괴강.
+- Do not list many saju terms in consecutive sentences.
+- Put detailed saju terms in "풀이 포인트" or "전문가 노트", and briefly explain what they mean.
+- Prefer everyday phrases such as 기준이 뚜렷함, 분석과 정리, 표현력, 책임감, 몰입, 피로 누적, 관계의 부드러움, 속도 조절.
 - Avoid abstract repetition such as "흐름", "기운", "안정" too often.
 
 love:
@@ -197,10 +236,22 @@ wealth:
 - Do not give investment instructions, stock advice, coin advice, or guaranteed profit predictions.
 
 luck_flow:
-- Focus only on the current luck cycle and the next luck cycle.
-- Explain the transition in practical life terms.
+- The luck_flow section must answer the user's real timing questions.
+- Use luck_flow_facts and luck_cycle_analysis as the main basis.
+- Do not merely describe the current and next luck cycles.
+- Explain what kind of period the user is in now.
+- Explain whether the current period is a preparation, expansion, adjustment, stabilization, or transition period.
+- Explain when the next major favorable period begins, based only on provided favorable_periods.
+- Explain which domain improves: love, career, wealth, relationships, stability, visibility, or responsibility.
+- Explain how long that favorable tendency lasts using provided periods only.
+- Explain what changes when moving from the current luck cycle to the next luck cycle.
+- Explain what the user should do now to use the next period well.
+- If locale is ko, prefer labels such as "지금은 어떤 시기인가", "좋아지는 시기는 언제인가", "어떤 운이 좋아지는가", "다음 대운에서 무엇이 바뀌는가", and "지금 해야 할 것".
+- If locale is en, prefer labels such as "what kind of period this is", "when the more favorable period begins", "which area improves", "what changes in the next cycle", and "what to do now".
+- Describe better/worse areas as tendencies and management points, never as guaranteed outcomes.
 - Do not list every luck cycle unless the schema or payload requires it.
-- Use current_flow as the main basis.
+- Do not say "best period" unless the payload explicitly marks a cycle as favorable.
+- Use phrases like "상대적으로 유리한 구간", "힘이 실리는 시기", or "기반이 잡히는 시기" instead of deterministic claims.
 
 Tone:
 - Professional, readable, calm, and grounded.
@@ -311,9 +362,12 @@ def _summary_overview(payload: InterpretationPayload) -> str:
     if _locale(payload) == "ko":
         text = (
             f"현재 보이는 사주 구조는 {pillars} 흐름으로 읽고 있습니다. "
-            f"강하게 드러나는 기운은 {dominant}, 약하게 보이는 기운은 {missing}이며, "
-            f"현재 기준 흐름은 {active_cycle}입니다. "
-            f"이 흐름을 함께 반영해 연애운, 직장운, 금전운을 해석합니다."
+            f"강하게 드러나는 기운은 {dominant}이고, 약하게 보이는 기운은 {missing}입니다. "
+            "그래서 장점이 살아나는 환경에서는 반응이 빠르지만, 부족한 쪽을 오래 방치하면 피로와 판단의 쏠림이 생기기 쉽습니다. "
+            f"현재 기준 흐름은 {active_cycle}이며, 지금은 가진 장점을 크게 쓰기 전에 생활과 선택의 기준을 정리하는 의미가 큽니다. "
+            "연애에서는 관계의 속도보다 지속 가능성을 보고, 직장에서는 역할과 책임의 선명함을 먼저 보는 편이 좋습니다. "
+            "금전에서는 크게 키우는 감각보다 새는 지점을 줄이고 관리 기준을 세우는 쪽이 더 중요합니다. "
+            "전체적으로는 강점을 믿되, 부족한 부분을 보완하는 루틴을 같이 만들 때 해석이 가장 좋게 쓰입니다."
         )
         if payload.profile.is_birth_time_estimated:
             text += " 출생시간이 미상이므로 시주 기반 해석은 보수적으로 제한했습니다."
@@ -321,11 +375,322 @@ def _summary_overview(payload: InterpretationPayload) -> str:
     text = (
         f"The current reading uses the visible structure {pillars}. "
         f"The stronger elements are {dominant}, and the weaker side is {missing}. "
-        f"The current timing is {_cycle_label(payload, payload.current_flow.active_luck_cycle)}, and that flow is reflected in love, career, and wealth."
+        "That means the chart can respond quickly in the right environment, while the weaker side can create fatigue or one-sided judgment when it is ignored. "
+        f"The current timing is {_cycle_label(payload, payload.current_flow.active_luck_cycle)}. "
+        "This makes the present period better for setting standards than forcing fast conclusions. "
+        "In love, durability matters more than speed; in career, clear responsibility matters more than scattered effort. "
+        "In wealth, the reading emphasizes reducing leakage and building rules before chasing scale. "
+        "Overall, the chart works best when strengths are used together with routines that support the weaker side."
     )
     if payload.profile.is_birth_time_estimated:
         text += " Because the birth time is estimated, hour-pillar-based interpretation stays conservative."
     return text
+
+
+def _fallback_depth_block(
+    payload: InterpretationPayload,
+    section_key: str,
+    *,
+    dominant: str,
+    missing: str,
+    active_cycle: str,
+    next_cycle: str,
+    top_domain_label: str,
+) -> str:
+    locale = _locale(payload)
+    if locale == "ko":
+        if section_key == "core_analysis":
+            return f"""
+
+### 4. 현실에서 드러나는 방식
+- {dominant} 기운이 먼저 드러나는 사람은 판단과 반응이 빠르게 보일 수 있습니다. 다만 빠른 반응이 늘 장점으로만 쓰이는 것은 아니어서, 상황을 충분히 확인하기 전에 결론을 앞당기면 피로가 쌓일 수 있습니다.
+- {missing} 기운은 사주에서 보완 과제로 읽습니다. 이 부분은 타고난 결핍이라는 뜻이 아니라, 생활 습관과 사람 선택으로 의식적으로 채워야 안정감이 커지는 영역입니다.
+- 특히 {top_domain_label} 쪽 이슈가 먼저 체감되기 쉬우므로, 중요한 선택을 할 때는 감정의 크기보다 반복해서 유지 가능한 방식인지를 같이 보는 편이 좋습니다.
+
+### 5. 이 사주를 좋게 쓰는 방향
+- 강한 부분은 성과를 빠르게 만들 때 쓰고, 약한 부분은 루틴과 환경으로 보완하는 식의 분업이 필요합니다.
+- 잘 맞는 환경에서는 자신감이 빨리 올라오지만, 맞지 않는 환경에서는 같은 장점이 고집이나 과한 몰입처럼 보일 수 있습니다.
+- 그래서 사주를 좋게 쓰는 핵심은 나를 바꾸는 것이 아니라, 힘이 잘 쓰이는 자리와 힘이 새는 자리를 구분하는 데 있습니다.
+"""
+        if section_key == "love":
+            return f"""
+
+### 4. 관계에서 반복되기 쉬운 장면
+- 이 연애운은 단순히 사람이 들어오느냐보다, 들어온 관계를 어떤 기준으로 유지하느냐가 더 중요합니다. 처음에는 매력이나 호감이 분명해도, 시간이 지나면 생활 리듬과 책임감의 차이가 더 크게 느껴질 수 있습니다.
+- 상대가 감정을 크게 표현하더라도 실제 행동이 일정하지 않으면 마음이 쉽게 피곤해질 수 있습니다. 반대로 표현이 화려하지 않아도 약속, 대화, 생활 감각이 안정적인 사람에게는 신뢰가 천천히 쌓이기 쉽습니다.
+- 현재 흐름인 {active_cycle}에서는 관계를 급하게 확정하기보다, 갈등이 생겼을 때 대화가 이어지는지 확인하는 과정이 더 중요합니다.
+
+### 5. 관계 조언
+- 호감이 생겼을 때 바로 결론을 내리기보다, 반복되는 행동을 몇 번 더 확인해 보세요.
+- 대화가 잘 되는 사람인지, 생활 패턴이 지나치게 흔들리지 않는지, 돈과 시간 약속을 어떻게 다루는지 같이 보는 편이 좋습니다.
+- 다음 흐름인 {next_cycle}로 갈수록 지금 세운 관계 기준이 더 중요해질 수 있으니, 끌림과 안정감을 함께 보는 균형이 필요합니다.
+"""
+        if section_key == "career":
+            return f"""
+
+### 4. 성과가 나는 방식
+- 이 직장운은 막연히 바쁜 환경보다 역할이 분명한 환경에서 더 잘 살아납니다. 해야 할 일, 책임 범위, 평가 기준이 정리되어 있을수록 실력이 누적되고 주변에서도 신뢰를 확인하기 쉽습니다.
+- 반대로 기준이 자주 바뀌거나 말로만 급한 일이 많은 곳에서는 능력보다 소모가 먼저 커질 수 있습니다. 이런 경우에는 더 열심히 하는 것보다 업무 범위와 우선순위를 문서나 대화로 정리하는 편이 도움이 됩니다.
+- 현재 흐름인 {active_cycle}에서는 넓게 벌리기보다 핵심 역량을 선명하게 만드는 쪽이 좋습니다. 다음 흐름인 {next_cycle}에서는 지금 만든 전문성의 기준이 역할 변화나 책임 증가로 이어질 수 있습니다.
+
+### 5. 직업 선택 기준
+- 직업명보다 실제 업무 방식이 더 중요합니다.
+- 반복해서 쌓이는 기술, 정리와 검토가 필요한 업무, 책임 범위가 분명한 자리가 잘 맞을 가능성이 있습니다.
+- 피해야 할 것은 기준 없이 계속 불이 나는 환경입니다. 그런 곳에서는 장점이 드러나기 전에 피로가 먼저 커질 수 있습니다.
+"""
+        if section_key == "wealth":
+            return f"""
+
+### 4. 돈이 모이고 새는 지점
+- 이 금전운은 한 번에 크게 키우는 흐름보다, 들어온 돈을 어떻게 남기고 배치하느냐가 중요합니다. 수입이 생겨도 기준이 흐리면 관계 비용, 충동 소비, 급한 선택으로 체감 안정감이 줄어들 수 있습니다.
+- {missing} 기운이 약하게 보이는 만큼, 돈 문제에서는 감정에 따라 결정을 미루거나 갑자기 크게 움직이는 패턴을 조심하는 편이 좋습니다. 숫자를 복잡하게 다루기보다 고정 지출, 예비비, 반복 소비를 먼저 나누는 단순한 기준이 더 잘 맞습니다.
+- 현재 흐름인 {active_cycle}에서는 확장보다 정리가 먼저입니다. 다음 흐름인 {next_cycle}에서 더 안정적으로 쓰려면 지금 새는 곳을 줄이는 습관이 바탕이 됩니다.
+
+### 5. 금전 조언
+- 큰 계획을 세우기 전에 매달 반복되는 지출부터 확인하세요.
+- 사람 때문에 쓰는 돈과 나를 위해 투자하는 돈을 구분해 두는 편이 좋습니다.
+- 수익을 키우는 선택은 가능성을 보되, 유지 가능한 구조인지 먼저 확인하는 것이 중요합니다.
+"""
+        if section_key == "luck_flow":
+            return f"""
+
+### 흐름을 쓰는 법
+- 대운은 사건을 하나씩 맞히는 도구라기보다, 어떤 태도가 더 잘 먹히는 시기인지 보는 기준에 가깝습니다. 현재 {active_cycle}에서는 속도를 내기보다 기준을 세우고, 다음 {next_cycle}에서는 그 기준이 실제 선택과 책임으로 드러나는 흐름으로 읽습니다.
+- 그래서 지금 해야 할 일은 운이 좋아질 때를 기다리는 것이 아니라, 좋아지는 흐름을 받을 수 있는 상태를 만들어 두는 것입니다. 관계에서는 오래 갈 기준을, 일에서는 반복해서 쓸 전문성을, 금전에서는 새지 않는 구조를 먼저 준비하는 편이 좋습니다.
+- 좋고 나쁨은 고정된 결과가 아니라 관리 포인트입니다. 같은 흐름도 준비가 되어 있으면 기회처럼 느껴지고, 기준이 없으면 부담처럼 느껴질 수 있습니다.
+"""
+    if section_key == "core_analysis":
+        return f"""
+
+### 4. How this appears in real life
+- When {dominant} shows first, the person can seem quick to respond and quick to recognize what works. That speed is useful, but it can also become tiring if conclusions are made before the situation is fully checked.
+- The weaker side, {missing}, is not a fixed flaw. It is the part that needs routines, environment, and repeated choices to become more stable.
+- Because {top_domain_label} is likely to be felt first, major decisions should be judged not only by intensity but also by whether the pattern can be sustained.
+
+### 5. How to use the chart well
+- Use the strong side for momentum and the weaker side as a design problem.
+- A good environment can make the strengths visible quickly, while a poor environment can turn the same strengths into stubbornness or over-focus.
+- The practical goal is not to change the person, but to separate places where energy works well from places where it leaks.
+"""
+    if section_key == "love":
+        return f"""
+
+### 4. Repeating relationship pattern
+- This love reading is less about whether someone appears and more about how the relationship is maintained. Attraction can be clear at first, but daily rhythm and responsibility may become more important over time.
+- A partner who is expressive but inconsistent can become tiring. A partner who is calmer but steady with promises, time, and communication may build trust more naturally.
+- In the current timing, {active_cycle}, checking durability is more useful than rushing a label.
+
+### 5. Relationship advice
+- Watch repeated behavior before making a conclusion.
+- Notice how the person handles conversation, daily rhythm, money, and time promises.
+- As the chart moves toward {next_cycle}, the relationship standards built now can matter more, so attraction and stability should be read together.
+"""
+    if section_key == "career":
+        return f"""
+
+### 4. How results are built
+- This career pattern works better where roles, ownership, and standards are clear. When responsibilities are defined, skill can accumulate and trust can become easier to see.
+- In a place where priorities constantly move, effort may turn into fatigue before results become visible. In that case, clarifying scope and order can help more than simply working harder.
+- In the current timing, {active_cycle}, sharpening the core specialty is more useful than spreading effort. In {next_cycle}, the standards built now can shape later role changes.
+
+### 5. Work-fit criteria
+- The actual work pattern matters more than the job title.
+- Roles involving accumulated skill, review, organization, responsibility, or structured execution can be a better fit.
+- The main environment to avoid is one where everything is urgent but nothing is defined.
+"""
+    if section_key == "wealth":
+        return f"""
+
+### 4. Where money gathers and leaks
+- This wealth reading emphasizes keeping and directing money more than dramatic expansion. Even when income appears, unclear standards can reduce the felt stability through relationship costs, impulse spending, or rushed choices.
+- Because {missing} is weaker, money decisions should be made with simple rules rather than mood. Fixed expenses, reserve funds, and repeated spending are better starting points than complicated plans.
+- In the current timing, {active_cycle}, organization comes before expansion. Habits built now can make {next_cycle} feel more stable.
+
+### 5. Money advice
+- Review recurring expenses before making larger plans.
+- Separate money spent for people from money invested in yourself.
+- When considering growth, first check whether the structure can be maintained.
+"""
+    return f"""
+
+### How to use the flow
+- Luck cycles are better used as timing context than as fixed event prediction. The current {active_cycle} favors setting standards, while the next {next_cycle} can make those standards more visible through choices and responsibility.
+- The task now is not simply waiting for better timing. It is preparing the condition that can receive a better flow.
+- Better and worse are management points. The same timing can feel like opportunity when standards exist and like pressure when they do not.
+"""
+
+
+def _luck_flow_transition_detail(
+    payload: InterpretationPayload,
+    active_cycle: str,
+    next_cycle: str,
+) -> str:
+    facts = payload.luck_flow_facts
+    favorable = facts.favorable_periods[0] if facts.favorable_periods else None
+    current_analysis = next(
+        (
+            item
+            for item in payload.luck_cycle_analysis
+            if item.display_gan_zhi == facts.current_luck_cycle
+            and item.period == facts.current_period
+        ),
+        None,
+    )
+    next_analysis = next(
+        (
+            item
+            for item in payload.luck_cycle_analysis
+            if item.display_gan_zhi == facts.next_luck_cycle
+            and item.period == facts.next_period
+        ),
+        None,
+    )
+    if facts.current_luck_cycle or facts.next_luck_cycle:
+        if _locale(payload) == "ko":
+            current_label = facts.current_luck_cycle or active_cycle
+            current_period = facts.current_period or "확인 대기"
+            next_label = facts.next_luck_cycle or next_cycle
+            next_period = facts.next_period or "확인 대기"
+            favorable_text = (
+                f"{favorable.period}의 {favorable.luck_cycle} 대운부터 "
+                f"{', '.join(favorable.favorable_for[:3])} 쪽에 상대적으로 힘이 실립니다."
+                if favorable
+                else "뚜렷하게 유리하다고 표시된 대운이 없어서, 현재와 다음 대운의 차이만 보수적으로 봅니다."
+            )
+            current_good = ", ".join(current_analysis.good_for[:3]) if current_analysis else "기준 정리"
+            current_watch = ", ".join(current_analysis.watch_out[:3]) if current_analysis else "무리한 확장"
+            next_good = ", ".join(next_analysis.good_for[:3]) if next_analysis else "다음 기준 만들기"
+            next_watch = ", ".join(next_analysis.watch_out[:3]) if next_analysis else "부담 증가"
+            action_lines = "\n".join(f"- {item}" for item in facts.now_action_tags[:5])
+            limitation = (
+                "\n출생 시간이 미상이거나 추정이면 대운 전환 해석은 확정적으로 보지 않고 방향성만 참고해야 합니다."
+                if payload.profile.is_birth_time_estimated
+                else ""
+            )
+            return f"""
+
+### 지금은 어떤 시기인가
+현재 {current_label} 대운은 {current_period} 구간이며, 성격은 {facts.current_phase_label or "현재 흐름 점검"}에 가깝습니다.
+지금은 큰 결론을 급하게 내기보다 {current_good} 쪽을 정리할수록 체감이 나아지기 쉽습니다.
+반대로 {current_watch} 쪽은 부담으로 느껴질 수 있어 속도보다 기준을 먼저 잡는 편이 좋습니다.
+
+### 좋아지는 시기는 언제인가
+{favorable_text}
+이 표현은 좋은 일이 정해져 있다는 뜻이 아니라, 해당 기간에 어떤 선택이 더 잘 받쳐질 수 있는지를 말합니다.
+
+### 어떤 운이 좋아지는가
+- 현재 대운에서 힘이 실리는 부분: {current_good}
+- 현재 대운에서 주의할 부분: {current_watch}
+- 다음 대운에서 좋아지기 쉬운 부분: {next_good}
+- 다음 대운에서 주의할 부분: {next_watch}
+
+### 다음 대운에서 무엇이 바뀌는가
+다음 {next_label} 대운은 {next_period} 구간이며, 성격은 {facts.next_phase_label or "다음 단계 준비"} 쪽으로 이동합니다.
+{facts.transition_summary}
+현재가 정리와 조율의 성격이라면, 다음 대운은 그 기준이 생활, 일, 돈 관리 방식으로 고정되는 흐름에 더 가깝습니다.{limitation}
+
+### 지금 해야 할 것
+{action_lines}
+
+### 풀이 포인트
+[{current_label}] [{next_label}] [대운 변화] [분야별 영향]
+
+### 전문가 노트
+대운은 십 년 단위의 환경 변화를 보는 자료입니다. 여기서는 백엔드가 계산한 대운별 성격, 유리 분야, 주의 태그를 바탕으로 현재와 다음 구간만 비교했습니다.
+"""
+
+        current_label = facts.current_luck_cycle or active_cycle
+        current_period = facts.current_period or "not available"
+        next_label = facts.next_luck_cycle or next_cycle
+        next_period = facts.next_period or "not available"
+        favorable_text = (
+            f"From {favorable.period}, the {favorable.luck_cycle} cycle is relatively more supportive for "
+            f"{', '.join(favorable.favorable_for[:3])}."
+            if favorable
+            else "No cycle is explicitly marked as strongly favorable, so the reading stays focused on the current-to-next transition."
+        )
+        current_good = ", ".join(current_analysis.good_for[:3]) if current_analysis else "setting standards"
+        current_watch = ", ".join(current_analysis.watch_out[:3]) if current_analysis else "over-expansion"
+        next_good = ", ".join(next_analysis.good_for[:3]) if next_analysis else "preparing the next standard"
+        next_watch = ", ".join(next_analysis.watch_out[:3]) if next_analysis else "greater pressure"
+        action_lines = "\n".join(f"- {item}" for item in facts.now_action_tags[:5])
+        limitation = (
+            "\nIf the birth time is estimated or unknown, luck-cycle transition reading should stay directional rather than certain."
+            if payload.profile.is_birth_time_estimated
+            else ""
+        )
+        return f"""
+
+### What kind of period this is
+The current {current_label} cycle covers {current_period}, and its character is close to {facts.current_phase_label or "current-flow review"}.
+This period tends to work better when the user focuses on {current_good} rather than forcing a quick conclusion.
+The area needing more care is {current_watch}, so standards matter more than speed.
+
+### When the more favorable period begins
+{favorable_text}
+This does not mean a fixed event will happen. It means that certain choices may be supported more easily in that period.
+
+### Which area improves
+- Current cycle support: {current_good}
+- Current cycle caution: {current_watch}
+- Next cycle support: {next_good}
+- Next cycle caution: {next_watch}
+
+### What changes in the next cycle
+The next {next_label} cycle covers {next_period}, and its character moves toward {facts.next_phase_label or "next-stage preparation"}.
+{facts.transition_summary}
+If the current cycle is more about adjustment, the next cycle is more about turning those standards into life, work, and money-management structure.{limitation}
+
+### What to do now
+{action_lines}
+
+### Interpretation points
+[{current_label}] [{next_label}] [luck-cycle transition] [domain impact]
+
+### Expert note
+Luck cycles show broad ten-year environmental changes. This section compares only the current and next cycle using backend-calculated cycle traits, favorable domains, and caution tags.
+"""
+
+    if _locale(payload) == "ko":
+        limitation = (
+            "\n출생 시간이 미상이거나 추정이면 대운 전환 해석은 확정적으로 보지 않고 방향성만 참고해야 합니다."
+            if payload.profile.is_birth_time_estimated
+            else ""
+        )
+        return f"""
+
+### 현재와 다음 대운의 차이
+- 현재 대운인 {active_cycle}에서는 이미 가진 강점을 정리하고, 생활과 일과 돈의 기준을 세우는 쪽이 좋아지기 쉽습니다.
+- 다만 기준이 흐려지면 속도보다 피로, 지출, 관계 부담이 먼저 커질 수 있어 주의가 필요합니다.
+- 다음 대운인 {next_cycle}로 넘어가면 지금 만든 기준이 결과나 역할 변화로 드러나기 쉽습니다.
+- 좋아지는 부분은 선택의 선명함, 일의 책임 범위, 관리 능력이고, 주의할 부분은 과한 확장, 관계 비용, 급한 결정입니다.{limitation}
+
+### 풀이 포인트
+[대운] [현재 흐름] [다음 흐름]
+
+### 전문가 노트
+현재와 다음 대운만 비교해 방향을 잡았습니다. 좋고 나쁨은 확정 사건이 아니라, 생활 선택에 따라 더 잘 쓰이거나 부담이 커질 수 있는 영역으로 읽어야 합니다.
+"""
+
+    limitation = (
+        "\nIf the birth time is estimated or unknown, luck-cycle transition reading should stay directional rather than certain."
+        if payload.profile.is_birth_time_estimated
+        else ""
+    )
+    return f"""
+
+### Difference between the current and next cycle
+- In the current cycle, {active_cycle}, the easier gains tend to come from organizing strengths and setting standards for life, work, and money.
+- The part that needs more care is losing those standards, because fatigue, spending leakage, or relationship burden can become more noticeable than speed.
+- In the next cycle, {next_cycle}, the standards built now can show up more clearly as results, responsibility, or role changes.
+- What may improve is clearer selection, work ownership, and management ability. What needs more care is over-expansion, relationship costs, and rushed decisions.{limitation}
+
+### Interpretation points
+[luck cycle] [current flow] [next flow]
+
+### Expert note
+This compares only the current and next luck cycle. Better or worse areas are not fixed outcomes; they are practical tendencies that can become helpful or burdensome depending on choices.
+"""
 
 
 def _section(title: str, body: str, evidence_ids: Sequence[str]) -> InterpretationNarrativeSection:
@@ -355,7 +720,7 @@ def build_fallback_interpretation_report(payload: InterpretationPayload) -> Inte
 - 강한 쪽이 빨리 힘을 쓰는 대신, 비어 있는 쪽을 늦게 보완하면 판단이 한 방향으로 기울 수 있습니다.
 - 그래서 이 사주는 무난하게 퍼지는 타입보다, 맞는 환경에서 장점이 빠르게 살아나는 타입에 가깝습니다.
 
-### 2. 평균과 다른 점
+### 2. 내 사주의 특징
 - 평균적인 사주보다 기운의 분포가 더 분명해서, 잘 맞는 자리와 맞지 않는 자리가 비교적 선명하게 갈릴 수 있습니다.
 - 현재는 {top_domain_label} 쪽 이슈가 먼저 체감되기 쉬워 삶의 초점이 자연스럽게 그쪽으로 모이기 쉽습니다.
 - 좋은 환경에서는 강점이 빠르게 붙고, 맞지 않는 환경에서는 단점도 함께 커질 가능성이 있습니다.
@@ -436,6 +801,52 @@ def build_fallback_interpretation_report(payload: InterpretationPayload) -> Inte
 - 그래서 현재 시기의 선택이 다음 흐름의 안정감, 성취감, 관계의 질을 결정하는 바탕이 될 수 있습니다.
 - 미리 방향을 단순하게 정리해 둘수록 다음 흐름의 장점을 더 잘 받기 쉽습니다.
 """
+        luck_flow_body += _luck_flow_transition_detail(payload, active_cycle, next_cycle)
+        core_body += _fallback_depth_block(
+            payload,
+            "core_analysis",
+            dominant=dominant,
+            missing=missing,
+            active_cycle=active_cycle,
+            next_cycle=next_cycle,
+            top_domain_label=top_domain_label,
+        )
+        love_body += _fallback_depth_block(
+            payload,
+            "love",
+            dominant=dominant,
+            missing=missing,
+            active_cycle=active_cycle,
+            next_cycle=next_cycle,
+            top_domain_label=top_domain_label,
+        )
+        career_body += _fallback_depth_block(
+            payload,
+            "career",
+            dominant=dominant,
+            missing=missing,
+            active_cycle=active_cycle,
+            next_cycle=next_cycle,
+            top_domain_label=top_domain_label,
+        )
+        wealth_body += _fallback_depth_block(
+            payload,
+            "wealth",
+            dominant=dominant,
+            missing=missing,
+            active_cycle=active_cycle,
+            next_cycle=next_cycle,
+            top_domain_label=top_domain_label,
+        )
+        luck_flow_body += _fallback_depth_block(
+            payload,
+            "luck_flow",
+            dominant=dominant,
+            missing=missing,
+            active_cycle=active_cycle,
+            next_cycle=next_cycle,
+            top_domain_label=top_domain_label,
+        )
     else:
         core_body = f"""
 This chart is read around the {payload.day_master} day master, with {dominant} showing first and {missing} left as the main area that needs support. That makes the contrast between strengths and weak points feel clearer than in a flatter chart.
@@ -526,6 +937,52 @@ The chart is currently read on top of {active_cycle}, and the next visible shift
 - That means the choices made now can shape later stability, performance, and relationship quality.
 - The clearer the direction becomes now, the easier it is to use the next flow well.
 """
+        luck_flow_body += _luck_flow_transition_detail(payload, active_cycle, next_cycle)
+        core_body += _fallback_depth_block(
+            payload,
+            "core_analysis",
+            dominant=dominant,
+            missing=missing,
+            active_cycle=active_cycle,
+            next_cycle=next_cycle,
+            top_domain_label=top_domain_label,
+        )
+        love_body += _fallback_depth_block(
+            payload,
+            "love",
+            dominant=dominant,
+            missing=missing,
+            active_cycle=active_cycle,
+            next_cycle=next_cycle,
+            top_domain_label=top_domain_label,
+        )
+        career_body += _fallback_depth_block(
+            payload,
+            "career",
+            dominant=dominant,
+            missing=missing,
+            active_cycle=active_cycle,
+            next_cycle=next_cycle,
+            top_domain_label=top_domain_label,
+        )
+        wealth_body += _fallback_depth_block(
+            payload,
+            "wealth",
+            dominant=dominant,
+            missing=missing,
+            active_cycle=active_cycle,
+            next_cycle=next_cycle,
+            top_domain_label=top_domain_label,
+        )
+        luck_flow_body += _fallback_depth_block(
+            payload,
+            "luck_flow",
+            dominant=dominant,
+            missing=missing,
+            active_cycle=active_cycle,
+            next_cycle=next_cycle,
+            top_domain_label=top_domain_label,
+        )
 
     report = InterpretationReport(
         provider="fallback",
@@ -961,15 +1418,29 @@ def _contains_exposed_score(text: str) -> bool:
     return any(re.search(pattern, lowered) for pattern in patterns)
 
 
+def _main_explanation_text(body: str) -> str:
+    split_pattern = r"\n###\s+(풀이 포인트|전문가 노트|Interpretation points|Expert note)\b"
+    return re.split(split_pattern, body, maxsplit=1)[0]
+
+
+def _core_analysis_technical_term_count(body: str) -> int:
+    main_text = _main_explanation_text(body)
+    return sum(main_text.count(term) for term in CORE_ANALYSIS_TECHNICAL_TERMS)
+
+
 def _validate_section(key: str, section: InterpretationNarrativeSection) -> List[str]:
     issues: List[str] = []
     body = section.body.strip()
     if len(body) < MIN_SECTION_LENGTH:
         issues.append(f"{key}.body:too_short")
+    if "### 현실 해석" in body:
+        issues.append(f"{key}.body:outdated_heading")
     if "### " not in body:
         issues.append(f"{key}.body:missing_subheadings")
     if "\n-" not in body and not body.startswith("-"):
         issues.append(f"{key}.body:missing_bullets")
+    if key == "core_analysis" and _core_analysis_technical_term_count(body) > 4:
+        issues.append("core_analysis.body:too_many_technical_terms")
     return issues
 
 

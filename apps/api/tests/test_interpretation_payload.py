@@ -58,6 +58,11 @@ class InterpretationPayloadTests(unittest.TestCase):
         self.assertIsNotNone(interpretation_payload.current_flow.active_luck_cycle)
         self.assertEqual(interpretation_payload.current_flow.active_luck_cycle.display_gan_zhi, "신묘")
         self.assertEqual(interpretation_payload.current_flow.next_luck_cycle.display_gan_zhi, "경인")
+        self.assertTrue(interpretation_payload.luck_cycle_analysis)
+        self.assertTrue(interpretation_payload.luck_flow_facts.current_luck_cycle)
+        self.assertTrue(interpretation_payload.luck_flow_facts.current_phase_label)
+        self.assertTrue(interpretation_payload.luck_flow_facts.favorable_periods)
+        self.assertTrue(interpretation_payload.luck_flow_facts.now_action_tags)
         self.assertEqual(interpretation_payload.love_facts.partner_star_label, "관성")
         self.assertTrue(interpretation_payload.love_facts.active_star_labels)
         self.assertEqual(interpretation_payload.career_facts.month_pillar_label, "월주")
@@ -103,6 +108,8 @@ class InterpretationPayloadTests(unittest.TestCase):
         self.assertTrue(all("-" in pillar.display_gan_zhi for pillar in interpretation_payload.visible_pillars))
         self.assertEqual(interpretation_payload.love_facts.partner_star_label, "Officer star")
         self.assertIn("Officer stars", [item.label for item in interpretation_payload.career_facts.key_ten_gods])
+        self.assertTrue(interpretation_payload.luck_flow_facts.current_phase_label)
+        self.assertTrue(interpretation_payload.luck_flow_facts.favorable_periods)
 
 
 if __name__ == "__main__":

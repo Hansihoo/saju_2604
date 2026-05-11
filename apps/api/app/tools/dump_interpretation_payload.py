@@ -10,6 +10,12 @@ from app.domain.saju.schemas import SajuPreviewRequest
 from app.domain.saju.services.build_interpretation_payload import build_interpretation_payload
 
 
+def _model_dump_json(model):
+    if hasattr(model, "model_dump"):
+        return model.model_dump(mode="json")
+    return json.loads(model.json())
+
+
 def main() -> None:
     """이 모듈의 CLI 진입점을 실행한다."""
     if hasattr(sys.stdout, "reconfigure"):
@@ -47,7 +53,7 @@ def main() -> None:
         request=request_payload,
         response=response,
     )
-    print(json.dumps(interpretation_payload.model_dump(), ensure_ascii=False, indent=2))
+    print(json.dumps(_model_dump_json(interpretation_payload), ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":

@@ -25,6 +25,8 @@ from app.domain.saju.llm_payload import (
     InterpretationWealthFacts,
 )
 from app.domain.saju.services.generate_interpretation import (
+    MIN_SECTION_LENGTH,
+    MIN_SUMMARY_LENGTH,
     _validate_report,
     build_fallback_interpretation_report,
     generate_interpretation_report,
@@ -236,7 +238,7 @@ def make_report(confidence: str = "medium") -> InterpretationReport:
     return InterpretationReport(
         provider="openai",
         model="gpt-5.4",
-        prompt_version="saju-report-v8",
+        prompt_version="saju-report-v13",
         summary=InterpretationSummaryBlock(
             headline="현재 흐름을 함께 보는 사주",
             overview="현재 기준 흐름과 원국 구조를 함께 반영해 장점과 주의점을 읽는 해석입니다. 연애, 직장, 금전 모두 현재 대운과 다음 대운의 연결을 같이 보도록 구성했습니다.",
@@ -271,6 +273,26 @@ class GenerateInterpretationTests(unittest.TestCase):
         self.assertIsNone(re.search(r"\d+\s*점", combined))
         self.assertNotIn("/100", combined)
 
+    def test_fallback_sections_are_substantial(self) -> None:
+        report = build_fallback_interpretation_report(make_payload())
+        self.assertGreaterEqual(len(report.summary.overview), MIN_SUMMARY_LENGTH)
+        for section in (
+            report.core_analysis,
+            report.love,
+            report.career,
+            report.wealth,
+            report.luck_flow,
+        ):
+            self.assertGreaterEqual(len(section.body), MIN_SECTION_LENGTH)
+
+    def test_prompt_uses_plain_language_heading(self) -> None:
+        from app.domain.saju.services.generate_interpretation import DEVELOPER_PROMPT
+
+        self.assertIn("### 쉽게 풀어보면", DEVELOPER_PROMPT)
+        self.assertIn('Do not use "현실 해석"', DEVELOPER_PROMPT)
+        self.assertIn("technical saju terms", DEVELOPER_PROMPT)
+        self.assertIn("Every paragraph should be 1 to 2 sentences", DEVELOPER_PROMPT)
+
     def test_validator_blocks_numeric_relative_wording(self) -> None:
         payload = make_payload()
         report = make_report()
@@ -293,6 +315,23 @@ class GenerateInterpretationTests(unittest.TestCase):
         self.assertIn("career.body:too_short", issues)
         self.assertIn("career.body:missing_subheadings", issues)
         self.assertIn("career.body:missing_bullets", issues)
+
+    def test_validator_blocks_outdated_plain_reading_heading(self) -> None:
+        payload = make_payload()
+        report = make_report()
+        report.core_analysis.body = report.core_analysis.body.replace("### 1. 핵심 구조", "### 현실 해석")
+        issues = _validate_report(report, payload)
+        self.assertIn("core_analysis.body:outdated_heading", issues)
+
+    def test_validator_blocks_jargon_heavy_core_analysis_main_body(self) -> None:
+        payload = make_payload()
+        report = make_report()
+        report.core_analysis.body += (
+            "\n### 쉽게 풀어보면\n"
+            "- 일간, 십성, 상관, 인성, 편관, 정관, 화개, 귀문관, 장성, 괴강을 그대로 나열합니다.\n"
+        )
+        issues = _validate_report(report, payload)
+        self.assertIn("core_analysis.body:too_many_technical_terms", issues)
 
     def test_validator_blocks_hanja_in_korean_output(self) -> None:
         payload = make_payload(locale="ko")
@@ -320,7 +359,7 @@ class GenerateInterpretationTests(unittest.TestCase):
                     configured_provider="openai",
                     final_provider="openai",
                     model="gpt-5.4-mini",
-                    prompt_version="saju-report-v8",
+                    prompt_version="saju-report-v13",
                     payload_chars=123,
                     duration_ms=999,
                     final_response_id="resp_test",

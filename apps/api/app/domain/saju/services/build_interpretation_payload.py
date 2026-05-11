@@ -16,9 +16,12 @@ from app.domain.saju.llm_payload import (
     InterpretationCountMetric,
     InterpretationCurrentFlowContext,
     InterpretationEvidenceItem,
+    InterpretationFavorablePeriod,
     InterpretationInputProfile,
     InterpretationLoveFacts,
     InterpretationLuckCycle,
+    InterpretationLuckCycleAnalysis,
+    InterpretationLuckFlowFacts,
     InterpretationPayload,
     InterpretationSignalBlock,
     InterpretationSpecialStar,
@@ -61,6 +64,7 @@ NARRATIVE_RULES = [
     "Do not use raw evidence IDs in user-facing text.",
     "Do not use the English word evidence in user-facing text.",
     "Use current_flow for current-period commentary in love, career, wealth, and luck-flow sections.",
+    "Use luck_flow_facts and luck_cycle_analysis as the primary basis for the luck-flow section.",
     "Use love_facts, career_facts, and wealth_facts when writing the matching sections.",
     "Special stars are supporting indicators only, not sole proof.",
     "Keep the tone grounded and avoid exaggerated certainty.",
@@ -70,6 +74,10 @@ NARRATIVE_RULES = [
     "Career must include work style, suitable environment, risks, strategy, and current timing.",
     "Wealth must include flow type, earning pattern, spending risk, cautions, and management direction.",
     "Luck flow must focus on current and next cycle only.",
+    "Luck flow must compare the current cycle and next cycle in practical life terms.",
+    "Luck flow must include what may improve and what needs more care, without deterministic prediction.",
+    "Luck flow must answer whether now is preparation, expansion, adjustment, stabilization, or transition.",
+    "Luck flow must explain when the next relatively favorable period begins only when favorable_periods provides it.",
 ]
 
 LOVE_STAR_KEYWORDS = ("dohwa", "hongyeom", "mokyok", "wangji", "hamji", "yeokma")
@@ -197,6 +205,8 @@ def _build_luck_cycles(
             end_year=cycle.end_year,
             gan_zhi=cycle.gan_zhi,
             display_gan_zhi=localize_ganzhi(cycle.gan_zhi, locale),
+            start_datetime=cycle.start_datetime,
+            change_datetime=cycle.change_datetime,
         )
         for cycle in response.manse.luck_cycles
     ]
@@ -243,6 +253,568 @@ def _build_current_flow_context(
         current_age=current_age,
         active_luck_cycle=active_luck_cycle,
         next_luck_cycle=next_luck_cycle,
+    )
+
+
+STEM_TRAITS = {
+    "\u7532": ("wood", "yang"),
+    "\u4e59": ("wood", "yin"),
+    "\u4e19": ("fire", "yang"),
+    "\u4e01": ("fire", "yin"),
+    "\u620a": ("earth", "yang"),
+    "\u5df1": ("earth", "yin"),
+    "\u5e9a": ("metal", "yang"),
+    "\u8f9b": ("metal", "yin"),
+    "\u58ec": ("water", "yang"),
+    "\u7678": ("water", "yin"),
+}
+
+BRANCH_ELEMENTS = {
+    "\u5b50": "water",
+    "\u4e11": "earth",
+    "\u5bc5": "wood",
+    "\u536f": "wood",
+    "\u8fb0": "earth",
+    "\u5df3": "fire",
+    "\u5348": "fire",
+    "\u672a": "earth",
+    "\u7533": "metal",
+    "\u9149": "metal",
+    "\u620c": "earth",
+    "\u4ea5": "water",
+}
+
+PRODUCES = {
+    "wood": "fire",
+    "fire": "earth",
+    "earth": "metal",
+    "metal": "water",
+    "water": "wood",
+}
+
+CONTROLS = {
+    "wood": "earth",
+    "fire": "metal",
+    "earth": "water",
+    "metal": "wood",
+    "water": "fire",
+}
+
+ELEMENT_LABELS = {
+    "ko": {
+        "wood": "목",
+        "fire": "화",
+        "earth": "토",
+        "metal": "금",
+        "water": "수",
+    },
+    "en": {
+        "wood": "wood",
+        "fire": "fire",
+        "earth": "earth",
+        "metal": "metal",
+        "water": "water",
+    },
+}
+
+DOMAIN_LABELS = {
+    "ko": {
+        "love": "연애와 관계",
+        "career": "직장과 역할",
+        "wealth": "금전 관리",
+        "relationships": "관계 정리",
+        "stability": "생활 안정",
+        "visibility": "표현과 성과",
+        "responsibility": "책임 있는 자리",
+        "learning": "학습과 문서",
+        "foundation": "생활 기반",
+    },
+    "en": {
+        "love": "love and relationships",
+        "career": "career and role",
+        "wealth": "money management",
+        "relationships": "relationship sorting",
+        "stability": "life stability",
+        "visibility": "visibility and output",
+        "responsibility": "responsible roles",
+        "learning": "learning and documents",
+        "foundation": "life foundation",
+    },
+}
+
+TEN_GOD_BY_GROUP = {
+    "ko": {
+        "peer": ("비견", "겁재"),
+        "output": ("식신", "상관"),
+        "wealth": ("편재", "정재"),
+        "officer": ("편관", "정관"),
+        "resource": ("편인", "정인"),
+        "unknown": ("확인 대기", "확인 대기"),
+    },
+    "en": {
+        "peer": ("Peer", "Rival"),
+        "output": ("Expression", "Output"),
+        "wealth": ("Indirect Wealth", "Direct Wealth"),
+        "officer": ("Seven Killings", "Direct Officer"),
+        "resource": ("Indirect Resource", "Direct Resource"),
+        "unknown": ("Not available", "Not available"),
+    },
+}
+
+
+def _unique(items: Iterable[str]) -> List[str]:
+    seen = set()
+    result: List[str] = []
+    for item in items:
+        if item and item not in seen:
+            seen.add(item)
+            result.append(item)
+    return result
+
+
+def _month_period_label(value: str | None, *, locale: OutputLocale) -> str:
+    if not value:
+        return ""
+    match = re.match(r"^(\d{4})-(\d{2})", value)
+    if not match:
+        return value[:10]
+    year, month = match.groups()
+    if locale == "ko":
+        return f"{year}년 {int(month)}월"
+    return f"{year}-{month}"
+
+
+def _cycle_period(cycle: InterpretationLuckCycle, locale: OutputLocale) -> str:
+    start = _month_period_label(cycle.start_datetime, locale=locale)
+    end = _month_period_label(cycle.change_datetime, locale=locale)
+    if start and end:
+        return f"{start} ~ {end}"
+    return f"{cycle.start_year}-{cycle.end_year}"
+
+
+def _stem_ten_god_group(day_stem: str, target_stem: str) -> Tuple[str, bool]:
+    day = STEM_TRAITS.get(day_stem)
+    target = STEM_TRAITS.get(target_stem)
+    if not day or not target:
+        return "unknown", True
+
+    day_element, day_polarity = day
+    target_element, target_polarity = target
+    same_polarity = day_polarity == target_polarity
+
+    if target_element == day_element:
+        return "peer", same_polarity
+    if PRODUCES[day_element] == target_element:
+        return "output", same_polarity
+    if CONTROLS[day_element] == target_element:
+        return "wealth", same_polarity
+    if CONTROLS[target_element] == day_element:
+        return "officer", same_polarity
+    if PRODUCES[target_element] == day_element:
+        return "resource", same_polarity
+    return "unknown", same_polarity
+
+
+def _impact_level(score: int) -> str:
+    if score >= 4:
+        return "high"
+    if score == 3:
+        return "medium_high"
+    if score == 2:
+        return "medium"
+    if score == 1:
+        return "low_medium"
+    return "low"
+
+
+def _favorability_label(score: int) -> str:
+    if score >= 5:
+        return "high"
+    if score >= 4:
+        return "medium_high"
+    if score >= 2:
+        return "medium"
+    if score == 1:
+        return "low_medium"
+    return "low"
+
+
+def _group_luck_profile(group: str, locale: OutputLocale) -> Dict[str, List[str] | str]:
+    if locale == "ko":
+        profiles = {
+            "peer": {
+                "phase": "adjustment",
+                "phase_label": "관계와 역할 재정리",
+                "overall_tone": "adjustment",
+                "domains": ["relationships"],
+                "caution_domains": ["relationships", "wealth"],
+                "good_for": ["관계 정리", "협업 기준 세우기", "역할 재배치"],
+                "watch_out": ["경쟁", "공유 비용", "관계 피로"],
+                "reason_tags": ["관계 신호 강화", "역할 조율"],
+                "caution_tags": ["관계 피로", "비용 누수"],
+                "actions": ["관계 경계 설정", "공동 비용 점검", "역할 범위 정리"],
+                "summary": "확장보다 사람과 역할의 기준을 다시 세우는 시기",
+            },
+            "output": {
+                "phase": "transition",
+                "phase_label": "표현과 성과 방식 조정",
+                "overall_tone": "transition",
+                "domains": ["visibility", "career"],
+                "caution_domains": ["relationships"],
+                "good_for": ["표현 방식 개선", "성과물 만들기", "기술과 콘텐츠 정리"],
+                "watch_out": ["말의 예민함", "과한 노출", "성급한 판단"],
+                "reason_tags": ["표현 신호 강화", "결과물 중심"],
+                "caution_tags": ["언어 충돌", "속도 과다"],
+                "actions": ["말과 글의 기준 정리", "성과물 축적", "충동적 결정 줄이기"],
+                "summary": "생각을 밖으로 꺼내 성과물로 정리하는 시기",
+            },
+            "wealth": {
+                "phase": "building",
+                "phase_label": "현실 성과와 자원 관리",
+                "overall_tone": "stabilizing",
+                "domains": ["wealth", "foundation"],
+                "caution_domains": ["wealth", "relationships"],
+                "good_for": ["금전 관리", "자산화", "현실 성과 고정"],
+                "watch_out": ["지출 확대", "수익 집착", "관계 비용"],
+                "reason_tags": ["현실성 강화", "자원 관리"],
+                "caution_tags": ["지출 증가", "관계 비용"],
+                "actions": ["지출 습관 점검", "관리 기준 만들기", "장기 계획 정리"],
+                "summary": "성과를 생활 기반과 관리 구조로 묶는 시기",
+            },
+            "officer": {
+                "phase": "stabilization",
+                "phase_label": "책임과 역할 강화",
+                "overall_tone": "stabilizing",
+                "domains": ["career", "responsibility", "stability"],
+                "caution_domains": ["career", "relationships"],
+                "good_for": ["직장 안정", "책임 있는 자리", "역할 정리"],
+                "watch_out": ["부담 증가", "압박감", "권위 충돌"],
+                "reason_tags": ["책임 증가", "역할 강화"],
+                "caution_tags": ["부담 증가", "압박감"],
+                "actions": ["일의 경계 설정", "책임 범위 문서화", "체력 루틴 만들기"],
+                "summary": "역할과 책임이 커지며 안정 구조를 만드는 시기",
+            },
+            "resource": {
+                "phase": "preparation",
+                "phase_label": "학습과 기반 준비",
+                "overall_tone": "preparation",
+                "domains": ["learning", "stability", "foundation"],
+                "caution_domains": ["career"],
+                "good_for": ["학습", "문서 정리", "자격과 기반 만들기"],
+                "watch_out": ["생각 과다", "속도 저하", "의존성"],
+                "reason_tags": ["기반 보강", "문서와 학습"],
+                "caution_tags": ["실행 지연", "생각 과다"],
+                "actions": ["생활 루틴 구축", "문서 정리", "학습 계획 세우기"],
+                "summary": "바로 확장하기보다 다음 단계를 준비하는 시기",
+            },
+        }
+    else:
+        profiles = {
+            "peer": {
+                "phase": "adjustment",
+                "phase_label": "relationship and role adjustment",
+                "overall_tone": "adjustment",
+                "domains": ["relationships"],
+                "caution_domains": ["relationships", "wealth"],
+                "good_for": ["relationship sorting", "collaboration standards", "role reset"],
+                "watch_out": ["competition", "shared costs", "relationship fatigue"],
+                "reason_tags": ["relationship signals", "role adjustment"],
+                "caution_tags": ["relationship fatigue", "cost leakage"],
+                "actions": ["set relationship boundaries", "review shared costs", "clarify roles"],
+                "summary": "a period for resetting people and role standards before expansion",
+            },
+            "output": {
+                "phase": "transition",
+                "phase_label": "expression and output adjustment",
+                "overall_tone": "transition",
+                "domains": ["visibility", "career"],
+                "caution_domains": ["relationships"],
+                "good_for": ["communication style", "deliverables", "skill and content output"],
+                "watch_out": ["sensitive wording", "overexposure", "rushed judgment"],
+                "reason_tags": ["output signals", "deliverable focus"],
+                "caution_tags": ["wording conflict", "too much speed"],
+                "actions": ["clarify communication rules", "build deliverables", "reduce impulsive decisions"],
+                "summary": "a period for turning thoughts into visible output",
+            },
+            "wealth": {
+                "phase": "building",
+                "phase_label": "practical results and resource management",
+                "overall_tone": "stabilizing",
+                "domains": ["wealth", "foundation"],
+                "caution_domains": ["wealth", "relationships"],
+                "good_for": ["money management", "asset planning", "fixing practical results"],
+                "watch_out": ["larger spending", "profit fixation", "relationship costs"],
+                "reason_tags": ["practicality", "resource management"],
+                "caution_tags": ["spending increase", "relationship costs"],
+                "actions": ["review spending habits", "build management rules", "organize long-term plans"],
+                "summary": "a period for turning results into a more stable life base",
+            },
+            "officer": {
+                "phase": "stabilization",
+                "phase_label": "responsibility and role strengthening",
+                "overall_tone": "stabilizing",
+                "domains": ["career", "responsibility", "stability"],
+                "caution_domains": ["career", "relationships"],
+                "good_for": ["career stability", "responsible roles", "role clarity"],
+                "watch_out": ["greater pressure", "heavier duty", "authority friction"],
+                "reason_tags": ["more responsibility", "role strengthening"],
+                "caution_tags": ["greater burden", "pressure"],
+                "actions": ["set work boundaries", "document responsibility", "build energy routines"],
+                "summary": "a period for forming stability through clearer roles and responsibility",
+            },
+            "resource": {
+                "phase": "preparation",
+                "phase_label": "learning and foundation preparation",
+                "overall_tone": "preparation",
+                "domains": ["learning", "stability", "foundation"],
+                "caution_domains": ["career"],
+                "good_for": ["learning", "documentation", "credentials and foundation"],
+                "watch_out": ["overthinking", "slower execution", "dependency"],
+                "reason_tags": ["foundation support", "learning and documents"],
+                "caution_tags": ["execution delay", "overthinking"],
+                "actions": ["build routines", "organize documents", "set a learning plan"],
+                "summary": "a period for preparing the next step rather than expanding immediately",
+            },
+        }
+
+    return profiles.get(group, profiles["resource"])
+
+
+def _localized_domain_keys(keys: Iterable[str], locale: OutputLocale) -> List[str]:
+    labels = DOMAIN_LABELS[locale]
+    return _unique(labels.get(key, key) for key in keys)
+
+
+def _cycle_analysis_score(
+    *,
+    group: str,
+    stem_element: str | None,
+    branch_element: str | None,
+    missing_elements: Sequence[str],
+    dominant_elements: Sequence[str],
+) -> int:
+    score = 1
+    if group in {"wealth", "officer"}:
+        score += 2
+    elif group in {"resource", "output"}:
+        score += 1
+
+    if branch_element in missing_elements:
+        score += 2
+    if stem_element in missing_elements:
+        score += 1
+    if branch_element in dominant_elements and stem_element in dominant_elements:
+        score -= 1
+    if group == "peer":
+        score -= 1
+    return score
+
+
+def _build_single_luck_cycle_analysis(
+    *,
+    cycle: InterpretationLuckCycle,
+    day_master: str,
+    response: SajuPreviewResponse,
+    locale: OutputLocale,
+    confidence: str,
+) -> Tuple[int, InterpretationLuckCycleAnalysis]:
+    stem = cycle.gan_zhi[0] if cycle.gan_zhi else ""
+    branch = cycle.gan_zhi[1] if len(cycle.gan_zhi) > 1 else ""
+    group, same_polarity = _stem_ten_god_group(day_master, stem)
+    stem_element = STEM_TRAITS.get(stem, (None, None))[0]
+    branch_element = BRANCH_ELEMENTS.get(branch)
+    profile = _group_luck_profile(group, locale)
+    missing_elements = response.result.signals.missing_elements
+    dominant_elements = response.result.signals.dominant_elements
+    score = _cycle_analysis_score(
+        group=group,
+        stem_element=stem_element,
+        branch_element=branch_element,
+        missing_elements=missing_elements,
+        dominant_elements=dominant_elements,
+    )
+    favorability = _favorability_label(score)
+    good_for = list(profile["good_for"])
+    watch_out = list(profile["watch_out"])
+    reason_tags = list(profile["reason_tags"])
+    caution_tags = list(profile["caution_tags"])
+    domains = list(profile["domains"])
+    caution_domains = list(profile["caution_domains"])
+
+    if branch_element in missing_elements:
+        element_label = ELEMENT_LABELS[locale][branch_element]
+        if locale == "ko":
+            good_for.append(f"부족한 {element_label} 기운 보완")
+            reason_tags.append("부족 오행 보완")
+        else:
+            good_for.append(f"supporting weaker {element_label} energy")
+            reason_tags.append("supports a weaker element")
+        domains.append("stability")
+
+    if branch_element in dominant_elements:
+        element_label = ELEMENT_LABELS[locale][branch_element]
+        if locale == "ko":
+            watch_out.append(f"이미 강한 {element_label} 기운 과다")
+            caution_tags.append("강한 오행 과다")
+        else:
+            watch_out.append(f"overemphasis of already strong {element_label} energy")
+            caution_tags.append("strong element overemphasis")
+        caution_domains.append("stability")
+
+    stem_ten_god = TEN_GOD_BY_GROUP[locale][group][0 if same_polarity else 1]
+    career_score = 1 + int("career" in domains) + int("responsibility" in domains) + int(group == "officer")
+    wealth_score = 1 + int("wealth" in domains) + int(group == "wealth") + int(branch_element in missing_elements)
+    love_score = 1 + int("love" in domains) + int("relationships" in domains) + int(group in {"peer", "officer", "wealth"})
+    relationship_score = 1 + int("relationships" in domains) + int(group == "peer")
+
+    return score, InterpretationLuckCycleAnalysis(
+        display_gan_zhi=cycle.display_gan_zhi,
+        start_year=cycle.start_year,
+        end_year=cycle.end_year,
+        start_age=cycle.start_age,
+        end_age=cycle.end_age,
+        period=_cycle_period(cycle, locale),
+        phase=str(profile["phase"]),
+        phase_label=str(profile["phase_label"]),
+        overall_tone=str(profile["overall_tone"]),
+        cycle_rank=0,
+        overall_favorability=favorability,
+        confidence=confidence,
+        stem_ten_god=stem_ten_god,
+        branch_element=branch_element,
+        favorable_domains=_localized_domain_keys(domains, locale),
+        caution_domains=_localized_domain_keys(caution_domains, locale),
+        good_for=_unique(good_for),
+        watch_out=_unique(watch_out),
+        reason_tags=_unique(reason_tags),
+        caution_tags=_unique(caution_tags),
+        love_impact=_impact_level(love_score),
+        career_impact=_impact_level(career_score),
+        wealth_impact=_impact_level(wealth_score),
+        relationship_impact=_impact_level(relationship_score),
+        summary=str(profile["summary"]),
+    )
+
+
+def _build_luck_cycle_analysis(
+    *,
+    request: SajuPreviewRequest,
+    response: SajuPreviewResponse,
+    locale: OutputLocale,
+    luck_cycles: Sequence[InterpretationLuckCycle],
+) -> List[InterpretationLuckCycleAnalysis]:
+    if not luck_cycles or not response.manse.luck_cycles_enabled:
+        return []
+
+    confidence = "low" if request.is_birth_time_estimated else "medium"
+    scored = [
+        _build_single_luck_cycle_analysis(
+            cycle=cycle,
+            day_master=response.manse.meta.day_master,
+            response=response,
+            locale=locale,
+            confidence=confidence,
+        )
+        for cycle in luck_cycles
+    ]
+    ranked = sorted(scored, key=lambda item: item[0], reverse=True)
+    for rank, (_, analysis) in enumerate(ranked, start=1):
+        analysis.cycle_rank = rank
+    return [analysis for _, analysis in scored]
+
+
+def _find_cycle_analysis(
+    analyses: Sequence[InterpretationLuckCycleAnalysis],
+    cycle: InterpretationLuckCycle | None,
+) -> InterpretationLuckCycleAnalysis | None:
+    if cycle is None:
+        return None
+    return next(
+        (
+            analysis
+            for analysis in analyses
+            if analysis.display_gan_zhi == cycle.display_gan_zhi
+            and analysis.start_year == cycle.start_year
+        ),
+        None,
+    )
+
+
+def _build_favorable_periods(
+    analyses: Sequence[InterpretationLuckCycleAnalysis],
+    *,
+    current_year: int,
+) -> List[InterpretationFavorablePeriod]:
+    relevant = [analysis for analysis in analyses if analysis.end_year >= current_year]
+    if not relevant:
+        relevant = list(analyses[-2:])
+    chronological = sorted(relevant, key=lambda item: item.start_year)
+    candidates = [
+        analysis
+        for analysis in chronological
+        if analysis.overall_favorability in {"high", "medium_high", "medium"}
+    ][:3]
+    if not candidates and chronological:
+        candidates = chronological[:1]
+    return [
+        InterpretationFavorablePeriod(
+            period=analysis.period,
+            luck_cycle=analysis.display_gan_zhi,
+            favorable_for=analysis.favorable_domains[:4],
+            reason_tags=analysis.reason_tags[:4],
+            caution_tags=analysis.caution_tags[:4],
+            confidence=analysis.confidence,
+        )
+        for analysis in candidates
+    ]
+
+
+def _build_luck_flow_facts(
+    *,
+    current_flow: InterpretationCurrentFlowContext,
+    analyses: Sequence[InterpretationLuckCycleAnalysis],
+    locale: OutputLocale,
+) -> InterpretationLuckFlowFacts:
+    current_analysis = _find_cycle_analysis(analyses, current_flow.active_luck_cycle)
+    next_analysis = _find_cycle_analysis(analyses, current_flow.next_luck_cycle)
+    favorable_periods = _build_favorable_periods(analyses, current_year=current_flow.current_year)
+
+    if locale == "ko":
+        transition_summary = (
+            f"현재는 {current_analysis.phase_label} 흐름이고, 다음은 {next_analysis.phase_label} 흐름으로 이동합니다."
+            if current_analysis and next_analysis
+            else "현재와 다음 대운 정보가 제한적이어서 큰 방향만 참고합니다."
+        )
+        default_actions = ["관계 정리", "지출 습관 점검", "생활 루틴 구축", "일의 경계 설정"]
+    else:
+        transition_summary = (
+            f"The current cycle is {current_analysis.phase_label}, moving toward {next_analysis.phase_label} next."
+            if current_analysis and next_analysis
+            else "Current and next luck-cycle details are limited, so only the broad direction is used."
+        )
+        default_actions = [
+            "sort relationships",
+            "review spending habits",
+            "build daily routines",
+            "set work boundaries",
+        ]
+
+    action_tags = list(default_actions)
+    if current_analysis:
+        action_tags = _unique(list(current_analysis.good_for[:2]) + action_tags)
+
+    return InterpretationLuckFlowFacts(
+        current_phase=current_analysis.phase if current_analysis else "",
+        current_phase_label=current_analysis.phase_label if current_analysis else "",
+        current_luck_cycle=current_analysis.display_gan_zhi if current_analysis else "",
+        current_period=current_analysis.period if current_analysis else "",
+        next_luck_cycle=next_analysis.display_gan_zhi if next_analysis else "",
+        next_period=next_analysis.period if next_analysis else "",
+        next_phase=next_analysis.phase if next_analysis else "",
+        next_phase_label=next_analysis.phase_label if next_analysis else "",
+        favorable_periods=favorable_periods,
+        transition_summary=transition_summary,
+        now_action_tags=action_tags[:6],
     )
 
 
@@ -392,6 +964,18 @@ def build_interpretation_payload(
     visible_pillars = _build_visible_pillars(response, locale)
     luck_cycles = _build_luck_cycles(response, locale)
     special_stars = _build_special_stars(response, locale)
+    current_flow = _build_current_flow_context(request, response, luck_cycles)
+    luck_cycle_analysis = _build_luck_cycle_analysis(
+        request=request,
+        response=response,
+        locale=locale,
+        luck_cycles=luck_cycles,
+    )
+    luck_flow_facts = _build_luck_flow_facts(
+        current_flow=current_flow,
+        analyses=luck_cycle_analysis,
+        locale=locale,
+    )
 
     return InterpretationPayload(
         output_sections=OUTPUT_SECTIONS,
@@ -442,7 +1026,9 @@ def build_interpretation_payload(
         ),
         evidence=_build_evidence(response),
         luck_cycles=luck_cycles,
-        current_flow=_build_current_flow_context(request, response, luck_cycles),
+        current_flow=current_flow,
+        luck_cycle_analysis=luck_cycle_analysis,
+        luck_flow_facts=luck_flow_facts,
         love_facts=_build_love_facts(request, response, locale, special_stars),
         career_facts=_build_career_facts(response, locale, special_stars),
         wealth_facts=_build_wealth_facts(response, locale, special_stars),

@@ -25,8 +25,8 @@ export function useSajuInputForm({
   initialValues,
 }: UseSajuInputFormOptions) {
   const texts = getCopy(locale);
-  const [birthDate, setBirthDate] = useState(initialValues?.birthDate ?? "1994-10-13");
-  const [birthTime, setBirthTime] = useState(initialValues?.birthTime ?? "08:30");
+  const [birthDate, setBirthDate] = useState(initialValues?.birthDate ?? "");
+  const [birthTime, setBirthTime] = useState(initialValues?.birthTime ?? "");
   const [isBirthTimeEstimated, setIsBirthTimeEstimated] = useState(false);
   const [regionQuery, setRegionQuery] = useState("");
   const [selectedRegion, setSelectedRegion] = useState<RegionSuggestion | null>(null);
