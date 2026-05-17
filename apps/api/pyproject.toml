@@ -12,6 +12,9 @@ dependencies = [
   "uvicorn[standard]>=0.29,<1.0",
   "openai>=1.99.0,<3.0",
   "lunar_python>=1.4.8",
+  "korean-lunar-calendar>=0.3.1,<1.0",
+  "skyfield>=1.49,<2.0",
+  "pypdf>=5.9,<6.0",
   "tzdata>=2024.1",
   "backports.zoneinfo>=0.2.1; python_version < '3.9'"
 ]
@@ -19,3 +22,11 @@ dependencies = [
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["app*"]
+
+[tool.setuptools.package-data]
+"app.domain.saju" = [
+  "data/lunar_reference/*.jsonl",
+  "data/lunar_reference/*.json",
+  "data/solar_terms_reference/*.jsonl",
+  "data/solar_terms_reference/*.json"
+]

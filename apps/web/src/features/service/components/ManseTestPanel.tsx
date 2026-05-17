@@ -210,7 +210,11 @@ export function ManseTestPanel({ locale, result }: ManseTestPanelProps) {
               <tbody>
                 {result.manse.luck_cycles.map((cycle) => (
                   <tr key={`${cycle.index}-${cycle.gan_zhi}`}>
-                    <td>{cycle.start_age}</td>
+                    <td>
+                      {cycle.start_age_years != null && cycle.start_age_months != null
+                        ? `${cycle.start_age_years}y ${cycle.start_age_months}m (${cycle.start_age})`
+                        : cycle.start_age}
+                    </td>
                     <td>{formatManseText(cycle.gan_zhi, locale)}</td>
                     <td>
                       {cycle.start_year} - {cycle.end_year}

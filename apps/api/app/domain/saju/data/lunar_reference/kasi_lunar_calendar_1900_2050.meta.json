@@ -1,0 +1,26 @@
+{
+  "description": "KASI official solar-date keyed Korean lunar/solar reference table.",
+  "generated_at": "2026-05-16T12:17:36+00:00",
+  "generated_by": "python -m app.tools.build_lunar_reference_table",
+  "notes": [
+    "This table is generated from the official KASI data.go.kr lunisolar calendar API.",
+    "Tests verify the checked-in file hash and structure without calling KASI.",
+    "Regeneration is an explicit maintenance action and requires KASI_SERVICE_KEY."
+  ],
+  "range": {
+    "end_date": "2050-12-31",
+    "start_date": "1900-01-01"
+  },
+  "retrieved_at": "2026-05-16T12:17:36+00:00",
+  "row_count": 55152,
+  "rows_sha256": "4ea1d89d60f93ab7d491465d5670d3cbbbc83117d001d2a39550c8617885f363",
+  "schema_version": 2,
+  "source": {
+    "data_go_kr_url": "https://www.data.go.kr/data/15012679/openapi.do",
+    "endpoint": "https://apis.data.go.kr/B090041/openapi/service/LrsrCldInfoService/getLunCalInfo",
+    "name": "KASI lunisolar calendar API",
+    "provider": "Korea Astronomy and Space Science Institute",
+    "type": "official_open_api"
+  },
+  "table_id": "kasi_lunar_calendar_1900_2050"
+}

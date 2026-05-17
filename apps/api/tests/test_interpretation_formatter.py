@@ -69,8 +69,9 @@ class InterpretationFormatterTests(unittest.TestCase):
         narrative = format_interpretation_fallback(payload=interpretation_payload, locale="ko")
 
         self.assertIn("출생시간이 미상", narrative.summary)
-        self.assertIn("Birth time is estimated", interpretation_payload.limitations[0])
-        self.assertIn("Birth time is estimated", narrative.cautions[1])
+        self.assertIn("Birth time is unknown", interpretation_payload.limitations[0])
+        self.assertIn("internal placeholder", interpretation_payload.limitations[0])
+        self.assertIn("Birth time is unknown", narrative.cautions[1])
 
 
 if __name__ == "__main__":

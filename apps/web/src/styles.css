@@ -150,7 +150,8 @@ button {
 
 .form-field input[type="date"],
 .form-field input[type="time"],
-.form-field input[type="text"] {
+.form-field input[type="text"],
+.form-field select {
   width: 100%;
   height: 46px;
   padding: 0 12px;
@@ -162,6 +163,7 @@ button {
 }
 
 .form-field input:focus,
+.form-field select:focus,
 .locale-select select:focus {
   outline: none;
   border-color: #111111;
@@ -543,6 +545,61 @@ button {
   color: #667085;
   font-size: 0.92rem;
   line-height: 1.7;
+}
+
+.result-uncertainty-notice {
+  display: grid;
+  gap: 12px;
+  padding: 18px 20px;
+  border: 1px solid #f6c76f;
+  border-radius: 18px;
+  background: #fffaf0;
+}
+
+.result-uncertainty-head {
+  display: grid;
+  gap: 8px;
+}
+
+.result-uncertainty-head p,
+.result-uncertainty-notice ul {
+  margin: 0;
+}
+
+.result-uncertainty-head p {
+  color: #7a4f01;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.result-uncertainty-notice ul {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.result-uncertainty-notice li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  color: #533f04;
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.result-uncertainty-notice li strong {
+  padding: 2px 7px;
+  border-radius: 999px;
+  color: #7a4f01;
+  background: #fff1c2;
+  font-size: 0.76rem;
+}
+
+.result-uncertainty-notice li.is-critical strong {
+  color: #7f1d1d;
+  background: #fee2e2;
 }
 
 .result-panel-label {
@@ -1382,6 +1439,10 @@ button {
 .dev-input-panel {
   position: sticky;
   top: 16px;
+}
+
+.dev-accuracy-field {
+  margin: 16px 0 20px;
 }
 
 .dev-form {

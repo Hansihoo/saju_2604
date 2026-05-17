@@ -1,0 +1,52 @@
+{
+  "description": "KASI-published solar-term timestamp reference table for high-traffic/common years.",
+  "generated_at": "2026-05-16T14:27:53+00:00",
+  "generated_by": "python -m app.tools.build_solar_term_reference_table",
+  "log_path": "apps\\api\\app\\domain\\saju\\data\\solar_terms_reference\\kasi_solar_terms_common_years.collection.log.jsonl",
+  "manifest_path": "apps\\api\\app\\domain\\saju\\data\\solar_terms_reference\\kasi_solar_terms_common_years.manifest.json",
+  "notes": [
+    "This table is reference data only and is not used by the primary calculation path yet.",
+    "Rows are collected incrementally from KASI almanac archive HTML, annual almanac PDFs, and calendarData pages/downloads.",
+    "official_almanac_confirmation remains pending for calendarData rows until the matching 월력요항/관보 source is parsed.",
+    "Use --limit to collect a small batch and rerun later; completed years are skipped unless --refresh is set."
+  ],
+  "range": {
+    "end_year": 2027,
+    "start_year": 2011,
+    "years": [
+      2011,
+      2012,
+      2013,
+      2014,
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2023,
+      2024,
+      2025,
+      2026,
+      2027
+    ]
+  },
+  "retrieved_at": "2026-05-16T14:27:53+00:00",
+  "row_count": 408,
+  "rows_sha256": "c2bf7e15939ed2c1a7fc191fefbdb4439697d08c6d445de39503281fe571ccbe",
+  "schema_version": 1,
+  "source": {
+    "almanac_archive_url": "https://astro.kasi.re.kr/almanac/pageView/1",
+    "calendar_data_url": "https://astro.kasi.re.kr/life/post/calendarData",
+    "name": "KASI solar-term timestamp reference sources",
+    "official_almanac_url": "https://astro.kasi.re.kr/life/post/almanac",
+    "provider": "Korea Astronomy and Space Science Institute",
+    "publication_url": "https://www.kasi.re.kr/kor/publication/post/publication",
+    "type": "official_kasi_sources"
+  },
+  "table_id": "kasi_solar_terms_common_years",
+  "terms_per_year": 24,
+  "timezone_id": "Asia/Seoul"
+}

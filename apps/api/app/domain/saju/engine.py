@@ -1,6 +1,6 @@
 """이 파일은 사주 엔진이 사용하는 내부 모델과 interface를 정의한다."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict, List, Literal, Optional, Protocol
 
 
@@ -39,6 +39,12 @@ class LuckCycle:
     end_year: int
     start_age: int
     end_age: int
+    start_age_years: Optional[int] = None
+    start_age_months: Optional[int] = None
+    start_age_total_months: Optional[int] = None
+    change_age_years: Optional[int] = None
+    change_age_months: Optional[int] = None
+    change_age_total_months: Optional[int] = None
     direction: Optional[Literal["forward", "backward"]] = None
     exact_start_age_years: Optional[float] = None
     precise_start_age_years: Optional[float] = None
@@ -55,6 +61,7 @@ class SajuCalculationResult:
     luck_cycles: List[LuckCycle]
     supplementary_positions: Dict[str, SupplementaryPosition]
     meta: Dict[str, str]
+    year_month_boundary_context: Dict[str, object] = field(default_factory=dict)
 
 
 class SajuEngine(Protocol):
@@ -64,6 +71,8 @@ class SajuEngine(Protocol):
         corrected_solar_datetime: str,
         gender: Gender,
         tzid: Optional[str] = None,
+        day_pillar_basis_datetime: Optional[str] = None,
+        use_canonical_year_month_pillars: bool = False,
     ) -> SajuCalculationResult:
         """계산 결과를 반환한다."""
         ...

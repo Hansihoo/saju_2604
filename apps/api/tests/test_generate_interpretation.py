@@ -1,5 +1,5 @@
+﻿import re
 import unittest
-import re
 from unittest.mock import patch
 
 from app.domain.saju.interpretation import (
@@ -24,6 +24,7 @@ from app.domain.saju.llm_payload import (
     InterpretationVisiblePillar,
     InterpretationWealthFacts,
 )
+from app.domain.saju.prompts.interpretation_report import get_interpretation_report_prompt
 from app.domain.saju.services.generate_interpretation import (
     MIN_SECTION_LENGTH,
     MIN_SUMMARY_LENGTH,
@@ -238,7 +239,7 @@ def make_report(confidence: str = "medium") -> InterpretationReport:
     return InterpretationReport(
         provider="openai",
         model="gpt-5.4",
-        prompt_version="saju-report-v13",
+        prompt_version="saju-report-v14",
         summary=InterpretationSummaryBlock(
             headline="현재 흐름을 함께 보는 사주",
             overview="현재 기준 흐름과 원국 구조를 함께 반영해 장점과 주의점을 읽는 해석입니다. 연애, 직장, 금전 모두 현재 대운과 다음 대운의 연결을 같이 보도록 구성했습니다.",
@@ -286,12 +287,20 @@ class GenerateInterpretationTests(unittest.TestCase):
             self.assertGreaterEqual(len(section.body), MIN_SECTION_LENGTH)
 
     def test_prompt_uses_plain_language_heading(self) -> None:
-        from app.domain.saju.services.generate_interpretation import DEVELOPER_PROMPT
+        prompt = get_interpretation_report_prompt().developer_prompt
 
-        self.assertIn("### 쉽게 풀어보면", DEVELOPER_PROMPT)
-        self.assertIn('Do not use "현실 해석"', DEVELOPER_PROMPT)
-        self.assertIn("technical saju terms", DEVELOPER_PROMPT)
-        self.assertIn("Every paragraph should be 1 to 2 sentences", DEVELOPER_PROMPT)
+        self.assertIn("### 쉽게 풀어보면", prompt)
+        self.assertIn('Do not use "현실 해석"', prompt)
+        self.assertIn("technical saju terms", prompt)
+        self.assertIn("Every paragraph should be 1 to 2 sentences", prompt)
+
+    def test_prompt_spec_keeps_version_and_payload_rules_together(self) -> None:
+        prompt_spec = get_interpretation_report_prompt()
+
+        self.assertEqual(prompt_spec.version, "saju-report-v14")
+        self.assertIn("Use only the provided facts and signals.", prompt_spec.narrative_rules)
+        self.assertIn("무조건", prompt_spec.validation_banned_phrases)
+        self.assertIn("일간", prompt_spec.core_analysis_technical_terms)
 
     def test_validator_blocks_numeric_relative_wording(self) -> None:
         payload = make_payload()
@@ -359,7 +368,7 @@ class GenerateInterpretationTests(unittest.TestCase):
                     configured_provider="openai",
                     final_provider="openai",
                     model="gpt-5.4-mini",
-                    prompt_version="saju-report-v13",
+                    prompt_version="saju-report-v14",
                     payload_chars=123,
                     duration_ms=999,
                     final_response_id="resp_test",
@@ -382,6 +391,24 @@ class GenerateInterpretationTests(unittest.TestCase):
         self.assertTrue(report.warnings)
         self.assertIsNotNone(report.diagnostics)
         self.assertEqual(report.diagnostics.fallback_reason, "validation_failed")
+
+    def test_fallback_provider_does_not_call_openai_path(self) -> None:
+        payload = make_payload()
+        with patch(
+            "app.domain.saju.services.generate_interpretation.settings.llm_provider",
+            "fallback",
+        ), patch(
+            "app.domain.saju.services.generate_interpretation._call_openai_structured_interpretation",
+            side_effect=AssertionError("OpenAI path must not be called in fallback mode"),
+        ):
+            report = generate_interpretation_report(
+                payload=payload,
+                trace_id="test-no-openai",
+                service_name="suju-insight",
+            )
+
+        self.assertEqual(report.provider, "fallback")
+        self.assertEqual(report.diagnostics.fallback_reason, "provider_not_openai")
 
 
 if __name__ == "__main__":

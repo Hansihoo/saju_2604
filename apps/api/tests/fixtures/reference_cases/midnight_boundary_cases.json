@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "category": "midnight_boundary_cases",
+  "description": "Hard reference cases for the project-declared midnight boundary policy. These are separate from golden baselines and protect the documented sect1 late-zi rule.",
+  "cases": [
+    {
+      "case_id": "sect1_before_late_zi_1988_2259",
+      "description": "Before 23:00, the current civil day pillar is retained.",
+      "input": {
+        "operation": "calculate_saju",
+        "corrected_solar_datetime": "1988-11-20 22:59:00",
+        "gender": "male",
+        "tzid": "Asia/Seoul"
+      },
+      "expected": {
+        "primary_midnight_rule": "sect1_23_changes_day",
+        "boundary_time": "23:00",
+        "pillars": {
+          "year": "\u620a\u8fb0",
+          "month": "\u7678\u4ea5",
+          "day": "\u5df1\u536f",
+          "time": "\u4e59\u4ea5"
+        }
+      },
+      "source": {
+        "type": "project_rule",
+        "name": "Documented sect1 late-zi boundary rule",
+        "url": null,
+        "retrieved_at": "2026-05-16"
+      },
+      "tolerance": {
+        "seconds": 0
+      },
+      "notes": "This protects the rule boundary rather than a public almanac value."
+    },
+    {
+      "case_id": "sect1_at_late_zi_boundary_1988_2300",
+      "description": "At 23:00, sect1 moves to the next day pillar.",
+      "input": {
+        "operation": "calculate_saju",
+        "corrected_solar_datetime": "1988-11-20 23:00:00",
+        "gender": "male",
+        "tzid": "Asia/Seoul"
+      },
+      "expected": {
+        "primary_midnight_rule": "sect1_23_changes_day",
+        "boundary_time": "23:00",
+        "pillars": {
+          "year": "\u620a\u8fb0",
+          "month": "\u7678\u4ea5",
+          "day": "\u5e9a\u8fb0",
+          "time": "\u4e19\u5b50"
+        }
+      },
+      "source": {
+        "type": "project_rule",
+        "name": "Documented sect1 late-zi boundary rule",
+        "url": null,
+        "retrieved_at": "2026-05-16"
+      },
+      "tolerance": {
+        "seconds": 0
+      },
+      "notes": "The boundary is inclusive at 23:00 for the current primary convention."
+    },
+    {
+      "case_id": "sect1_after_late_zi_1988_2330",
+      "description": "After 23:00, sect1 keeps the next day pillar through late zi hour.",
+      "input": {
+        "operation": "calculate_saju",
+        "corrected_solar_datetime": "1988-11-20 23:30:00",
+        "gender": "male",
+        "tzid": "Asia/Seoul"
+      },
+      "expected": {
+        "primary_midnight_rule": "sect1_23_changes_day",
+        "boundary_time": "23:00",
+        "pillars": {
+          "year": "\u620a\u8fb0",
+          "month": "\u7678\u4ea5",
+          "day": "\u5e9a\u8fb0",
+          "time": "\u4e19\u5b50"
+        }
+      },
+      "source": {
+        "type": "project_rule",
+        "name": "Documented sect1 late-zi boundary rule",
+        "url": null,
+        "retrieved_at": "2026-05-16"
+      },
+      "tolerance": {
+        "seconds": 0
+      },
+      "notes": "This is the same late-zi case used by the uncertainty detector tests."
+    },
+    {
+      "case_id": "sect1_after_civil_midnight_1988_0030",
+      "description": "After civil midnight, the same next day pillar remains active.",
+      "input": {
+        "operation": "calculate_saju",
+        "corrected_solar_datetime": "1988-11-21 00:30:00",
+        "gender": "male",
+        "tzid": "Asia/Seoul"
+      },
+      "expected": {
+        "primary_midnight_rule": "sect1_23_changes_day",
+        "boundary_time": "23:00",
+        "pillars": {
+          "year": "\u620a\u8fb0",
+          "month": "\u7678\u4ea5",
+          "day": "\u5e9a\u8fb0",
+          "time": "\u4e19\u5b50"
+        }
+      },
+      "source": {
+        "type": "project_rule",
+        "name": "Documented sect1 late-zi boundary rule",
+        "url": null,
+        "retrieved_at": "2026-05-16"
+      },
+      "tolerance": {
+        "seconds": 0
+      },
+      "notes": "Pairs with the 23:00/23:30 cases to protect continuity across midnight."
+    }
+  ]
+}

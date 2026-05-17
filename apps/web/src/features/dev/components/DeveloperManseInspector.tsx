@@ -119,6 +119,25 @@ export function DeveloperManseInspector({ locale, result }: DeveloperManseInspec
             <strong>{result.regional_solar_correction.corrected_solar_datetime}</strong>
           </div>
           <div className="dev-summary-item">
+            <span>Accuracy mode</span>
+            <strong>{result.result.calculation_basis.accuracy_mode}</strong>
+          </div>
+          <div className="dev-summary-item">
+            <span>Primary basis</span>
+            <strong>{result.result.calculation_basis.primary_time_basis}</strong>
+            <small>{result.result.calculation_basis.primary_input_datetime_to_lunar_python}</small>
+          </div>
+          <div className="dev-summary-item">
+            <span>Day pillar basis</span>
+            <strong>{result.manse.meta.day_pillar_rule || "-"}</strong>
+            <small>{result.result.calculation_basis.primary_day_pillar_basis_datetime}</small>
+          </div>
+          <div className="dev-summary-item">
+            <span>Iljin query date</span>
+            <strong>{result.manse.meta.iljin_query_date || "-"}</strong>
+            <small>{result.manse.meta.day_pillar_source || "-"}</small>
+          </div>
+          <div className="dev-summary-item">
             <span>{text.dayMaster}</span>
             <strong>{formatManseText(result.manse.meta.day_master, locale)}</strong>
           </div>
@@ -343,7 +362,11 @@ export function DeveloperManseInspector({ locale, result }: DeveloperManseInspec
                 <tbody>
                   {result.manse.luck_cycles.map((cycle) => (
                     <tr key={`${cycle.index}-${cycle.gan_zhi}`}>
-                      <td>{cycle.start_age}</td>
+                      <td>
+                        {cycle.start_age_years != null && cycle.start_age_months != null
+                          ? `${cycle.start_age_years}y ${cycle.start_age_months}m (${cycle.start_age})`
+                          : cycle.start_age}
+                      </td>
                       <td>{formatManseText(cycle.gan_zhi, locale)}</td>
                       <td>
                         {cycle.start_year} - {cycle.end_year}
@@ -360,7 +383,10 @@ export function DeveloperManseInspector({ locale, result }: DeveloperManseInspec
           {firstLuckCycle ? (
             <div className="dev-first-cycle-note">
               <strong>
-                {firstLuckCycle.start_age} / {formatManseText(firstLuckCycle.gan_zhi, locale)}
+                {firstLuckCycle.start_age_years != null && firstLuckCycle.start_age_months != null
+                  ? `${firstLuckCycle.start_age_years}y ${firstLuckCycle.start_age_months}m`
+                  : firstLuckCycle.start_age}{" "}
+                / {formatManseText(firstLuckCycle.gan_zhi, locale)}
               </strong>
             </div>
           ) : null}
@@ -524,6 +550,51 @@ export function DeveloperManseInspector({ locale, result }: DeveloperManseInspec
               ))}
             </ul>
           </div>
+
+          {result.debug_trace.birth_time_context ? (
+            <div className="dev-review-block">
+              <h3>Birth time context</h3>
+              <pre className="dev-pre">
+                {JSON.stringify(result.debug_trace.birth_time_context, null, 2)}
+              </pre>
+            </div>
+          ) : null}
+
+          {result.debug_trace.calculation_basis ? (
+            <div className="dev-review-block">
+              <h3>Calculation basis</h3>
+              <pre className="dev-pre">
+                {JSON.stringify(result.debug_trace.calculation_basis, null, 2)}
+              </pre>
+            </div>
+          ) : null}
+
+          {result.debug_trace.year_month_boundary_context ? (
+            <div className="dev-review-block">
+              <h3>Year/month boundary context</h3>
+              <pre className="dev-pre">
+                {JSON.stringify(result.debug_trace.year_month_boundary_context, null, 2)}
+              </pre>
+            </div>
+          ) : null}
+
+          {result.debug_trace.candidate_charts?.length ? (
+            <div className="dev-review-block">
+              <h3>Candidate charts</h3>
+              <pre className="dev-pre">
+                {JSON.stringify(result.debug_trace.candidate_charts, null, 2)}
+              </pre>
+            </div>
+          ) : null}
+
+          {result.debug_trace.uncertainty_flags?.length ? (
+            <div className="dev-review-block">
+              <h3>Uncertainty flags</h3>
+              <pre className="dev-pre">
+                {JSON.stringify(result.debug_trace.uncertainty_flags, null, 2)}
+              </pre>
+            </div>
+          ) : null}
 
           <div className="dev-review-block">
             <h3>{text.requestEcho}</h3>

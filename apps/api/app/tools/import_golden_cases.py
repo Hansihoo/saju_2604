@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 from typing import List
 
+from app.domain.saju.pydantic_compat import model_to_dict
 from app.domain.saju.services.parse_golden_answer_text import load_golden_answer_text
 
 
@@ -51,7 +52,7 @@ def import_golden_cases(*, source_dir: Path, output_dir: Path) -> List[Path]:
         )
         output_path = output_dir / f"{source_path.stem}.json"
         output_path.write_text(
-            json.dumps(case.model_dump(), ensure_ascii=False, indent=2),
+            json.dumps(model_to_dict(case), ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
         generated_paths.append(output_path)

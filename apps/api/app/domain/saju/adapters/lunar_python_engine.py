@@ -12,6 +12,11 @@ from app.domain.saju.engine import (
     SupplementaryPosition,
 )
 from app.domain.saju.services.calculate_luck_cycles import calculate_luck_cycles
+from app.domain.saju.services.canonical_year_month import calculate_canonical_year_month
+from app.domain.saju.services.day_pillar_reference import (
+    get_day_pillar_reference_date,
+    resolve_day_pillar_reference,
+)
 from app.domain.saju.time_correction import STANDARD_OFFSET_BY_TZ
 
 
@@ -40,6 +45,8 @@ class LunarPythonSajuEngine:
         corrected_solar_datetime: str,
         gender: Gender,
         tzid: Optional[str] = None,
+        day_pillar_basis_datetime: Optional[str] = None,
+        use_canonical_year_month_pillars: bool = False,
     ) -> SajuCalculationResult:
         """lunar_python 엔진으로 사주를 계산하고 내부 모델로 변환한다."""
         try:
@@ -50,6 +57,25 @@ class LunarPythonSajuEngine:
                 message="The corrected solar datetime must use YYYY-MM-DD HH:MM:SS format.",
                 meta={"corrected_solar_datetime": corrected_solar_datetime},
             ) from exc
+        day_pillar_lookup_dt = dt
+        if day_pillar_basis_datetime:
+            try:
+                day_pillar_lookup_dt = datetime.strptime(
+                    day_pillar_basis_datetime,
+                    "%Y-%m-%d %H:%M:%S",
+                )
+            except ValueError as exc:
+                raise SajuCalculationError(
+                    error_code="INVALID_DAY_PILLAR_BASIS_DATETIME",
+                    message="The day-pillar basis datetime must use YYYY-MM-DD HH:MM:SS format.",
+                    meta={"day_pillar_basis_datetime": day_pillar_basis_datetime},
+                ) from exc
+        day_time_dt = (
+            day_pillar_lookup_dt
+            if get_day_pillar_reference_date(day_pillar_lookup_dt, 1)
+            != get_day_pillar_reference_date(dt, 1)
+            else dt
+        )
 
         try:
             solar = Solar.fromYmdHms(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
@@ -58,6 +84,16 @@ class LunarPythonSajuEngine:
             # Use the late-zi-day-switch convention expected by the current
             # golden answers: day pillar changes after 23:00.
             eight_char.setSect(1)
+            day_time_solar = Solar.fromYmdHms(
+                day_time_dt.year,
+                day_time_dt.month,
+                day_time_dt.day,
+                day_time_dt.hour,
+                day_time_dt.minute,
+                day_time_dt.second,
+            )
+            day_time_eight_char = day_time_solar.getLunar().getEightChar()
+            day_time_eight_char.setSect(1)
         except Exception as exc:
             raise SajuCalculationError(
                 error_code="SAJU_ENGINE_CALCULATION_ERROR",
@@ -96,32 +132,55 @@ class LunarPythonSajuEngine:
                 xun_kong=eight_char.getMonthXunKong(),
             ),
             "day": self._build_pillar(
-                gan_zhi=eight_char.getDay(),
-                stem=eight_char.getDayGan(),
-                branch=eight_char.getDayZhi(),
-                five_elements=eight_char.getDayWuXing(),
-                stem_ten_god=eight_char.getDayShiShenGan(),
-                branch_ten_gods=eight_char.getDayShiShenZhi(),
-                hidden_stems=eight_char.getDayHideGan(),
-                twelve_fortune=eight_char.getDayDiShi(),
-                na_yin=eight_char.getDayNaYin(),
-                xun=eight_char.getDayXun(),
-                xun_kong=eight_char.getDayXunKong(),
+                gan_zhi=day_time_eight_char.getDay(),
+                stem=day_time_eight_char.getDayGan(),
+                branch=day_time_eight_char.getDayZhi(),
+                five_elements=day_time_eight_char.getDayWuXing(),
+                stem_ten_god=day_time_eight_char.getDayShiShenGan(),
+                branch_ten_gods=day_time_eight_char.getDayShiShenZhi(),
+                hidden_stems=day_time_eight_char.getDayHideGan(),
+                twelve_fortune=day_time_eight_char.getDayDiShi(),
+                na_yin=day_time_eight_char.getDayNaYin(),
+                xun=day_time_eight_char.getDayXun(),
+                xun_kong=day_time_eight_char.getDayXunKong(),
             ),
             "time": self._build_pillar(
-                gan_zhi=eight_char.getTime(),
-                stem=eight_char.getTimeGan(),
-                branch=eight_char.getTimeZhi(),
-                five_elements=eight_char.getTimeWuXing(),
-                stem_ten_god=eight_char.getTimeShiShenGan(),
-                branch_ten_gods=eight_char.getTimeShiShenZhi(),
-                hidden_stems=eight_char.getTimeHideGan(),
-                twelve_fortune=eight_char.getTimeDiShi(),
-                na_yin=eight_char.getTimeNaYin(),
-                xun=eight_char.getTimeXun(),
-                xun_kong=eight_char.getTimeXunKong(),
+                gan_zhi=day_time_eight_char.getTime(),
+                stem=day_time_eight_char.getTimeGan(),
+                branch=day_time_eight_char.getTimeZhi(),
+                five_elements=day_time_eight_char.getTimeWuXing(),
+                stem_ten_god=day_time_eight_char.getTimeShiShenGan(),
+                branch_ten_gods=day_time_eight_char.getTimeShiShenZhi(),
+                hidden_stems=day_time_eight_char.getTimeHideGan(),
+                twelve_fortune=day_time_eight_char.getTimeDiShi(),
+                na_yin=day_time_eight_char.getTimeNaYin(),
+                xun=day_time_eight_char.getTimeXun(),
+                xun_kong=day_time_eight_char.getTimeXunKong(),
             ),
         }
+        day_reference = resolve_day_pillar_reference(
+            input_dt=day_pillar_lookup_dt,
+            sect=1,
+            lunar_python_gan_zhi=pillars["day"].gan_zhi,
+        )
+        pillars["day"].gan_zhi = day_reference.gan_zhi
+        pillars["day"].stem = day_reference.stem
+        pillars["day"].branch = day_reference.branch
+        year_month_context = calculate_canonical_year_month(
+            basis_datetime_text=corrected_solar_datetime,
+            timezone_id=tzid,
+            day_stem=pillars["day"].stem,
+            legacy_year_pillar=pillars["year"].gan_zhi,
+            legacy_month_pillar=pillars["month"].gan_zhi,
+            apply_to_primary=use_canonical_year_month_pillars,
+        )
+        if (
+            use_canonical_year_month_pillars
+            and year_month_context.year_pillar is not None
+            and year_month_context.month_pillar is not None
+        ):
+            pillars["year"] = year_month_context.year_pillar
+            pillars["month"] = year_month_context.month_pillar
 
         luck_cycles = calculate_luck_cycles(
             gender=gender,
@@ -131,6 +190,7 @@ class LunarPythonSajuEngine:
             day_pillar=pillars["day"].gan_zhi,
             cycle_count=10,
             target_standard_offset_minutes=STANDARD_OFFSET_BY_TZ.get(tzid) if tzid else None,
+            timezone_id=tzid,
         )
         first_luck_cycle = luck_cycles[0] if luck_cycles else None
 
@@ -166,6 +226,14 @@ class LunarPythonSajuEngine:
                 "corrected_solar_datetime": corrected_solar_datetime,
                 "gender": gender,
                 "day_master": pillars["day"].stem,
+                "day_time_basis_datetime": day_time_dt.strftime("%Y-%m-%d %H:%M:%S"),
+                "civil_date": day_reference.civil_date,
+                "day_pillar_rule": day_reference.rule,
+                "day_pillar_basis_date": day_reference.day_pillar_basis_date,
+                "iljin_query_date": day_reference.iljin_query_date,
+                "day_pillar_source": day_reference.source,
+                "day_pillar_reference_date": day_reference.reference_date,
+                "day_pillar_reference_matched_lunar_python": day_reference.matched_lunar_python,
                 "luck_cycle_start_date": (
                     first_luck_cycle.month_boundary_datetime[:10]
                     if first_luck_cycle and first_luck_cycle.month_boundary_datetime
@@ -186,6 +254,7 @@ class LunarPythonSajuEngine:
                     else ""
                 ),
             },
+            year_month_boundary_context=year_month_context.context,
         )
 
     def _build_pillar(

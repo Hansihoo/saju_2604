@@ -1,6 +1,6 @@
 import { KeyboardEvent, useEffect, useRef, useState } from "react";
 
-import { RegionSuggestion, SajuPreviewResponse } from "../../shared/api/contracts";
+import { AccuracyMode, RegionSuggestion, SajuPreviewResponse } from "../../shared/api/contracts";
 import { createSajuPreview, searchRegionSuggestions } from "../../shared/api/saju";
 import { Locale, getCopy } from "../../shared/copy";
 
@@ -14,6 +14,7 @@ type UseSajuInputFormOptions = {
     birthTime: string;
     gender: "male" | "female";
     calendarType: "solar" | "lunar";
+    accuracyMode: AccuracyMode;
   }>;
 };
 
@@ -37,6 +38,9 @@ export function useSajuInputForm({
   const [gender, setGender] = useState<"male" | "female">(initialValues?.gender ?? "female");
   const [calendarType, setCalendarType] = useState<"solar" | "lunar">(
     initialValues?.calendarType ?? "solar",
+  );
+  const [accuracyMode, setAccuracyMode] = useState<AccuracyMode>(
+    initialValues?.accuracyMode ?? "legacy",
   );
   const [isLunarLeapMonth, setIsLunarLeapMonth] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -191,6 +195,7 @@ export function useSajuInputForm({
           is_lunar_leap_month: isLunarLeapMonth,
           gender,
           region_id: selectedRegion.id,
+          accuracy_mode: accuracyMode,
           debug,
         },
         debug,
@@ -216,6 +221,7 @@ export function useSajuInputForm({
     regionLoading,
     gender,
     calendarType,
+    accuracyMode,
     isLunarLeapMonth,
     loading,
     error,
@@ -224,6 +230,7 @@ export function useSajuInputForm({
     setBirthTime: handleBirthTimeChange,
     setGender,
     setCalendarType,
+    setAccuracyMode,
     setIsLunarLeapMonth,
     handleUnknownTimeChange,
     handleRegionSelect,

@@ -377,6 +377,21 @@ def _build_analysis_summary(
             if luck_cycles_enabled and first_luck_cycle and first_luck_cycle.precise_start_age_years is not None
             else None
         ),
+        first_luck_cycle_start_age_years=(
+            first_luck_cycle.start_age_years
+            if luck_cycles_enabled and first_luck_cycle and first_luck_cycle.start_age_years is not None
+            else None
+        ),
+        first_luck_cycle_start_age_months=(
+            first_luck_cycle.start_age_months
+            if luck_cycles_enabled and first_luck_cycle and first_luck_cycle.start_age_months is not None
+            else None
+        ),
+        first_luck_cycle_start_age_total_months=(
+            first_luck_cycle.start_age_total_months
+            if luck_cycles_enabled and first_luck_cycle and first_luck_cycle.start_age_total_months is not None
+            else None
+        ),
         first_luck_cycle_boundary_datetime=(
             first_luck_cycle.month_boundary_datetime if luck_cycles_enabled and first_luck_cycle else None
         ),
@@ -440,6 +455,16 @@ def build_manse_data(
             pillar_order=["year", "month", "day", "time"],
             visible_pillar_keys=list(birth_time_policy.visible_pillar_keys),
             hour_pillar_enabled=birth_time_policy.hour_pillar_enabled,
+            day_pillar_rule=saju_calculation.meta.get("day_pillar_rule", ""),
+            day_time_basis_datetime=saju_calculation.meta.get("day_time_basis_datetime", ""),
+            civil_date=saju_calculation.meta.get("civil_date", ""),
+            day_pillar_basis_date=saju_calculation.meta.get("day_pillar_basis_date", ""),
+            iljin_query_date=saju_calculation.meta.get("iljin_query_date", ""),
+            day_pillar_source=saju_calculation.meta.get("day_pillar_source", ""),
+            day_pillar_reference_matched_lunar_python=saju_calculation.meta.get(
+                "day_pillar_reference_matched_lunar_python",
+                "",
+            ),
         ),
         pillars=pillars,
         table_rows=_build_table_rows(pillar_dict),
@@ -461,6 +486,12 @@ def build_manse_data(
                     "end_year": cycle.end_year,
                     "start_age": cycle.start_age,
                     "end_age": cycle.end_age,
+                    "start_age_years": cycle.start_age_years,
+                    "start_age_months": cycle.start_age_months,
+                    "start_age_total_months": cycle.start_age_total_months,
+                    "change_age_years": cycle.change_age_years,
+                    "change_age_months": cycle.change_age_months,
+                    "change_age_total_months": cycle.change_age_total_months,
                     "start_datetime": cycle.start_datetime,
                     "change_datetime": cycle.change_datetime,
                 }

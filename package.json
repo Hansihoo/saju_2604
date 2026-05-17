@@ -14,6 +14,9 @@
     "dev:web:direct": "npm --prefix ./apps/web run dev -- --host 127.0.0.1 --port 5173",
     "build:web": "pnpm --filter web build",
     "preview:web": "pnpm --filter web preview",
-    "test:api": "powershell -ExecutionPolicy Bypass -File ./scripts/test-api.ps1"
+    "test:api": "powershell -ExecutionPolicy Bypass -File ./scripts/test-api.ps1",
+    "test:accuracy": "powershell -ExecutionPolicy Bypass -File ./scripts/accuracy-safety-check.ps1",
+    "ensure:skyfield": "powershell -ExecutionPolicy Bypass -File ./scripts/ensure-skyfield-ephemeris.ps1",
+    "verify:kasi": "powershell -ExecutionPolicy Bypass -File ./scripts/kasi-live-spot-check.ps1"
   }
 }

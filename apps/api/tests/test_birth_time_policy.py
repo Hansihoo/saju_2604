@@ -21,6 +21,9 @@ class BirthTimePolicyTests(unittest.TestCase):
 
         self.assertFalse(policy.hour_pillar_enabled)
         self.assertEqual(policy.effective_birth_time, "00:00")
+        self.assertIsNotNone(policy.birth_time_interval)
+        self.assertEqual(policy.birth_time_interval.start, "2024-02-10 00:00:00")
+        self.assertEqual(policy.birth_time_interval.end, "2024-02-10 23:59:59")
         self.assertEqual(policy.visible_pillar_keys, ["year", "month", "day"])
         self.assertIn("time_pillar", policy.disabled_sections)
 
@@ -39,6 +42,7 @@ class BirthTimePolicyTests(unittest.TestCase):
         )
 
         self.assertTrue(policy.hour_pillar_enabled)
+        self.assertIsNone(policy.birth_time_interval)
         self.assertEqual(policy.visible_pillar_keys, ["year", "month", "day", "time"])
         self.assertEqual(policy.disabled_sections, [])
 

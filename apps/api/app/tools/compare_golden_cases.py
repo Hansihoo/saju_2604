@@ -16,6 +16,7 @@ from app.domain.saju.golden import (
     compare_golden_snapshots,
     to_korean_gan_zhi,
 )
+from app.domain.saju.pydantic_compat import model_from_json, model_to_dict
 from app.domain.saju.services.calculate_luck_cycles import (
     get_adjacent_month_boundary,
     get_luck_direction,
@@ -561,18 +562,18 @@ def compare_golden_cases(*, expected_dir: Path, report_dir: Path, summary_file: 
     case_status_counts: Counter[str] = Counter()
 
     for expected_path in sorted(expected_dir.glob("*.json")):
-        case = GoldenKnownAnswerCase.model_validate_json(expected_path.read_text(encoding="utf-8"))
+        case = model_from_json(GoldenKnownAnswerCase, expected_path.read_text(encoding="utf-8"))
         actual = build_actual_golden_snapshot(case_input=case.input)
         report = compare_golden_snapshots(case=case, actual=actual)
 
         actual_path = actual_dir / f"{case.input.case_id}.actual.json"
         diff_path = diff_dir / f"{case.input.case_id}.report.json"
         actual_path.write_text(
-            json.dumps(actual.model_dump(), ensure_ascii=False, indent=2),
+            json.dumps(model_to_dict(actual), ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
         diff_path.write_text(
-            json.dumps(report.model_dump(), ensure_ascii=False, indent=2),
+            json.dumps(model_to_dict(report), ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
 

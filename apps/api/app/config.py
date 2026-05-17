@@ -62,6 +62,13 @@ def _parse_int_env(name: str, default: int, *, minimum: int = 0) -> int:
     return max(minimum, value)
 
 
+def _parse_bool_env(name: str, default: bool = False) -> bool:
+    raw_value = os.getenv(name)
+    if raw_value is None:
+        return default
+    return raw_value in {"1", "true", "TRUE", "yes", "YES", "on", "ON"}
+
+
 @dataclass
 class Settings:
     app_name: str = os.getenv("SAJU_APP_NAME", "suju-insight")
@@ -81,6 +88,10 @@ class Settings:
     )
     request_log_max_bytes: int = _parse_int_env("SAJU_REQUEST_LOG_MAX_BYTES", 10 * 1024 * 1024)
     request_log_backup_count: int = _parse_int_env("SAJU_REQUEST_LOG_BACKUP_COUNT", 3)
+    use_canonical_year_month_pillars: bool = _parse_bool_env(
+        "SAJU_USE_CANONICAL_YEAR_MONTH_PILLARS",
+        False,
+    )
     cors_origins: Optional[List[str]] = None
 
     def __post_init__(self) -> None:

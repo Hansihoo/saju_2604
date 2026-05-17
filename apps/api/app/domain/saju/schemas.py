@@ -15,6 +15,7 @@ try:
 except TypeError:
     BirthTimeStr = constr(regex=r"^\d{2}:\d{2}$")
 ElementKey = Literal["wood", "fire", "earth", "metal", "water"]
+AccuracyMode = Literal["legacy", "standard_time", "mean_solar_time", "compare"]
 
 
 class RegionSuggestion(BaseModel):
@@ -49,6 +50,7 @@ class SajuPreviewRequest(BaseModel):
     is_lunar_leap_month: bool = False
     gender: Literal["male", "female"] = "male"
     region_id: str
+    accuracy_mode: AccuracyMode = "legacy"
     debug: bool = False
 
 
@@ -69,6 +71,26 @@ class EvidenceSection(BaseModel):
     summary: str
 
 
+class UncertaintyFlagSummary(BaseModel):
+    code: str
+    severity: Literal["info", "warning", "critical"]
+    affected_fields: List[str]
+    user_message: str
+    developer_message: str
+    evidence: Dict[str, object] = Field(default_factory=dict)
+
+
+class CalculationBasisSummary(BaseModel):
+    accuracy_mode: AccuracyMode = "legacy"
+    primary_candidate_id: str = "legacy_corrected"
+    primary_time_basis: str = "legacy_corrected"
+    primary_midnight_rule: str = "sect1_23_changes_day"
+    primary_input_datetime_to_lunar_python: str = ""
+    primary_day_pillar_basis_datetime: str = ""
+    legacy_corrected_solar_datetime: str = ""
+    compare_candidates_enabled: bool = False
+
+
 class TimeCorrectionSummary(BaseModel):
     tzid: str
     source_local_datetime: str
@@ -77,6 +99,8 @@ class TimeCorrectionSummary(BaseModel):
     offset_minutes: int
     ambiguous: bool
     fold: int
+    is_placeholder_time: bool = False
+    placeholder_reason: Optional[str] = None
 
 
 class RegionalSolarCorrectionSummary(BaseModel):
@@ -86,6 +110,8 @@ class RegionalSolarCorrectionSummary(BaseModel):
     regional_time_offset_minutes: float
     daylight_saving_offset_minutes: int = 0
     correction_basis: str
+    is_placeholder_time: bool = False
+    placeholder_reason: Optional[str] = None
 
 
 class CalendarNormalizationSummary(BaseModel):
@@ -103,6 +129,8 @@ class CalendarNormalizationSummary(BaseModel):
     lunar_year: int
     lunar_month: int
     lunar_day: int
+    is_placeholder_time: bool = False
+    placeholder_reason: Optional[str] = None
 
 
 class MansePillar(BaseModel):
@@ -182,6 +210,12 @@ class ManseLuckCycle(BaseModel):
     end_year: int
     start_age: int
     end_age: int
+    start_age_years: Optional[int] = None
+    start_age_months: Optional[int] = None
+    start_age_total_months: Optional[int] = None
+    change_age_years: Optional[int] = None
+    change_age_months: Optional[int] = None
+    change_age_total_months: Optional[int] = None
     start_datetime: Optional[str] = None
     change_datetime: Optional[str] = None
 
@@ -222,6 +256,13 @@ class ManseMeta(BaseModel):
     pillar_order: List[Literal["year", "month", "day", "time"]]
     visible_pillar_keys: List[Literal["year", "month", "day", "time"]]
     hour_pillar_enabled: bool
+    day_pillar_rule: str = ""
+    day_time_basis_datetime: str = ""
+    civil_date: str = ""
+    day_pillar_basis_date: str = ""
+    iljin_query_date: str = ""
+    day_pillar_source: str = ""
+    day_pillar_reference_matched_lunar_python: str = ""
 
 
 class ManseAnalysisSummary(BaseModel):
@@ -240,6 +281,9 @@ class ManseAnalysisSummary(BaseModel):
     first_luck_cycle_direction: Optional[Literal["forward", "backward"]] = None
     first_luck_cycle_exact_start_age_years: Optional[float] = None
     first_luck_cycle_precise_start_age_years: Optional[float] = None
+    first_luck_cycle_start_age_years: Optional[int] = None
+    first_luck_cycle_start_age_months: Optional[int] = None
+    first_luck_cycle_start_age_total_months: Optional[int] = None
     first_luck_cycle_boundary_datetime: Optional[str] = None
 
 
@@ -281,6 +325,8 @@ class SajuPreviewResult(BaseModel):
     limitations: List[str]
     disabled_sections: List[str]
     evidence_sections: Dict[str, EvidenceSection]
+    calculation_basis: CalculationBasisSummary = Field(default_factory=CalculationBasisSummary)
+    uncertainty_summary: List[UncertaintyFlagSummary] = Field(default_factory=list)
     hour_pillar_enabled: bool
     signals: SajuResultSignals
 
@@ -292,11 +338,64 @@ class DebugCheckpoint(BaseModel):
     error_code: Optional[str] = None
 
 
+class BirthTimeContextSummary(BaseModel):
+    legal_local_datetime: str
+    normalized_local_datetime: str
+    normalized_utc_datetime: str
+    timezone_id: str
+    utc_offset_minutes: int
+    dst_offset_minutes: int
+    normalized_solar_datetime: str
+    standard_local_datetime: str
+    mean_solar_datetime: str
+    legacy_corrected_solar_datetime: str
+    corrected_solar_datetime: str
+    longitude: float
+    standard_meridian: float
+    regional_time_offset_minutes: float
+    daylight_saving_offset_minutes: int
+    ambiguous: bool
+    fold: int
+    warnings: List[str] = Field(default_factory=list)
+
+
+class CandidateChartDifferenceSummary(BaseModel):
+    primary: Optional[str] = None
+    candidate: Optional[str] = None
+
+
+class CandidateChartSummary(BaseModel):
+    candidate_id: str
+    time_basis: str
+    midnight_rule: str
+    input_datetime_to_lunar_python: str
+    day_pillar_basis_datetime: str = ""
+    iljin_query_date: str = ""
+    day_pillar_rule: str = ""
+    year_pillar: str
+    month_pillar: str
+    day_pillar: str
+    hour_pillar: str
+    luck_cycle_start_age: Optional[int] = None
+    luck_cycle_start_age_years: Optional[int] = None
+    luck_cycle_start_age_months: Optional[int] = None
+    luck_cycle_start_age_total_months: Optional[int] = None
+    luck_cycle_first_ganzhi: Optional[str] = None
+    differences_from_primary: Dict[str, CandidateChartDifferenceSummary]
+    aliases: List[str] = Field(default_factory=list)
+
+
 class DebugTrace(BaseModel):
     stage_order: List[str]
     failed_stage: Optional[str] = None
     checkpoints: List[DebugCheckpoint]
     request_echo: Dict[str, str]
+    accuracy_mode: AccuracyMode = "legacy"
+    calculation_basis: CalculationBasisSummary = Field(default_factory=CalculationBasisSummary)
+    birth_time_context: Optional[BirthTimeContextSummary] = None
+    year_month_boundary_context: Dict[str, object] = Field(default_factory=dict)
+    candidate_charts: List[CandidateChartSummary] = Field(default_factory=list)
+    uncertainty_flags: List[UncertaintyFlagSummary] = Field(default_factory=list)
 
 
 class SajuPreviewResponse(BaseModel):

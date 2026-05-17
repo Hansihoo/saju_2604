@@ -7,6 +7,14 @@ from app.domain.saju.llm_payload import InterpretationPayload
 from app.domain.saju.schemas import ElementKey
 
 
+def _luck_cycle_start_age_text(cycle, *, locale: InterpretationLocale) -> str:
+    if cycle.start_age_years is not None and cycle.start_age_months is not None:
+        if locale == "ko":
+            return f"{cycle.start_age_years}세 {cycle.start_age_months}개월"
+        return f"age {cycle.start_age_years}y {cycle.start_age_months}m"
+    return f"{cycle.start_age}세" if locale == "ko" else f"age {cycle.start_age}"
+
+
 ELEMENT_LABELS: Dict[InterpretationLocale, Dict[ElementKey, str]] = {
     "ko": {
         "wood": "목",
@@ -183,8 +191,9 @@ def _format_action(locale: InterpretationLocale, payload: InterpretationPayload)
             else "강한 기운을 유지하되 한쪽 판단에 과하게 기대지 않도록 생활 리듬을 조절하는 편이 좋습니다."
         )
         if first_cycle is not None:
+            age_text = _luck_cycle_start_age_text(first_cycle, locale=locale)
             return (
-                f"{base} 현재 확인된 첫 대운은 {first_cycle.start_age}세부터 시작하는 "
+                f"{base} 현재 확인된 첫 대운은 {age_text}부터 시작하는 "
                 f"{first_cycle.gan_zhi} 흐름입니다."
             )
         return base
@@ -195,8 +204,9 @@ def _format_action(locale: InterpretationLocale, payload: InterpretationPayload)
         else "Keep your strengths steady while avoiding over-reliance on one side."
     )
     if first_cycle is not None:
+        age_text = _luck_cycle_start_age_text(first_cycle, locale=locale)
         return (
-            f"{base} The first verified decade cycle starts at age {first_cycle.start_age} "
+            f"{base} The first verified decade cycle starts at {age_text} "
             f"with {first_cycle.gan_zhi}."
         )
     return base

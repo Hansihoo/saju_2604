@@ -4,7 +4,13 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Any, Dict, Literal, Optional
 
-from lunar_python import Lunar, Solar
+from korean_lunar_calendar import KoreanLunarCalendar
+
+from app.domain.saju.reference_calendar import (
+    LunarReferenceRecord,
+    lookup_lunar_reference_by_lunar_date,
+    lookup_lunar_reference_by_solar_date,
+)
 
 
 CalendarType = Literal["solar", "lunar"]
@@ -37,11 +43,76 @@ class CalendarNormalizationResult:
     lunar_day: int
 
 
-def _format_lunar_datetime(lunar: Lunar) -> str:
+def _format_solar_datetime(calendar: KoreanLunarCalendar, *, hour: int, minute: int) -> str:
+    """양력 시각을 포맷한다."""
+    return f"{calendar.solarYear:04d}-{calendar.solarMonth:02d}-{calendar.solarDay:02d} {hour:02d}:{minute:02d}:00"
+
+
+def _format_lunar_datetime(calendar: KoreanLunarCalendar, *, hour: int, minute: int) -> str:
     """음력 시각을 포맷한다."""
-    return (
-        f"{lunar.getYear():04d}-{abs(lunar.getMonth()):02d}-{lunar.getDay():02d} "
-        f"{lunar.getHour():02d}:{lunar.getMinute():02d}:{lunar.getSecond():02d}"
+    return f"{calendar.lunarYear:04d}-{calendar.lunarMonth:02d}-{calendar.lunarDay:02d} {hour:02d}:{minute:02d}:00"
+
+
+def _result_from_reference_record(
+    *,
+    calendar_type: CalendarType,
+    input_date: str,
+    input_time: str,
+    record: LunarReferenceRecord,
+    hour: int,
+    minute: int,
+) -> CalendarNormalizationResult:
+    return CalendarNormalizationResult(
+        calendar_type=calendar_type,
+        is_lunar_leap_month=record.is_lunar_leap_month,
+        input_date=input_date,
+        input_time=input_time,
+        normalized_solar_datetime=(
+            f"{record.solar_year:04d}-{record.solar_month:02d}-{record.solar_day:02d} "
+            f"{hour:02d}:{minute:02d}:00"
+        ),
+        normalized_lunar_datetime=(
+            f"{record.lunar_year:04d}-{record.lunar_month:02d}-{record.lunar_day:02d} "
+            f"{hour:02d}:{minute:02d}:00"
+        ),
+        solar_year=record.solar_year,
+        solar_month=record.solar_month,
+        solar_day=record.solar_day,
+        solar_hour=hour,
+        solar_minute=minute,
+        lunar_year=record.lunar_year,
+        lunar_month=record.lunar_month,
+        lunar_day=record.lunar_day,
+    )
+
+
+def _set_solar_date(calendar: KoreanLunarCalendar, *, year: int, month: int, day: int) -> None:
+    if calendar.setSolarDate(year, month, day):
+        return
+    raise CalendarNormalizationError(
+        error_code="UNSUPPORTED_SOLAR_DATE",
+        message="The solar date is outside the supported Korean lunar calendar range.",
+        meta={"birth_date": f"{year:04d}-{month:02d}-{day:02d}"},
+    )
+
+
+def _set_lunar_date(
+    calendar: KoreanLunarCalendar,
+    *,
+    year: int,
+    month: int,
+    day: int,
+    is_lunar_leap_month: bool,
+) -> None:
+    if calendar.setLunarDate(year, month, day, is_lunar_leap_month):
+        return
+    raise CalendarNormalizationError(
+        error_code="UNSUPPORTED_LUNAR_DATE",
+        message="The lunar date is outside the supported Korean lunar calendar range.",
+        meta={
+            "birth_date": f"{year:04d}-{month:02d}-{day:02d}",
+            "is_lunar_leap_month": is_lunar_leap_month,
+        },
     )
 
 
@@ -64,28 +135,43 @@ def normalize_calendar(
             meta={"birth_time": birth_time},
         ) from exc
 
+    if calendar_type == "solar":
+        reference_record = lookup_lunar_reference_by_solar_date(birth_date)
+    else:
+        reference_record = lookup_lunar_reference_by_lunar_date(
+            lunar_year=birth_date.year,
+            lunar_month=birth_date.month,
+            lunar_day=birth_date.day,
+            is_lunar_leap_month=is_lunar_leap_month,
+        )
+
+    if reference_record is not None:
+        return _result_from_reference_record(
+            calendar_type=calendar_type,
+            input_date=birth_date.isoformat(),
+            input_time=birth_time,
+            record=reference_record,
+            hour=hour,
+            minute=minute,
+        )
+
     try:
+        calendar = KoreanLunarCalendar()
         if calendar_type == "solar":
-            solar = Solar.fromYmdHms(
-                birth_date.year,
-                birth_date.month,
-                birth_date.day,
-                hour,
-                minute,
-                0,
+            _set_solar_date(
+                calendar,
+                year=birth_date.year,
+                month=birth_date.month,
+                day=birth_date.day,
             )
-            lunar = solar.getLunar()
         else:
-            lunar_month = -birth_date.month if is_lunar_leap_month else birth_date.month
-            lunar = Lunar.fromYmdHms(
-                birth_date.year,
-                lunar_month,
-                birth_date.day,
-                hour,
-                minute,
-                0,
+            _set_lunar_date(
+                calendar,
+                year=birth_date.year,
+                month=birth_date.month,
+                day=birth_date.day,
+                is_lunar_leap_month=is_lunar_leap_month,
             )
-            solar = lunar.getSolar()
     except Exception as exc:
         raise CalendarNormalizationError(
             error_code="CALENDAR_NORMALIZATION_ERROR",
@@ -100,17 +186,17 @@ def normalize_calendar(
 
     return CalendarNormalizationResult(
         calendar_type=calendar_type,
-        is_lunar_leap_month=is_lunar_leap_month,
+        is_lunar_leap_month=bool(calendar.isIntercalation),
         input_date=birth_date.isoformat(),
         input_time=birth_time,
-        normalized_solar_datetime=solar.toYmdHms(),
-        normalized_lunar_datetime=_format_lunar_datetime(lunar),
-        solar_year=solar.getYear(),
-        solar_month=solar.getMonth(),
-        solar_day=solar.getDay(),
-        solar_hour=solar.getHour(),
-        solar_minute=solar.getMinute(),
-        lunar_year=lunar.getYear(),
-        lunar_month=lunar.getMonth(),
-        lunar_day=lunar.getDay(),
+        normalized_solar_datetime=_format_solar_datetime(calendar, hour=hour, minute=minute),
+        normalized_lunar_datetime=_format_lunar_datetime(calendar, hour=hour, minute=minute),
+        solar_year=calendar.solarYear,
+        solar_month=calendar.solarMonth,
+        solar_day=calendar.solarDay,
+        solar_hour=hour,
+        solar_minute=minute,
+        lunar_year=calendar.lunarYear,
+        lunar_month=calendar.lunarMonth,
+        lunar_day=calendar.lunarDay,
     )

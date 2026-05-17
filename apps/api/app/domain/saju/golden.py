@@ -8,6 +8,8 @@ from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
+from app.domain.saju.pydantic_compat import model_to_dict
+
 
 STANDARD_OFFSET_BY_TZ: Dict[str, int] = {
     "Asia/Seoul": 540,
@@ -359,8 +361,8 @@ def compare_golden_snapshots(
     actual: GoldenSnapshot,
 ) -> GoldenComparisonReport:
     """기대 snapshot과 실제 snapshot을 비교해 diff report를 만든다."""
-    expected_payload = case.expected.model_dump()
-    actual_payload = actual.model_dump()
+    expected_payload = model_to_dict(case.expected)
+    actual_payload = model_to_dict(actual)
     diffs: List[GoldenDiffEntry] = []
     _diff_values(expected_payload, actual_payload, "", diffs)
     return GoldenComparisonReport(

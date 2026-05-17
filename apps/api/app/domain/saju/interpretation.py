@@ -81,6 +81,6 @@ class InterpretationReport(InterpretationLLMOutput):
     schema_version: Literal["m2-llm-v5"] = "m2-llm-v5"
     provider: Literal["openai", "fallback"]
     model: Optional[str] = None
-    prompt_version: str = "saju-report-v13"
+    prompt_version: str = "saju-report-v14"
     warnings: List[str] = Field(default_factory=list)
     diagnostics: Optional[InterpretationDiagnostics] = None

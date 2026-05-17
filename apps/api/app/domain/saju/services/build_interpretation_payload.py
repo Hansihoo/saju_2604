@@ -27,6 +27,7 @@ from app.domain.saju.llm_payload import (
     InterpretationSpecialStar,
     InterpretationSupplementaryPosition,
     InterpretationTimeContext,
+    InterpretationUncertaintyFlag,
     InterpretationVisiblePillar,
     InterpretationWealthFacts,
 )
@@ -39,6 +40,7 @@ from app.domain.saju.localization import (
     localize_stem,
     localize_ten_god,
 )
+from app.domain.saju.prompts.interpretation_report import get_interpretation_report_prompt
 from app.domain.saju.schemas import SajuPreviewRequest, SajuPreviewResponse
 
 
@@ -49,36 +51,7 @@ OUTPUT_SECTIONS = [
     "wealth",
     "luck_flow",
 ]
-
-NARRATIVE_RULES = [
-    "Use only the provided facts and signals.",
-    "Do not recalculate saju, manse, timing corrections, pillars, ten gods, special stars, scores, or luck cycles.",
-    "Use profile.locale as the only output language.",
-    "If profile.locale is ko, write in Hangul only and do not use Hanja.",
-    "If profile.locale is en, write in English only and do not use Korean or Hanja.",
-    "Do not expose numeric scores or point-based phrasing.",
-    "Use scores only as internal tone-strength signals.",
-    "Each section should be easy to read but include short user-facing basis chips.",
-    "Use the label 풀이 포인트 for short basis chips.",
-    "Use the label 전문가 노트 for a short explanation of the interpretation logic.",
-    "Do not use raw evidence IDs in user-facing text.",
-    "Do not use the English word evidence in user-facing text.",
-    "Use current_flow for current-period commentary in love, career, wealth, and luck-flow sections.",
-    "Use luck_flow_facts and luck_cycle_analysis as the primary basis for the luck-flow section.",
-    "Use love_facts, career_facts, and wealth_facts when writing the matching sections.",
-    "Special stars are supporting indicators only, not sole proof.",
-    "Keep the tone grounded and avoid exaggerated certainty.",
-    "If the birth time is estimated, explicitly acknowledge the hidden hour-pillar limitations.",
-    "Core analysis must include standout traits, comparison, strengths, risks, and direction.",
-    "Love must include relationship style, marriage traits, good match, difficult match, advice, and current timing.",
-    "Career must include work style, suitable environment, risks, strategy, and current timing.",
-    "Wealth must include flow type, earning pattern, spending risk, cautions, and management direction.",
-    "Luck flow must focus on current and next cycle only.",
-    "Luck flow must compare the current cycle and next cycle in practical life terms.",
-    "Luck flow must include what may improve and what needs more care, without deterministic prediction.",
-    "Luck flow must answer whether now is preparation, expansion, adjustment, stabilization, or transition.",
-    "Luck flow must explain when the next relatively favorable period begins only when favorable_periods provides it.",
-]
+PROMPT_SPEC = get_interpretation_report_prompt()
 
 LOVE_STAR_KEYWORDS = ("dohwa", "hongyeom", "mokyok", "wangji", "hamji", "yeokma")
 CAREER_STAR_KEYWORDS = ("munchang", "hakdang", "hagwan", "jangseong", "yangin", "goegang", "cheonmun")
@@ -190,6 +163,19 @@ def _build_evidence(response: SajuPreviewResponse) -> List[InterpretationEvidenc
     ]
 
 
+def _build_uncertainty_summary(response: SajuPreviewResponse) -> List[InterpretationUncertaintyFlag]:
+    return [
+        InterpretationUncertaintyFlag(
+            code=flag.code,
+            severity=flag.severity,
+            affected_fields=list(flag.affected_fields),
+            user_message=flag.user_message,
+        )
+        for flag in response.result.uncertainty_summary
+        if flag.severity in ("warning", "critical")
+    ]
+
+
 def _build_luck_cycles(
     response: SajuPreviewResponse,
     locale: OutputLocale,
@@ -205,6 +191,12 @@ def _build_luck_cycles(
             end_year=cycle.end_year,
             gan_zhi=cycle.gan_zhi,
             display_gan_zhi=localize_ganzhi(cycle.gan_zhi, locale),
+            start_age_years=cycle.start_age_years,
+            start_age_months=cycle.start_age_months,
+            start_age_total_months=cycle.start_age_total_months,
+            change_age_years=cycle.change_age_years,
+            change_age_months=cycle.change_age_months,
+            change_age_total_months=cycle.change_age_total_months,
             start_datetime=cycle.start_datetime,
             change_datetime=cycle.change_datetime,
         )
@@ -960,7 +952,7 @@ def build_interpretation_payload(
     response: SajuPreviewResponse,
 ) -> InterpretationPayload:
     locale = _resolve_locale(request)
-    effective_birth_time = "00:00" if request.is_birth_time_estimated else request.birth_time
+    effective_birth_time = "unknown" if request.is_birth_time_estimated else request.birth_time
     visible_pillars = _build_visible_pillars(response, locale)
     luck_cycles = _build_luck_cycles(response, locale)
     special_stars = _build_special_stars(response, locale)
@@ -976,6 +968,12 @@ def build_interpretation_payload(
         analyses=luck_cycle_analysis,
         locale=locale,
     )
+    uncertainty_summary = _build_uncertainty_summary(response)
+    narrative_rules = list(PROMPT_SPEC.narrative_rules)
+    if uncertainty_summary:
+        narrative_rules.append(
+            "If uncertainty_summary is present, verbalize only those precomputed uncertainty flags; do not infer new uncertainty."
+        )
 
     return InterpretationPayload(
         output_sections=OUTPUT_SECTIONS,
@@ -998,6 +996,12 @@ def build_interpretation_payload(
             regional_time_offset_minutes=response.regional_solar_correction.regional_time_offset_minutes,
             daylight_saving_offset_minutes=response.regional_solar_correction.daylight_saving_offset_minutes,
             correction_basis=response.regional_solar_correction.correction_basis,
+            accuracy_mode=response.result.calculation_basis.accuracy_mode,
+            primary_time_basis=response.result.calculation_basis.primary_time_basis,
+            primary_input_datetime_to_lunar_python=(
+                response.result.calculation_basis.primary_input_datetime_to_lunar_python
+            ),
+            primary_midnight_rule=response.result.calculation_basis.primary_midnight_rule,
         ),
         visible_pillars=visible_pillars,
         day_master=localize_stem(response.manse.meta.day_master, locale),
@@ -1025,6 +1029,7 @@ def build_interpretation_payload(
             missing_elements=response.result.signals.missing_elements,
         ),
         evidence=_build_evidence(response),
+        uncertainty_summary=uncertainty_summary,
         luck_cycles=luck_cycles,
         current_flow=current_flow,
         luck_cycle_analysis=luck_cycle_analysis,
@@ -1037,9 +1042,9 @@ def build_interpretation_payload(
         limitations=list(response.result.limitations),
         disabled_sections=list(response.result.disabled_sections),
         notes=list(response.manse.notes),
-        narrative_rules=NARRATIVE_RULES,
-        prompt_seed=(
-            f"Use {locale} only. Build a grounded saju reading for {_localize_region_display_name(response, locale)} "
-            f"with focus on current flow, love, career, wealth, and structure."
+        narrative_rules=narrative_rules,
+        prompt_seed=PROMPT_SPEC.build_prompt_seed(
+            locale=locale,
+            region_display_name=_localize_region_display_name(response, locale),
         ),
     )

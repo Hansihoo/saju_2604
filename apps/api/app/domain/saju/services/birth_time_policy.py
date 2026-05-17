@@ -1,15 +1,22 @@
 """이 파일은 birth 시간 policy 관련 로직을 담는다."""
 
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 
 from app.domain.saju.schemas import SajuPreviewRequest
+
+
+@dataclass
+class BirthTimeInterval:
+    start: str
+    end: str
 
 
 @dataclass
 class BirthTimePolicyResult:
     is_birth_time_estimated: bool
     effective_birth_time: str
+    birth_time_interval: Optional[BirthTimeInterval]
     hour_pillar_enabled: bool
     visible_pillar_keys: List[str]
     disabled_sections: List[str]
@@ -21,6 +28,10 @@ def resolve_birth_time_policy(payload: SajuPreviewRequest) -> BirthTimePolicyRes
         return BirthTimePolicyResult(
             is_birth_time_estimated=True,
             effective_birth_time="00:00",
+            birth_time_interval=BirthTimeInterval(
+                start=f"{payload.birth_date.isoformat()} 00:00:00",
+                end=f"{payload.birth_date.isoformat()} 23:59:59",
+            ),
             hour_pillar_enabled=False,
             visible_pillar_keys=["year", "month", "day"],
             disabled_sections=["time_pillar", "luck_cycles", "hour_based_interpretation"],
@@ -29,6 +40,7 @@ def resolve_birth_time_policy(payload: SajuPreviewRequest) -> BirthTimePolicyRes
     return BirthTimePolicyResult(
         is_birth_time_estimated=False,
         effective_birth_time=payload.birth_time,
+        birth_time_interval=None,
         hour_pillar_enabled=True,
         visible_pillar_keys=["year", "month", "day", "time"],
         disabled_sections=[],

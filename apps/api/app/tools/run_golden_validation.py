@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from app.domain.saju.services import generate_interpretation
 from app.tools.compare_golden_cases import compare_golden_cases
 from app.tools.import_golden_cases import import_golden_cases
 
@@ -34,6 +35,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Return a non-zero exit code if any case mismatches.",
     )
+    parser.add_argument(
+        "--use-configured-llm",
+        action="store_true",
+        help="Use the configured LLM provider. Defaults to fallback to keep validation deterministic.",
+    )
     return parser
 
 
@@ -44,12 +50,18 @@ def main() -> int:
     expected_dir = Path(args.expected_dir)
     report_dir = Path(args.report_dir)
 
-    import_golden_cases(source_dir=source_dir, output_dir=expected_dir)
-    summary = compare_golden_cases(
-        expected_dir=expected_dir,
-        report_dir=report_dir,
-        summary_file=report_dir / "summary.json",
-    )
+    original_provider = generate_interpretation.settings.llm_provider
+    if not args.use_configured_llm:
+        generate_interpretation.settings.llm_provider = "fallback"
+    try:
+        import_golden_cases(source_dir=source_dir, output_dir=expected_dir)
+        summary = compare_golden_cases(
+            expected_dir=expected_dir,
+            report_dir=report_dir,
+            summary_file=report_dir / "summary.json",
+        )
+    finally:
+        generate_interpretation.settings.llm_provider = original_provider
 
     if args.fail_on_mismatch and int(summary["total_mismatches"]) > 0:
         return 1

@@ -27,6 +27,11 @@ class LuckCycleCalculationTests(unittest.TestCase):
 
         self.assertEqual(cycles[0].direction, "backward")
         self.assertTrue(4.5 < cycles[0].exact_start_age_years < 4.7)
+        self.assertEqual(cycles[0].start_age_years, 4)
+        self.assertEqual(cycles[0].start_age_months, 6)
+        self.assertEqual(cycles[0].start_age_total_months, 54)
+        self.assertEqual(cycles[0].change_age_years, 14)
+        self.assertEqual(cycles[0].change_age_months, 6)
         self.assertEqual(cycles[0].month_boundary_datetime, "1996-06-05 18:40:47")
         self.assertEqual(
             [(cycle.start_age, cycle.gan_zhi) for cycle in cycles],
@@ -58,6 +63,9 @@ class LuckCycleCalculationTests(unittest.TestCase):
         self.assertEqual(cycles[0].direction, "forward")
         self.assertEqual(cycles[0].gan_zhi, "\u4e01\u536f")
         self.assertEqual(cycles[0].start_age, 8)
+        self.assertEqual(cycles[0].start_age_years, 7)
+        self.assertEqual(cycles[0].start_age_months, 10)
+        self.assertEqual(cycles[0].start_age_total_months, 94)
         self.assertEqual(cycles[1].gan_zhi, "\u620a\u8fb0")
         self.assertEqual(cycles[2].gan_zhi, "\u5df1\u5df3")
 

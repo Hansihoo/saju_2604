@@ -1,0 +1,1524 @@
+{
+  "cases": [
+    {
+      "description": "Regular Korea solar birth.",
+      "expected": {
+        "calendar_normalization": {
+          "normalized_lunar_datetime": "2024-01-01 10:30:00",
+          "normalized_solar_datetime": "2024-02-10 10:30:00"
+        },
+        "manse": {
+          "first_luck_cycle": {
+            "gan_zhi": "\u4e01\u536f",
+            "start_age": 8
+          },
+          "luck_cycles_enabled": true,
+          "pillars": {
+            "day": {
+              "branch": "\u8fb0",
+              "branch_element": "\u571f",
+              "branch_ten_god": "\ud3b8\uc7ac",
+              "branch_ten_gods": [
+                "\ud3b8\uc7ac",
+                "\uac81\uc7ac",
+                "\uc815\uc778"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u7532\u8fb0",
+              "hidden_stems": [
+                "\uc744",
+                "\uacc4",
+                "\ubb34"
+              ],
+              "key": "day",
+              "label": "\uc77c\uc8fc",
+              "na_yin": "\u8986\u706f\u706b",
+              "stem": "\u7532",
+              "stem_element": "\u6728",
+              "stem_ten_god": "\ube44\uacac",
+              "twelve_fortune": "\uc1e0",
+              "twelve_shinsal": "\ud654\uac1c\uc0b4",
+              "xun": "\u7532\u8fb0",
+              "xun_kong": "\u5bc5\u536f"
+            },
+            "month": {
+              "branch": "\u5bc5",
+              "branch_element": "\u6728",
+              "branch_ten_god": "\ube44\uacac",
+              "branch_ten_gods": [
+                "\ube44\uacac",
+                "\uc2dd\uc2e0",
+                "\ud3b8\uc7ac"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u4e19\u5bc5",
+              "hidden_stems": [
+                "\ubb34",
+                "\ubcd1",
+                "\uac11"
+              ],
+              "key": "month",
+              "label": "\uc6d4\uc8fc",
+              "na_yin": "\u7089\u4e2d\u706b",
+              "stem": "\u4e19",
+              "stem_element": "\u706b",
+              "stem_ten_god": "\uc2dd\uc2e0",
+              "twelve_fortune": "\uac74\ub85d",
+              "twelve_shinsal": "\uc5ed\ub9c8\uc0b4",
+              "xun": "\u7532\u5b50",
+              "xun_kong": "\u620c\u4ea5"
+            },
+            "time": {
+              "branch": "\u5df3",
+              "branch_element": "\u706b",
+              "branch_ten_god": "\uc2dd\uc2e0",
+              "branch_ten_gods": [
+                "\uc2dd\uc2e0",
+                "\ud3b8\uad00",
+                "\ud3b8\uc7ac"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u5df1\u5df3",
+              "hidden_stems": [
+                "\ubb34",
+                "\uacbd",
+                "\ubcd1"
+              ],
+              "key": "time",
+              "label": "\uc2dc\uc8fc",
+              "na_yin": "\u5927\u6797\u6728",
+              "stem": "\u5df1",
+              "stem_element": "\u571f",
+              "stem_ten_god": "\uc815\uc7ac",
+              "twelve_fortune": "\ubcd1",
+              "twelve_shinsal": "\uac81\uc0b4",
+              "xun": "\u7532\u5b50",
+              "xun_kong": "\u620c\u4ea5"
+            },
+            "year": {
+              "branch": "\u8fb0",
+              "branch_element": "\u571f",
+              "branch_ten_god": "\ud3b8\uc7ac",
+              "branch_ten_gods": [
+                "\ud3b8\uc7ac",
+                "\uac81\uc7ac",
+                "\uc815\uc778"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u7532\u8fb0",
+              "hidden_stems": [
+                "\uc744",
+                "\uacc4",
+                "\ubb34"
+              ],
+              "key": "year",
+              "label": "\ub144\uc8fc",
+              "na_yin": "\u8986\u706f\u706b",
+              "stem": "\u7532",
+              "stem_element": "\u6728",
+              "stem_ten_god": "\ube44\uacac",
+              "twelve_fortune": "\uc1e0",
+              "twelve_shinsal": "\ud654\uac1c\uc0b4",
+              "xun": "\u7532\u8fb0",
+              "xun_kong": "\u5bc5\u536f"
+            }
+          }
+        },
+        "regional_solar_correction": {
+          "corrected_solar_datetime": "2024-02-10 09:57:58",
+          "daylight_saving_offset_minutes": 0,
+          "regional_time_offset_minutes": -32.033
+        },
+        "result": {
+          "hour_pillar_enabled": true
+        },
+        "time_correction": {
+          "ambiguous": false,
+          "fold": 0,
+          "normalized_local_datetime": "2024-02-10T10:30:00+09:00",
+          "normalized_utc_datetime": "2024-02-10T01:30:00+00:00",
+          "offset_minutes": 540
+        }
+      },
+      "id": "kr_solar_regular",
+      "request": {
+        "birth_date": "2024-02-10",
+        "birth_time": "10:30",
+        "calendar_type": "solar",
+        "debug": false,
+        "gender": "male",
+        "is_birth_time_estimated": false,
+        "is_lunar_leap_month": false,
+        "region_id": "kr-seoul"
+      }
+    },
+    {
+      "description": "Birth time estimated; engine uses 00:00 and hides hour-dependent output.",
+      "expected": {
+        "calendar_normalization": {
+          "normalized_lunar_datetime": "1994-09-09 00:00:00",
+          "normalized_solar_datetime": "1994-10-13 00:00:00"
+        },
+        "manse": {
+          "first_luck_cycle": null,
+          "luck_cycles_enabled": false,
+          "pillars": {
+            "day": {
+              "branch": "\u7533",
+              "branch_element": "\u91d1",
+              "branch_ten_god": "\ud3b8\uc778",
+              "branch_ten_gods": [
+                "\ud3b8\uc778",
+                "\ube44\uacac",
+                "\ud3b8\uad00"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u58ec\u7533",
+              "hidden_stems": [
+                "\ubb34",
+                "\uc784",
+                "\uacbd"
+              ],
+              "key": "day",
+              "label": "\uc77c\uc8fc",
+              "na_yin": "\u5251\u950b\u91d1",
+              "stem": "\u58ec",
+              "stem_element": "\u6c34",
+              "stem_ten_god": "\ube44\uacac",
+              "twelve_fortune": "\uc7a5\uc0dd",
+              "twelve_shinsal": "\uc5ed\ub9c8\uc0b4",
+              "xun": "\u7532\u5b50",
+              "xun_kong": "\u620c\u4ea5"
+            },
+            "month": {
+              "branch": "\u620c",
+              "branch_element": "\u571f",
+              "branch_ten_god": "\ud3b8\uad00",
+              "branch_ten_gods": [
+                "\ud3b8\uad00",
+                "\uc815\uc778",
+                "\uc815\uc7ac"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u7532\u620c",
+              "hidden_stems": [
+                "\uc2e0",
+                "\uc815",
+                "\ubb34"
+              ],
+              "key": "month",
+              "label": "\uc6d4\uc8fc",
+              "na_yin": "\u5c71\u5934\u706b",
+              "stem": "\u7532",
+              "stem_element": "\u6728",
+              "stem_ten_god": "\uc2dd\uc2e0",
+              "twelve_fortune": "\uad00\ub300",
+              "twelve_shinsal": "\ud654\uac1c\uc0b4",
+              "xun": "\u7532\u620c",
+              "xun_kong": "\u7533\u9149"
+            },
+            "time": {
+              "branch": null,
+              "branch_element": null,
+              "branch_ten_god": null,
+              "branch_ten_gods": [],
+              "enabled": false,
+              "gan_zhi": null,
+              "hidden_stems": [],
+              "key": "time",
+              "label": "\uc2dc\uc8fc",
+              "na_yin": null,
+              "stem": null,
+              "stem_element": null,
+              "stem_ten_god": null,
+              "twelve_fortune": null,
+              "twelve_shinsal": null,
+              "xun": null,
+              "xun_kong": null
+            },
+            "year": {
+              "branch": "\u620c",
+              "branch_element": "\u571f",
+              "branch_ten_god": "\ud3b8\uad00",
+              "branch_ten_gods": [
+                "\ud3b8\uad00",
+                "\uc815\uc778",
+                "\uc815\uc7ac"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u7532\u620c",
+              "hidden_stems": [
+                "\uc2e0",
+                "\uc815",
+                "\ubb34"
+              ],
+              "key": "year",
+              "label": "\ub144\uc8fc",
+              "na_yin": "\u5c71\u5934\u706b",
+              "stem": "\u7532",
+              "stem_element": "\u6728",
+              "stem_ten_god": "\uc2dd\uc2e0",
+              "twelve_fortune": "\uad00\ub300",
+              "twelve_shinsal": "\uc6d4\uc0b4",
+              "xun": "\u7532\u620c",
+              "xun_kong": "\u7533\u9149"
+            }
+          }
+        },
+        "regional_solar_correction": {
+          "corrected_solar_datetime": "1994-10-12 23:27:58",
+          "daylight_saving_offset_minutes": 0,
+          "regional_time_offset_minutes": -32.033
+        },
+        "result": {
+          "hour_pillar_enabled": false
+        },
+        "time_correction": {
+          "ambiguous": false,
+          "fold": 0,
+          "normalized_local_datetime": "1994-10-13T00:00:00+09:00",
+          "normalized_utc_datetime": "1994-10-12T15:00:00+00:00",
+          "offset_minutes": 540
+        }
+      },
+      "id": "estimated_birth_time",
+      "request": {
+        "birth_date": "1994-10-13",
+        "birth_time": "08:30",
+        "calendar_type": "solar",
+        "debug": false,
+        "gender": "female",
+        "is_birth_time_estimated": true,
+        "is_lunar_leap_month": false,
+        "region_id": "kr-seoul"
+      }
+    },
+    {
+      "description": "Late zi-hour boundary case at 23:30.",
+      "expected": {
+        "calendar_normalization": {
+          "normalized_lunar_datetime": "1988-10-12 23:30:00",
+          "normalized_solar_datetime": "1988-11-20 23:30:00"
+        },
+        "manse": {
+          "first_luck_cycle": {
+            "gan_zhi": "\u7532\u5b50",
+            "start_age": 5
+          },
+          "luck_cycles_enabled": true,
+          "pillars": {
+            "day": {
+              "branch": "\u8fb0",
+              "branch_element": "\u571f",
+              "branch_ten_god": "\ud3b8\uc778",
+              "branch_ten_gods": [
+                "\ud3b8\uc778",
+                "\uc815\uc7ac",
+                "\uc0c1\uad00"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u5e9a\u8fb0",
+              "hidden_stems": [
+                "\uc744",
+                "\uacc4",
+                "\ubb34"
+              ],
+              "key": "day",
+              "label": "\uc77c\uc8fc",
+              "na_yin": "\u767d\u8721\u91d1",
+              "stem": "\u5e9a",
+              "stem_element": "\u91d1",
+              "stem_ten_god": "\ube44\uacac",
+              "twelve_fortune": "\uc591",
+              "twelve_shinsal": "\ud654\uac1c\uc0b4",
+              "xun": "\u7532\u620c",
+              "xun_kong": "\u7533\u9149"
+            },
+            "month": {
+              "branch": "\u4ea5",
+              "branch_element": "\u6c34",
+              "branch_ten_god": "\uc815\uc7ac",
+              "branch_ten_gods": [
+                "\uc815\uc7ac",
+                "\uc815\uad00"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u7678\u4ea5",
+              "hidden_stems": [
+                "\ubb34",
+                "\uac11",
+                "\uc784"
+              ],
+              "key": "month",
+              "label": "\uc6d4\uc8fc",
+              "na_yin": "\u5927\u6d77\u6c34",
+              "stem": "\u7678",
+              "stem_element": "\u6c34",
+              "stem_ten_god": "\ud3b8\uc7ac",
+              "twelve_fortune": "\ud0dc",
+              "twelve_shinsal": "\ub9dd\uc2e0\uc0b4",
+              "xun": "\u7532\u5bc5",
+              "xun_kong": "\u5b50\u4e11"
+            },
+            "time": {
+              "branch": "\u5b50",
+              "branch_element": "\u6c34",
+              "branch_ten_god": "\uc0c1\uad00",
+              "branch_ten_gods": [
+                "\uc0c1\uad00"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u4e19\u5b50",
+              "hidden_stems": [
+                "\uc784",
+                "\uacc4"
+              ],
+              "key": "time",
+              "label": "\uc2dc\uc8fc",
+              "na_yin": "\u6da7\u4e0b\u6c34",
+              "stem": "\u4e19",
+              "stem_element": "\u706b",
+              "stem_ten_god": "\ud3b8\uad00",
+              "twelve_fortune": "\uc0ac",
+              "twelve_shinsal": "\uc7a5\uc131\uc0b4",
+              "xun": "\u7532\u620c",
+              "xun_kong": "\u7533\u9149"
+            },
+            "year": {
+              "branch": "\u8fb0",
+              "branch_element": "\u571f",
+              "branch_ten_god": "\uac81\uc7ac",
+              "branch_ten_gods": [
+                "\uac81\uc7ac",
+                "\ud3b8\uad00",
+                "\ud3b8\uc7ac"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u620a\u8fb0",
+              "hidden_stems": [
+                "\uc744",
+                "\uacc4",
+                "\ubb34"
+              ],
+              "key": "year",
+              "label": "\ub144\uc8fc",
+              "na_yin": "\u5927\u6797\u6728",
+              "stem": "\u620a",
+              "stem_element": "\u571f",
+              "stem_ten_god": "\uac81\uc7ac",
+              "twelve_fortune": "\uc1e0",
+              "twelve_shinsal": "\ud654\uac1c\uc0b4",
+              "xun": "\u7532\u5b50",
+              "xun_kong": "\u620c\u4ea5"
+            }
+          }
+        },
+        "regional_solar_correction": {
+          "corrected_solar_datetime": "1988-11-20 22:57:58",
+          "daylight_saving_offset_minutes": 0,
+          "regional_time_offset_minutes": -32.033
+        },
+        "result": {
+          "hour_pillar_enabled": true
+        },
+        "time_correction": {
+          "ambiguous": false,
+          "fold": 0,
+          "normalized_local_datetime": "1988-11-20T23:30:00+09:00",
+          "normalized_utc_datetime": "1988-11-20T14:30:00+00:00",
+          "offset_minutes": 540
+        }
+      },
+      "id": "late_zi_2330",
+      "request": {
+        "birth_date": "1988-11-20",
+        "birth_time": "23:30",
+        "calendar_type": "solar",
+        "debug": false,
+        "gender": "male",
+        "is_birth_time_estimated": false,
+        "is_lunar_leap_month": false,
+        "region_id": "kr-seoul-special"
+      }
+    },
+    {
+      "description": "Early day boundary case at 00:30.",
+      "expected": {
+        "calendar_normalization": {
+          "normalized_lunar_datetime": "1988-10-13 00:30:00",
+          "normalized_solar_datetime": "1988-11-21 00:30:00"
+        },
+        "manse": {
+          "first_luck_cycle": {
+            "gan_zhi": "\u7532\u5b50",
+            "start_age": 5
+          },
+          "luck_cycles_enabled": true,
+          "pillars": {
+            "day": {
+              "branch": "\u8fb0",
+              "branch_element": "\u571f",
+              "branch_ten_god": "\ud3b8\uc778",
+              "branch_ten_gods": [
+                "\ud3b8\uc778",
+                "\uc815\uc7ac",
+                "\uc0c1\uad00"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u5e9a\u8fb0",
+              "hidden_stems": [
+                "\uc744",
+                "\uacc4",
+                "\ubb34"
+              ],
+              "key": "day",
+              "label": "\uc77c\uc8fc",
+              "na_yin": "\u767d\u8721\u91d1",
+              "stem": "\u5e9a",
+              "stem_element": "\u91d1",
+              "stem_ten_god": "\ube44\uacac",
+              "twelve_fortune": "\uc591",
+              "twelve_shinsal": "\ud654\uac1c\uc0b4",
+              "xun": "\u7532\u620c",
+              "xun_kong": "\u7533\u9149"
+            },
+            "month": {
+              "branch": "\u4ea5",
+              "branch_element": "\u6c34",
+              "branch_ten_god": "\uc2dd\uc2e0",
+              "branch_ten_gods": [
+                "\uc2dd\uc2e0",
+                "\ud3b8\uc7ac"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u7678\u4ea5",
+              "hidden_stems": [
+                "\ubb34",
+                "\uac11",
+                "\uc784"
+              ],
+              "key": "month",
+              "label": "\uc6d4\uc8fc",
+              "na_yin": "\u5927\u6d77\u6c34",
+              "stem": "\u7678",
+              "stem_element": "\u6c34",
+              "stem_ten_god": "\uc0c1\uad00",
+              "twelve_fortune": "\ubcd1",
+              "twelve_shinsal": "\ub9dd\uc2e0\uc0b4",
+              "xun": "\u7532\u5bc5",
+              "xun_kong": "\u5b50\u4e11"
+            },
+            "time": {
+              "branch": "\u5b50",
+              "branch_element": "\u6c34",
+              "branch_ten_god": "\uc0c1\uad00",
+              "branch_ten_gods": [
+                "\uc0c1\uad00"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u4e19\u5b50",
+              "hidden_stems": [
+                "\uc784",
+                "\uacc4"
+              ],
+              "key": "time",
+              "label": "\uc2dc\uc8fc",
+              "na_yin": "\u6da7\u4e0b\u6c34",
+              "stem": "\u4e19",
+              "stem_element": "\u706b",
+              "stem_ten_god": "\ud3b8\uad00",
+              "twelve_fortune": "\uc0ac",
+              "twelve_shinsal": "\uc7a5\uc131\uc0b4",
+              "xun": "\u7532\u620c",
+              "xun_kong": "\u7533\u9149"
+            },
+            "year": {
+              "branch": "\u8fb0",
+              "branch_element": "\u571f",
+              "branch_ten_god": "\ud3b8\uc778",
+              "branch_ten_gods": [
+                "\ud3b8\uc778",
+                "\uc815\uc7ac",
+                "\uc0c1\uad00"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u620a\u8fb0",
+              "hidden_stems": [
+                "\uc744",
+                "\uacc4",
+                "\ubb34"
+              ],
+              "key": "year",
+              "label": "\ub144\uc8fc",
+              "na_yin": "\u5927\u6797\u6728",
+              "stem": "\u620a",
+              "stem_element": "\u571f",
+              "stem_ten_god": "\ud3b8\uc778",
+              "twelve_fortune": "\uc591",
+              "twelve_shinsal": "\ud654\uac1c\uc0b4",
+              "xun": "\u7532\u5b50",
+              "xun_kong": "\u620c\u4ea5"
+            }
+          }
+        },
+        "regional_solar_correction": {
+          "corrected_solar_datetime": "1988-11-20 23:57:58",
+          "daylight_saving_offset_minutes": 0,
+          "regional_time_offset_minutes": -32.033
+        },
+        "result": {
+          "hour_pillar_enabled": true
+        },
+        "time_correction": {
+          "ambiguous": false,
+          "fold": 0,
+          "normalized_local_datetime": "1988-11-21T00:30:00+09:00",
+          "normalized_utc_datetime": "1988-11-20T15:30:00+00:00",
+          "offset_minutes": 540
+        }
+      },
+      "id": "early_0030",
+      "request": {
+        "birth_date": "1988-11-21",
+        "birth_time": "00:30",
+        "calendar_type": "solar",
+        "debug": false,
+        "gender": "male",
+        "is_birth_time_estimated": false,
+        "is_lunar_leap_month": false,
+        "region_id": "kr-seoul-special"
+      }
+    },
+    {
+      "description": "Seoul longitude correction case.",
+      "expected": {
+        "calendar_normalization": {
+          "normalized_lunar_datetime": "1996-05-04 15:03:00",
+          "normalized_solar_datetime": "1996-06-19 15:03:00"
+        },
+        "manse": {
+          "first_luck_cycle": {
+            "gan_zhi": "\u7678\u5df3",
+            "start_age": 5
+          },
+          "luck_cycles_enabled": true,
+          "pillars": {
+            "day": {
+              "branch": "\u4ea5",
+              "branch_element": "\u6c34",
+              "branch_ten_god": "\uc815\uad00",
+              "branch_ten_gods": [
+                "\uc815\uad00",
+                "\uc815\uc778"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u4e01\u4ea5",
+              "hidden_stems": [
+                "\ubb34",
+                "\uac11",
+                "\uc784"
+              ],
+              "key": "day",
+              "label": "\uc77c\uc8fc",
+              "na_yin": "\u5c4b\u4e0a\u571f",
+              "stem": "\u4e01",
+              "stem_element": "\u706b",
+              "stem_ten_god": "\ube44\uacac",
+              "twelve_fortune": "\ud0dc",
+              "twelve_shinsal": "\ub9dd\uc2e0\uc0b4",
+              "xun": "\u7532\u7533",
+              "xun_kong": "\u5348\u672a"
+            },
+            "month": {
+              "branch": "\u5348",
+              "branch_element": "\u706b",
+              "branch_ten_god": "\ube44\uacac",
+              "branch_ten_gods": [
+                "\ube44\uacac",
+                "\uc2dd\uc2e0"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u7532\u5348",
+              "hidden_stems": [
+                "\ubcd1",
+                "\uae30",
+                "\uc815"
+              ],
+              "key": "month",
+              "label": "\uc6d4\uc8fc",
+              "na_yin": "\u6c99\u4e2d\u91d1",
+              "stem": "\u7532",
+              "stem_element": "\u6728",
+              "stem_ten_god": "\uc815\uc778",
+              "twelve_fortune": "\uac74\ub85d",
+              "twelve_shinsal": "\uc7ac\uc0b4",
+              "xun": "\u7532\u5348",
+              "xun_kong": "\u8fb0\u5df3"
+            },
+            "time": {
+              "branch": "\u672a",
+              "branch_element": "\u571f",
+              "branch_ten_god": "\uc2dd\uc2e0",
+              "branch_ten_gods": [
+                "\uc2dd\uc2e0",
+                "\ube44\uacac",
+                "\ud3b8\uc778"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u4e01\u672a",
+              "hidden_stems": [
+                "\uc815",
+                "\uc744",
+                "\uae30"
+              ],
+              "key": "time",
+              "label": "\uc2dc\uc8fc",
+              "na_yin": "\u5929\u6cb3\u6c34",
+              "stem": "\u4e01",
+              "stem_element": "\u706b",
+              "stem_ten_god": "\ube44\uacac",
+              "twelve_fortune": "\uad00\ub300",
+              "twelve_shinsal": "\ucc9c\uc0b4",
+              "xun": "\u7532\u8fb0",
+              "xun_kong": "\u5bc5\u536f"
+            },
+            "year": {
+              "branch": "\u5b50",
+              "branch_element": "\u6c34",
+              "branch_ten_god": "\ud3b8\uad00",
+              "branch_ten_gods": [
+                "\ud3b8\uad00"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u4e19\u5b50",
+              "hidden_stems": [
+                "\uc784",
+                "\uacc4"
+              ],
+              "key": "year",
+              "label": "\ub144\uc8fc",
+              "na_yin": "\u6da7\u4e0b\u6c34",
+              "stem": "\u4e19",
+              "stem_element": "\u706b",
+              "stem_ten_god": "\uac81\uc7ac",
+              "twelve_fortune": "\uc808",
+              "twelve_shinsal": "\ub144\uc0b4",
+              "xun": "\u7532\u620c",
+              "xun_kong": "\u7533\u9149"
+            }
+          }
+        },
+        "regional_solar_correction": {
+          "corrected_solar_datetime": "1996-06-19 14:30:58",
+          "daylight_saving_offset_minutes": 0,
+          "regional_time_offset_minutes": -32.033
+        },
+        "result": {
+          "hour_pillar_enabled": true
+        },
+        "time_correction": {
+          "ambiguous": false,
+          "fold": 0,
+          "normalized_local_datetime": "1996-06-19T15:03:00+09:00",
+          "normalized_utc_datetime": "1996-06-19T06:03:00+00:00",
+          "offset_minutes": 540
+        }
+      },
+      "id": "seoul_longitude_correction",
+      "request": {
+        "birth_date": "1996-06-19",
+        "birth_time": "15:03",
+        "calendar_type": "solar",
+        "debug": false,
+        "gender": "female",
+        "is_birth_time_estimated": false,
+        "is_lunar_leap_month": false,
+        "region_id": "kr-seoul-special"
+      }
+    },
+    {
+      "description": "Korea daylight-saving period in 1988.",
+      "expected": {
+        "calendar_normalization": {
+          "normalized_lunar_datetime": "1988-04-05 12:30:00",
+          "normalized_solar_datetime": "1988-05-20 12:30:00"
+        },
+        "manse": {
+          "first_luck_cycle": {
+            "gan_zhi": "\u4e19\u8fb0",
+            "start_age": 5
+          },
+          "luck_cycles_enabled": true,
+          "pillars": {
+            "day": {
+              "branch": "\u4ea5",
+              "branch_element": "\u6c34",
+              "branch_ten_god": "\uc815\uc778",
+              "branch_ten_gods": [
+                "\uc815\uc778",
+                "\uac81\uc7ac"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u4e59\u4ea5",
+              "hidden_stems": [
+                "\ubb34",
+                "\uac11",
+                "\uc784"
+              ],
+              "key": "day",
+              "label": "\uc77c\uc8fc",
+              "na_yin": "\u5c71\u5934\u706b",
+              "stem": "\u4e59",
+              "stem_element": "\u6728",
+              "stem_ten_god": "\ube44\uacac",
+              "twelve_fortune": "\uc0ac",
+              "twelve_shinsal": "\ub9dd\uc2e0\uc0b4",
+              "xun": "\u7532\u620c",
+              "xun_kong": "\u7533\u9149"
+            },
+            "month": {
+              "branch": "\u5df3",
+              "branch_element": "\u706b",
+              "branch_ten_god": "\uc0c1\uad00",
+              "branch_ten_gods": [
+                "\uc0c1\uad00",
+                "\uc815\uad00",
+                "\uc815\uc7ac"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u4e01\u5df3",
+              "hidden_stems": [
+                "\ubb34",
+                "\uacbd",
+                "\ubcd1"
+              ],
+              "key": "month",
+              "label": "\uc6d4\uc8fc",
+              "na_yin": "\u6c99\u4e2d\u571f",
+              "stem": "\u4e01",
+              "stem_element": "\u706b",
+              "stem_ten_god": "\uc2dd\uc2e0",
+              "twelve_fortune": "\ubaa9\uc695",
+              "twelve_shinsal": "\uac81\uc0b4",
+              "xun": "\u7532\u5bc5",
+              "xun_kong": "\u5b50\u4e11"
+            },
+            "time": {
+              "branch": "\u5df3",
+              "branch_element": "\u706b",
+              "branch_ten_god": "\uc0c1\uad00",
+              "branch_ten_gods": [
+                "\uc0c1\uad00",
+                "\uc815\uad00",
+                "\uc815\uc7ac"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u8f9b\u5df3",
+              "hidden_stems": [
+                "\ubb34",
+                "\uacbd",
+                "\ubcd1"
+              ],
+              "key": "time",
+              "label": "\uc2dc\uc8fc",
+              "na_yin": "\u767d\u8721\u91d1",
+              "stem": "\u8f9b",
+              "stem_element": "\u91d1",
+              "stem_ten_god": "\ud3b8\uad00",
+              "twelve_fortune": "\ubaa9\uc695",
+              "twelve_shinsal": "\uac81\uc0b4",
+              "xun": "\u7532\u620c",
+              "xun_kong": "\u7533\u9149"
+            },
+            "year": {
+              "branch": "\u8fb0",
+              "branch_element": "\u571f",
+              "branch_ten_god": "\uc815\uc7ac",
+              "branch_ten_gods": [
+                "\uc815\uc7ac",
+                "\ube44\uacac",
+                "\ud3b8\uc778"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u620a\u8fb0",
+              "hidden_stems": [
+                "\uc744",
+                "\uacc4",
+                "\ubb34"
+              ],
+              "key": "year",
+              "label": "\ub144\uc8fc",
+              "na_yin": "\u5927\u6797\u6728",
+              "stem": "\u620a",
+              "stem_element": "\u571f",
+              "stem_ten_god": "\uc815\uc7ac",
+              "twelve_fortune": "\uad00\ub300",
+              "twelve_shinsal": "\ubc18\uc548\uc0b4",
+              "xun": "\u7532\u5b50",
+              "xun_kong": "\u620c\u4ea5"
+            }
+          }
+        },
+        "regional_solar_correction": {
+          "corrected_solar_datetime": "1988-05-20 10:57:58",
+          "daylight_saving_offset_minutes": -60,
+          "regional_time_offset_minutes": -32.033
+        },
+        "result": {
+          "hour_pillar_enabled": true
+        },
+        "time_correction": {
+          "ambiguous": false,
+          "fold": 0,
+          "normalized_local_datetime": "1988-05-20T12:30:00+10:00",
+          "normalized_utc_datetime": "1988-05-20T02:30:00+00:00",
+          "offset_minutes": 600
+        }
+      },
+      "id": "korea_dst_1988",
+      "request": {
+        "birth_date": "1988-05-20",
+        "birth_time": "12:30",
+        "calendar_type": "solar",
+        "debug": false,
+        "gender": "female",
+        "is_birth_time_estimated": false,
+        "is_lunar_leap_month": false,
+        "region_id": "kr-seoul-special"
+      }
+    },
+    {
+      "description": "Regular lunar input converted through the preview pipeline.",
+      "expected": {
+        "calendar_normalization": {
+          "normalized_lunar_datetime": "2024-01-01 10:30:00",
+          "normalized_solar_datetime": "2024-02-10 10:30:00"
+        },
+        "manse": {
+          "first_luck_cycle": {
+            "gan_zhi": "\u4e01\u536f",
+            "start_age": 8
+          },
+          "luck_cycles_enabled": true,
+          "pillars": {
+            "day": {
+              "branch": "\u8fb0",
+              "branch_element": "\u571f",
+              "branch_ten_god": "\ud3b8\uc7ac",
+              "branch_ten_gods": [
+                "\ud3b8\uc7ac",
+                "\uac81\uc7ac",
+                "\uc815\uc778"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u7532\u8fb0",
+              "hidden_stems": [
+                "\uc744",
+                "\uacc4",
+                "\ubb34"
+              ],
+              "key": "day",
+              "label": "\uc77c\uc8fc",
+              "na_yin": "\u8986\u706f\u706b",
+              "stem": "\u7532",
+              "stem_element": "\u6728",
+              "stem_ten_god": "\ube44\uacac",
+              "twelve_fortune": "\uc1e0",
+              "twelve_shinsal": "\ud654\uac1c\uc0b4",
+              "xun": "\u7532\u8fb0",
+              "xun_kong": "\u5bc5\u536f"
+            },
+            "month": {
+              "branch": "\u5bc5",
+              "branch_element": "\u6728",
+              "branch_ten_god": "\ube44\uacac",
+              "branch_ten_gods": [
+                "\ube44\uacac",
+                "\uc2dd\uc2e0",
+                "\ud3b8\uc7ac"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u4e19\u5bc5",
+              "hidden_stems": [
+                "\ubb34",
+                "\ubcd1",
+                "\uac11"
+              ],
+              "key": "month",
+              "label": "\uc6d4\uc8fc",
+              "na_yin": "\u7089\u4e2d\u706b",
+              "stem": "\u4e19",
+              "stem_element": "\u706b",
+              "stem_ten_god": "\uc2dd\uc2e0",
+              "twelve_fortune": "\uac74\ub85d",
+              "twelve_shinsal": "\uc5ed\ub9c8\uc0b4",
+              "xun": "\u7532\u5b50",
+              "xun_kong": "\u620c\u4ea5"
+            },
+            "time": {
+              "branch": "\u5df3",
+              "branch_element": "\u706b",
+              "branch_ten_god": "\uc2dd\uc2e0",
+              "branch_ten_gods": [
+                "\uc2dd\uc2e0",
+                "\ud3b8\uad00",
+                "\ud3b8\uc7ac"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u5df1\u5df3",
+              "hidden_stems": [
+                "\ubb34",
+                "\uacbd",
+                "\ubcd1"
+              ],
+              "key": "time",
+              "label": "\uc2dc\uc8fc",
+              "na_yin": "\u5927\u6797\u6728",
+              "stem": "\u5df1",
+              "stem_element": "\u571f",
+              "stem_ten_god": "\uc815\uc7ac",
+              "twelve_fortune": "\ubcd1",
+              "twelve_shinsal": "\uac81\uc0b4",
+              "xun": "\u7532\u5b50",
+              "xun_kong": "\u620c\u4ea5"
+            },
+            "year": {
+              "branch": "\u8fb0",
+              "branch_element": "\u571f",
+              "branch_ten_god": "\ud3b8\uc7ac",
+              "branch_ten_gods": [
+                "\ud3b8\uc7ac",
+                "\uac81\uc7ac",
+                "\uc815\uc778"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u7532\u8fb0",
+              "hidden_stems": [
+                "\uc744",
+                "\uacc4",
+                "\ubb34"
+              ],
+              "key": "year",
+              "label": "\ub144\uc8fc",
+              "na_yin": "\u8986\u706f\u706b",
+              "stem": "\u7532",
+              "stem_element": "\u6728",
+              "stem_ten_god": "\ube44\uacac",
+              "twelve_fortune": "\uc1e0",
+              "twelve_shinsal": "\ud654\uac1c\uc0b4",
+              "xun": "\u7532\u8fb0",
+              "xun_kong": "\u5bc5\u536f"
+            }
+          }
+        },
+        "regional_solar_correction": {
+          "corrected_solar_datetime": "2024-02-10 09:57:58",
+          "daylight_saving_offset_minutes": 0,
+          "regional_time_offset_minutes": -32.033
+        },
+        "result": {
+          "hour_pillar_enabled": true
+        },
+        "time_correction": {
+          "ambiguous": false,
+          "fold": 0,
+          "normalized_local_datetime": "2024-01-01T10:30:00+09:00",
+          "normalized_utc_datetime": "2024-01-01T01:30:00+00:00",
+          "offset_minutes": 540
+        }
+      },
+      "id": "lunar_input_regular",
+      "request": {
+        "birth_date": "2024-01-01",
+        "birth_time": "10:30",
+        "calendar_type": "lunar",
+        "debug": false,
+        "gender": "male",
+        "is_birth_time_estimated": false,
+        "is_lunar_leap_month": false,
+        "region_id": "kr-seoul"
+      }
+    },
+    {
+      "description": "Leap lunar month input converted through the preview pipeline.",
+      "expected": {
+        "calendar_normalization": {
+          "normalized_lunar_datetime": "2023-02-15 10:30:00",
+          "normalized_solar_datetime": "2023-04-05 10:30:00"
+        },
+        "manse": {
+          "first_luck_cycle": {
+            "gan_zhi": "\u4e01\u5df3",
+            "start_age": 0
+          },
+          "luck_cycles_enabled": true,
+          "pillars": {
+            "day": {
+              "branch": "\u5df3",
+              "branch_element": "\u706b",
+              "branch_ten_god": "\uc815\uc7ac",
+              "branch_ten_gods": [
+                "\uc815\uc7ac",
+                "\uc815\uc778",
+                "\uc815\uad00"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u7678\u5df3",
+              "hidden_stems": [
+                "\ubb34",
+                "\uacbd",
+                "\ubcd1"
+              ],
+              "key": "day",
+              "label": "\uc77c\uc8fc",
+              "na_yin": "\u957f\u6d41\u6c34",
+              "stem": "\u7678",
+              "stem_element": "\u6c34",
+              "stem_ten_god": "\ube44\uacac",
+              "twelve_fortune": "\ud0dc",
+              "twelve_shinsal": "\uc5ed\ub9c8\uc0b4",
+              "xun": "\u7532\u7533",
+              "xun_kong": "\u5348\u672a"
+            },
+            "month": {
+              "branch": "\u8fb0",
+              "branch_element": "\u571f",
+              "branch_ten_god": "\uc815\uad00",
+              "branch_ten_gods": [
+                "\uc815\uad00",
+                "\uc2dd\uc2e0",
+                "\ube44\uacac"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u4e19\u8fb0",
+              "hidden_stems": [
+                "\uc744",
+                "\uacc4",
+                "\ubb34"
+              ],
+              "key": "month",
+              "label": "\uc6d4\uc8fc",
+              "na_yin": "\u6c99\u4e2d\u571f",
+              "stem": "\u4e19",
+              "stem_element": "\u706b",
+              "stem_ten_god": "\uc815\uc7ac",
+              "twelve_fortune": "\uc591",
+              "twelve_shinsal": "\ubc18\uc548\uc0b4",
+              "xun": "\u7532\u5bc5",
+              "xun_kong": "\u5b50\u4e11"
+            },
+            "time": {
+              "branch": "\u5df3",
+              "branch_element": "\u706b",
+              "branch_ten_god": "\uc815\uc7ac",
+              "branch_ten_gods": [
+                "\uc815\uc7ac",
+                "\uc815\uc778",
+                "\uc815\uad00"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u4e01\u5df3",
+              "hidden_stems": [
+                "\ubb34",
+                "\uacbd",
+                "\ubcd1"
+              ],
+              "key": "time",
+              "label": "\uc2dc\uc8fc",
+              "na_yin": "\u6c99\u4e2d\u571f",
+              "stem": "\u4e01",
+              "stem_element": "\u706b",
+              "stem_ten_god": "\ud3b8\uc7ac",
+              "twelve_fortune": "\ud0dc",
+              "twelve_shinsal": "\uc5ed\ub9c8\uc0b4",
+              "xun": "\u7532\u5bc5",
+              "xun_kong": "\u5b50\u4e11"
+            },
+            "year": {
+              "branch": "\u536f",
+              "branch_element": "\u6728",
+              "branch_ten_god": "\uc2dd\uc2e0",
+              "branch_ten_gods": [
+                "\uc2dd\uc2e0"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u7678\u536f",
+              "hidden_stems": [
+                "\uac11",
+                "\uc744"
+              ],
+              "key": "year",
+              "label": "\ub144\uc8fc",
+              "na_yin": "\u91d1\u7b94\u91d1",
+              "stem": "\u7678",
+              "stem_element": "\u6c34",
+              "stem_ten_god": "\ube44\uacac",
+              "twelve_fortune": "\uc7a5\uc0dd",
+              "twelve_shinsal": "\uc7ac\uc0b4",
+              "xun": "\u7532\u5348",
+              "xun_kong": "\u8fb0\u5df3"
+            }
+          }
+        },
+        "regional_solar_correction": {
+          "corrected_solar_datetime": "2023-04-05 09:57:58",
+          "daylight_saving_offset_minutes": 0,
+          "regional_time_offset_minutes": -32.033
+        },
+        "result": {
+          "hour_pillar_enabled": true
+        },
+        "time_correction": {
+          "ambiguous": false,
+          "fold": 0,
+          "normalized_local_datetime": "2023-02-15T10:30:00+09:00",
+          "normalized_utc_datetime": "2023-02-15T01:30:00+00:00",
+          "offset_minutes": 540
+        }
+      },
+      "id": "lunar_leap_month_input",
+      "request": {
+        "birth_date": "2023-02-15",
+        "birth_time": "10:30",
+        "calendar_type": "lunar",
+        "debug": false,
+        "gender": "female",
+        "is_birth_time_estimated": false,
+        "is_lunar_leap_month": true,
+        "region_id": "kr-seoul"
+      }
+    },
+    {
+      "description": "Birth close to an Ipchun solar-term boundary.",
+      "expected": {
+        "calendar_normalization": {
+          "normalized_lunar_datetime": "2023-12-25 17:00:00",
+          "normalized_solar_datetime": "2024-02-04 17:00:00"
+        },
+        "manse": {
+          "first_luck_cycle": {
+            "gan_zhi": "\u4e59\u4e11",
+            "start_age": 10
+          },
+          "luck_cycles_enabled": true,
+          "pillars": {
+            "day": {
+              "branch": "\u620c",
+              "branch_element": "\u571f",
+              "branch_ten_god": "\ube44\uacac",
+              "branch_ten_gods": [
+                "\ube44\uacac",
+                "\uc0c1\uad00",
+                "\uc815\uc778"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u620a\u620c",
+              "hidden_stems": [
+                "\uc2e0",
+                "\uc815",
+                "\ubb34"
+              ],
+              "key": "day",
+              "label": "\uc77c\uc8fc",
+              "na_yin": "\u5e73\u5730\u6728",
+              "stem": "\u620a",
+              "stem_element": "\u571f",
+              "stem_ten_god": "\ube44\uacac",
+              "twelve_fortune": "\ubb18",
+              "twelve_shinsal": "\uc6d4\uc0b4",
+              "xun": "\u7532\u5348",
+              "xun_kong": "\u8fb0\u5df3"
+            },
+            "month": {
+              "branch": "\u5bc5",
+              "branch_element": "\u6728",
+              "branch_ten_god": "\ud3b8\uad00",
+              "branch_ten_gods": [
+                "\ud3b8\uad00",
+                "\ud3b8\uc778",
+                "\ube44\uacac"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u4e19\u5bc5",
+              "hidden_stems": [
+                "\ubb34",
+                "\ubcd1",
+                "\uac11"
+              ],
+              "key": "month",
+              "label": "\uc6d4\uc8fc",
+              "na_yin": "\u7089\u4e2d\u706b",
+              "stem": "\u4e19",
+              "stem_element": "\u706b",
+              "stem_ten_god": "\ud3b8\uc778",
+              "twelve_fortune": "\uc7a5\uc0dd",
+              "twelve_shinsal": "\uc5ed\ub9c8\uc0b4",
+              "xun": "\u7532\u5b50",
+              "xun_kong": "\u620c\u4ea5"
+            },
+            "time": {
+              "branch": "\u7533",
+              "branch_element": "\u91d1",
+              "branch_ten_god": "\uc2dd\uc2e0",
+              "branch_ten_gods": [
+                "\uc2dd\uc2e0",
+                "\ud3b8\uc7ac",
+                "\ube44\uacac"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u5e9a\u7533",
+              "hidden_stems": [
+                "\ubb34",
+                "\uc784",
+                "\uacbd"
+              ],
+              "key": "time",
+              "label": "\uc2dc\uc8fc",
+              "na_yin": "\u77f3\u69b4\u6728",
+              "stem": "\u5e9a",
+              "stem_element": "\u91d1",
+              "stem_ten_god": "\uc2dd\uc2e0",
+              "twelve_fortune": "\ubcd1",
+              "twelve_shinsal": "\uc9c0\uc0b4",
+              "xun": "\u7532\u5bc5",
+              "xun_kong": "\u5b50\u4e11"
+            },
+            "year": {
+              "branch": "\u8fb0",
+              "branch_element": "\u571f",
+              "branch_ten_god": "\ube44\uacac",
+              "branch_ten_gods": [
+                "\ube44\uacac",
+                "\uc815\uad00",
+                "\uc815\uc7ac"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u7532\u8fb0",
+              "hidden_stems": [
+                "\uc744",
+                "\uacc4",
+                "\ubb34"
+              ],
+              "key": "year",
+              "label": "\ub144\uc8fc",
+              "na_yin": "\u8986\u706f\u706b",
+              "stem": "\u7532",
+              "stem_element": "\u6728",
+              "stem_ten_god": "\ud3b8\uad00",
+              "twelve_fortune": "\uad00\ub300",
+              "twelve_shinsal": "\uc6d4\uc0b4",
+              "xun": "\u7532\u8fb0",
+              "xun_kong": "\u5bc5\u536f"
+            }
+          }
+        },
+        "regional_solar_correction": {
+          "corrected_solar_datetime": "2024-02-04 16:27:58",
+          "daylight_saving_offset_minutes": 0,
+          "regional_time_offset_minutes": -32.033
+        },
+        "result": {
+          "hour_pillar_enabled": true
+        },
+        "time_correction": {
+          "ambiguous": false,
+          "fold": 0,
+          "normalized_local_datetime": "2024-02-04T17:00:00+09:00",
+          "normalized_utc_datetime": "2024-02-04T08:00:00+00:00",
+          "offset_minutes": 540
+        }
+      },
+      "id": "solar_term_near_ipchun",
+      "request": {
+        "birth_date": "2024-02-04",
+        "birth_time": "17:00",
+        "calendar_type": "solar",
+        "debug": false,
+        "gender": "female",
+        "is_birth_time_estimated": false,
+        "is_lunar_leap_month": false,
+        "region_id": "kr-seoul"
+      }
+    },
+    {
+      "description": "Overseas timezone case using a test-only region override.",
+      "expected": {
+        "calendar_normalization": {
+          "normalized_lunar_datetime": "1990-05-23 14:20:00",
+          "normalized_solar_datetime": "1990-07-15 14:20:00"
+        },
+        "manse": {
+          "first_luck_cycle": {
+            "gan_zhi": "\u58ec\u5348",
+            "start_age": 3
+          },
+          "luck_cycles_enabled": true,
+          "pillars": {
+            "day": {
+              "branch": "\u5df3",
+              "branch_element": "\u706b",
+              "branch_ten_god": "\uc815\uad00",
+              "branch_ten_gods": [
+                "\uc815\uad00",
+                "\uac81\uc7ac",
+                "\uc815\uc778"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u8f9b\u5df3",
+              "hidden_stems": [
+                "\ubb34",
+                "\uacbd",
+                "\ubcd1"
+              ],
+              "key": "day",
+              "label": "\uc77c\uc8fc",
+              "na_yin": "\u767d\u8721\u91d1",
+              "stem": "\u8f9b",
+              "stem_element": "\u91d1",
+              "stem_ten_god": "\ube44\uacac",
+              "twelve_fortune": "\uc0ac",
+              "twelve_shinsal": "\ub9dd\uc2e0\uc0b4",
+              "xun": "\u7532\u620c",
+              "xun_kong": "\u7533\u9149"
+            },
+            "month": {
+              "branch": "\u672a",
+              "branch_element": "\u571f",
+              "branch_ten_god": "\ud3b8\uc778",
+              "branch_ten_gods": [
+                "\ud3b8\uc778",
+                "\ud3b8\uad00",
+                "\ud3b8\uc7ac"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u7678\u672a",
+              "hidden_stems": [
+                "\uc815",
+                "\uc744",
+                "\uae30"
+              ],
+              "key": "month",
+              "label": "\uc6d4\uc8fc",
+              "na_yin": "\u6768\u67f3\u6728",
+              "stem": "\u7678",
+              "stem_element": "\u6c34",
+              "stem_ten_god": "\uc2dd\uc2e0",
+              "twelve_fortune": "\uc1e0",
+              "twelve_shinsal": "\ubc18\uc548\uc0b4",
+              "xun": "\u7532\u620c",
+              "xun_kong": "\u7533\u9149"
+            },
+            "time": {
+              "branch": "\u672a",
+              "branch_element": "\u571f",
+              "branch_ten_god": "\ud3b8\uc778",
+              "branch_ten_gods": [
+                "\ud3b8\uc778",
+                "\ud3b8\uad00",
+                "\ud3b8\uc7ac"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u4e59\u672a",
+              "hidden_stems": [
+                "\uc815",
+                "\uc744",
+                "\uae30"
+              ],
+              "key": "time",
+              "label": "\uc2dc\uc8fc",
+              "na_yin": "\u6c99\u4e2d\u91d1",
+              "stem": "\u4e59",
+              "stem_element": "\u6728",
+              "stem_ten_god": "\ud3b8\uc7ac",
+              "twelve_fortune": "\uc1e0",
+              "twelve_shinsal": "\ubc18\uc548\uc0b4",
+              "xun": "\u7532\u5348",
+              "xun_kong": "\u8fb0\u5df3"
+            },
+            "year": {
+              "branch": "\u5348",
+              "branch_element": "\u706b",
+              "branch_ten_god": "\ud3b8\uad00",
+              "branch_ten_gods": [
+                "\ud3b8\uad00",
+                "\ud3b8\uc778"
+              ],
+              "enabled": true,
+              "gan_zhi": "\u5e9a\u5348",
+              "hidden_stems": [
+                "\ubcd1",
+                "\uae30",
+                "\uc815"
+              ],
+              "key": "year",
+              "label": "\ub144\uc8fc",
+              "na_yin": "\u8def\u65c1\u571f",
+              "stem": "\u5e9a",
+              "stem_element": "\u91d1",
+              "stem_ten_god": "\uac81\uc7ac",
+              "twelve_fortune": "\ubcd1",
+              "twelve_shinsal": "\ub144\uc0b4",
+              "xun": "\u7532\u5b50",
+              "xun_kong": "\u620c\u4ea5"
+            }
+          }
+        },
+        "regional_solar_correction": {
+          "corrected_solar_datetime": "1990-07-15 14:23:59",
+          "daylight_saving_offset_minutes": 0,
+          "regional_time_offset_minutes": 3.976
+        },
+        "result": {
+          "hour_pillar_enabled": true
+        },
+        "time_correction": {
+          "ambiguous": false,
+          "fold": 0,
+          "normalized_local_datetime": "1990-07-15T14:20:00-04:00",
+          "normalized_utc_datetime": "1990-07-15T18:20:00+00:00",
+          "offset_minutes": -240
+        }
+      },
+      "id": "overseas_timezone_new_york",
+      "region_override": {
+        "aliases": [
+          "New York",
+          "NYC"
+        ],
+        "city": "New York",
+        "correction_basis": "test-standard-meridian-longitude",
+        "country": "United States",
+        "display_name": "New York, United States",
+        "id": "test-new-york",
+        "longitude": -74.006,
+        "province": "New York",
+        "regional_time_offset_minutes": 3.976,
+        "tzid": "America/New_York"
+      },
+      "request": {
+        "birth_date": "1990-07-15",
+        "birth_time": "14:20",
+        "calendar_type": "solar",
+        "debug": false,
+        "gender": "female",
+        "is_birth_time_estimated": false,
+        "is_lunar_leap_month": false,
+        "region_id": "test-new-york"
+      }
+    }
+  ],
+  "description": "Golden regression baseline for deterministic /saju/preview calculation fields.",
+  "excluded_fields": [
+    "trace_id",
+    "result.interpretation",
+    "result.overview",
+    "result.strengths",
+    "result.cautions",
+    "result.love",
+    "result.career",
+    "result.wealth",
+    "result.action_advice",
+    "debug_trace"
+  ],
+  "schema_version": 1
+}

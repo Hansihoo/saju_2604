@@ -5,6 +5,7 @@ import json
 import sys
 from pathlib import Path
 
+from app.domain.saju.pydantic_compat import model_to_dict
 from app.domain.saju.schemas import SajuPreviewRequest
 from app.domain.saju.services.preview_orchestrator import create_saju_preview_response
 
@@ -48,11 +49,11 @@ def main() -> None:
     )
     rendered = {
         "trace_id": response.trace_id,
-        "region": response.region.model_dump(mode="json"),
-        "time_correction": response.time_correction.model_dump(mode="json"),
-        "regional_solar_correction": response.regional_solar_correction.model_dump(mode="json"),
-        "calendar_normalization": response.calendar_normalization.model_dump(mode="json"),
-        "manse": response.manse.model_dump(mode="json"),
+        "region": model_to_dict(response.region, mode="json"),
+        "time_correction": model_to_dict(response.time_correction, mode="json"),
+        "regional_solar_correction": model_to_dict(response.regional_solar_correction, mode="json"),
+        "calendar_normalization": model_to_dict(response.calendar_normalization, mode="json"),
+        "manse": model_to_dict(response.manse, mode="json"),
     }
 
     if args.output:

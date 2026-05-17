@@ -29,6 +29,8 @@ export type RegionSearchResponse = {
   total: number;
 };
 
+export type AccuracyMode = "legacy" | "standard_time" | "mean_solar_time" | "compare";
+
 export type SajuPreviewRequest = {
   locale: "ko" | "en";
   calendar_type: "solar" | "lunar";
@@ -38,6 +40,7 @@ export type SajuPreviewRequest = {
   is_lunar_leap_month: boolean;
   gender: "male" | "female";
   region_id: string;
+  accuracy_mode?: AccuracyMode;
   debug: boolean;
 };
 
@@ -58,6 +61,26 @@ export type EvidenceSection = {
   summary: string;
 };
 
+export type UncertaintyFlag = {
+  code: string;
+  severity: "info" | "warning" | "critical";
+  affected_fields: string[];
+  user_message: string;
+  developer_message: string;
+  evidence: Record<string, unknown>;
+};
+
+export type CalculationBasis = {
+  accuracy_mode: AccuracyMode;
+  primary_candidate_id: string;
+  primary_time_basis: string;
+  primary_midnight_rule: string;
+  primary_input_datetime_to_lunar_python: string;
+  primary_day_pillar_basis_datetime: string;
+  legacy_corrected_solar_datetime: string;
+  compare_candidates_enabled: boolean;
+};
+
 export type TimeCorrectionSummary = {
   tzid: string;
   source_local_datetime: string;
@@ -66,6 +89,8 @@ export type TimeCorrectionSummary = {
   offset_minutes: number;
   ambiguous: boolean;
   fold: number;
+  is_placeholder_time: boolean;
+  placeholder_reason?: string | null;
 };
 
 export type RegionalSolarCorrectionSummary = {
@@ -75,6 +100,56 @@ export type RegionalSolarCorrectionSummary = {
   regional_time_offset_minutes: number;
   daylight_saving_offset_minutes: number;
   correction_basis: string;
+  is_placeholder_time: boolean;
+  placeholder_reason?: string | null;
+};
+
+export type BirthTimeContext = {
+  legal_local_datetime: string;
+  normalized_local_datetime: string;
+  normalized_utc_datetime: string;
+  timezone_id: string;
+  utc_offset_minutes: number;
+  dst_offset_minutes: number;
+  normalized_solar_datetime: string;
+  standard_local_datetime: string;
+  mean_solar_datetime: string;
+  legacy_corrected_solar_datetime: string;
+  corrected_solar_datetime: string;
+  longitude: number;
+  standard_meridian: number;
+  regional_time_offset_minutes: number;
+  daylight_saving_offset_minutes: number;
+  ambiguous: boolean;
+  fold: number;
+  warnings: string[];
+};
+
+export type CandidateChart = {
+  candidate_id: string;
+  time_basis: string;
+  midnight_rule: string;
+  input_datetime_to_lunar_python: string;
+  day_pillar_basis_datetime: string;
+  iljin_query_date: string;
+  day_pillar_rule: string;
+  year_pillar: string;
+  month_pillar: string;
+  day_pillar: string;
+  hour_pillar: string;
+  luck_cycle_start_age?: number | null;
+  luck_cycle_start_age_years?: number | null;
+  luck_cycle_start_age_months?: number | null;
+  luck_cycle_start_age_total_months?: number | null;
+  luck_cycle_first_ganzhi?: string | null;
+  differences_from_primary: Record<
+    string,
+    {
+      primary?: string | null;
+      candidate?: string | null;
+    }
+  >;
+  aliases: string[];
 };
 
 export type MansePillar = {
@@ -154,6 +229,12 @@ export type ManseLuckCycle = {
   end_year: number;
   start_age: number;
   end_age: number;
+  start_age_years?: number | null;
+  start_age_months?: number | null;
+  start_age_total_months?: number | null;
+  change_age_years?: number | null;
+  change_age_months?: number | null;
+  change_age_total_months?: number | null;
   start_datetime?: string | null;
   change_datetime?: string | null;
 };
@@ -194,6 +275,13 @@ export type ManseMeta = {
   pillar_order: Array<"year" | "month" | "day" | "time">;
   visible_pillar_keys: Array<"year" | "month" | "day" | "time">;
   hour_pillar_enabled: boolean;
+  day_pillar_rule: string;
+  day_time_basis_datetime: string;
+  civil_date: string;
+  day_pillar_basis_date: string;
+  iljin_query_date: string;
+  day_pillar_source: string;
+  day_pillar_reference_matched_lunar_python: string;
 };
 
 export type ManseAnalysisSummary = {
@@ -212,6 +300,9 @@ export type ManseAnalysisSummary = {
   first_luck_cycle_direction?: "forward" | "backward" | null;
   first_luck_cycle_exact_start_age_years?: number | null;
   first_luck_cycle_precise_start_age_years?: number | null;
+  first_luck_cycle_start_age_years?: number | null;
+  first_luck_cycle_start_age_months?: number | null;
+  first_luck_cycle_start_age_total_months?: number | null;
   first_luck_cycle_boundary_datetime?: string | null;
 };
 
@@ -318,6 +409,8 @@ export type SajuPreviewResponse = {
     lunar_year: number;
     lunar_month: number;
     lunar_day: number;
+    is_placeholder_time: boolean;
+    placeholder_reason?: string | null;
   };
   result: {
     overview: string;
@@ -331,6 +424,8 @@ export type SajuPreviewResponse = {
     limitations: string[];
     disabled_sections: string[];
     evidence_sections: Record<string, EvidenceSection>;
+    calculation_basis: CalculationBasis;
+    uncertainty_summary: UncertaintyFlag[];
     hour_pillar_enabled: boolean;
     signals: SajuResultSignals;
   };
@@ -344,5 +439,11 @@ export type SajuPreviewResponse = {
       error_code?: string | null;
     }>;
     request_echo: Record<string, string>;
+    accuracy_mode?: AccuracyMode;
+    calculation_basis?: CalculationBasis;
+    birth_time_context?: BirthTimeContext | null;
+    year_month_boundary_context?: Record<string, unknown>;
+    candidate_charts?: CandidateChart[];
+    uncertainty_flags?: UncertaintyFlag[];
   } | null;
 };

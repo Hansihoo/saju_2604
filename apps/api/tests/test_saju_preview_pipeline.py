@@ -1,8 +1,10 @@
+import json
 import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
 
 from app.api.routes import create_saju_preview
+from app.domain.saju.pydantic_compat import model_to_dict
 from app.domain.saju.schemas import SajuPreviewRequest
 
 
@@ -55,6 +57,14 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         self.assertIn("\u7532\u8fb0", response.debug_trace.checkpoints[5].note)
         self.assertEqual(response.region.longitude, 126.991824)
         self.assertEqual(response.regional_solar_correction.corrected_solar_datetime, "2024-02-10 09:57:58")
+        self.assertIsNotNone(response.debug_trace.birth_time_context)
+        self.assertEqual(
+            response.debug_trace.birth_time_context.corrected_solar_datetime,
+            response.regional_solar_correction.corrected_solar_datetime,
+        )
+        self.assertEqual(response.debug_trace.birth_time_context.standard_local_datetime, "2024-02-10 10:30:00")
+        self.assertEqual(response.debug_trace.birth_time_context.mean_solar_datetime, "2024-02-10 09:57:58")
+        json.dumps(model_to_dict(response.debug_trace))
 
     def test_preview_pipeline_includes_core_manse_data(self) -> None:
         request = SimpleNamespace(
@@ -119,6 +129,9 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         self.assertTrue(all(cycle.gan_zhi for cycle in response.manse.luck_cycles))
         self.assertEqual(response.manse.luck_cycles[0].gan_zhi, "\u4e01\u536f")
         self.assertEqual(response.manse.luck_cycles[0].start_age, 8)
+        self.assertEqual(response.manse.luck_cycles[0].start_age_years, 7)
+        self.assertEqual(response.manse.luck_cycles[0].start_age_months, 10)
+        self.assertEqual(response.manse.luck_cycles[0].start_age_total_months, 94)
         self.assertRegex(
             response.manse.luck_cycles[0].start_datetime or "",
             r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$",
@@ -130,7 +143,7 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         self.assertEqual(response.pipeline_status.llm_formatting, "failed")
         self.assertIsNotNone(response.result.interpretation)
         self.assertEqual(response.result.interpretation.provider, "fallback")
-        self.assertEqual(response.result.interpretation.prompt_version, "saju-report-v13")
+        self.assertEqual(response.result.interpretation.prompt_version, "saju-report-v14")
         self.assertIsNotNone(response.result.interpretation.diagnostics)
         self.assertEqual(
             response.result.interpretation.diagnostics.fallback_reason,
@@ -140,6 +153,43 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         self.assertTrue(response.result.interpretation.core_analysis.evidence_ids)
         self.assertTrue(response.result.interpretation.love.body)
         self.assertTrue(response.result.overview)
+
+    def test_late_zi_uses_local_civil_time_for_iljin_query_and_hour_pillar(self) -> None:
+        request = SimpleNamespace(
+            state=SimpleNamespace(
+                trace_id="test-trace-late-zi",
+                debug_requested=True,
+            )
+        )
+        payload = SajuPreviewRequest(
+            calendar_type="solar",
+            birth_date="1988-11-20",
+            birth_time="23:30",
+            is_birth_time_estimated=False,
+            is_lunar_leap_month=False,
+            gender="male",
+            region_id="kr-seoul-special",
+            debug=True,
+        )
+
+        response = create_saju_preview(payload=payload, request=request)
+
+        self.assertEqual(
+            response.regional_solar_correction.corrected_solar_datetime,
+            "1988-11-20 22:57:58",
+        )
+        self.assertEqual(response.manse.pillars.year.gan_zhi, "\u620a\u8fb0")
+        self.assertEqual(response.manse.pillars.month.gan_zhi, "\u7678\u4ea5")
+        self.assertEqual(response.manse.pillars.day.gan_zhi, "\u5e9a\u8fb0")
+        self.assertEqual(response.manse.pillars.time.gan_zhi, "\u4e19\u5b50")
+        self.assertEqual(response.manse.meta.day_time_basis_datetime, "1988-11-20 23:30:00")
+        self.assertEqual(response.manse.meta.day_pillar_basis_date, "1988-11-21")
+        self.assertEqual(response.manse.meta.iljin_query_date, "1988-11-21")
+        self.assertEqual(response.manse.meta.day_pillar_rule, "sect1_23_changes_day")
+        self.assertEqual(
+            response.result.calculation_basis.primary_day_pillar_basis_datetime,
+            "1988-11-20 23:30:00",
+        )
 
     def test_estimated_birth_time_hides_hour_pillar_outputs(self) -> None:
         request = SimpleNamespace(
@@ -230,6 +280,11 @@ class SajuPreviewPipelineTests(unittest.TestCase):
 
         self.assertEqual(response.pipeline_status.saju_calculation, "passed")
         self.assertEqual(response.manse.luck_cycles[0].start_age, 5)
+        self.assertEqual(response.manse.luck_cycles[0].start_age_years, 4)
+        self.assertEqual(response.manse.luck_cycles[0].start_age_months, 6)
+        self.assertEqual(response.manse.analysis.first_luck_cycle_start_age_years, 4)
+        self.assertEqual(response.manse.analysis.first_luck_cycle_start_age_months, 6)
+        self.assertEqual(response.manse.analysis.first_luck_cycle_start_age_total_months, 54)
         self.assertEqual(response.manse.luck_cycles[0].gan_zhi, "\u7678\u5df3")
         self.assertEqual(response.manse.luck_cycles[1].start_age, 15)
         self.assertEqual(response.manse.luck_cycles[1].gan_zhi, "\u58ec\u8fb0")

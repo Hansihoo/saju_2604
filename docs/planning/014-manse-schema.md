@@ -177,13 +177,27 @@
   "start_year": 2032,
   "end_year": 2041,
   "start_age": 9,
-  "end_age": 18
+  "end_age": 18,
+  "start_age_years": 8,
+  "start_age_months": 7,
+  "start_age_total_months": 103,
+  "change_age_years": 18,
+  "change_age_months": 7,
+  "change_age_total_months": 223,
+  "start_datetime": "2032-01-06 11:31:58",
+  "change_datetime": "2042-01-05 21:39:38"
 }
 ```
 
 ### 관련 필드
 - `luck_cycles_enabled`
   - 시주 정책상 대운을 노출 가능한지 여부
+- `start_age`
+  - 하위 호환을 위해 유지하는 legacy 표시 나이
+- `start_age_years`, `start_age_months`, `start_age_total_months`
+  - `start_datetime` 기준의 완료 년/개월 나이. 반올림하지 않는다.
+- `change_age_years`, `change_age_months`, `change_age_total_months`
+  - `change_datetime` 기준의 다음 대운 교체 시점 완료 년/개월 나이. 반올림하지 않는다.
 
 ## `supplementary_positions`
 

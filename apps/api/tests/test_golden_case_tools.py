@@ -1,12 +1,14 @@
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from app.domain.saju.golden import (
     GoldenKnownAnswerCase,
     compare_golden_snapshots,
     derive_display_minutes_from_longitude,
 )
+from app.domain.saju.pydantic_compat import model_copy_compat, model_from_json
 from app.domain.saju.services.build_golden_snapshot import build_actual_golden_snapshot
 from app.domain.saju.services.parse_golden_answer_text import load_golden_answer_text
 from app.tools.compare_golden_cases import compare_golden_cases
@@ -17,6 +19,14 @@ EXPECTED_DIR = Path(__file__).parent / "golden_cases" / "expected"
 
 
 class GoldenCaseToolTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._llm_provider_patch = patch(
+            "app.domain.saju.services.generate_interpretation.settings.llm_provider",
+            "fallback",
+        )
+        self._llm_provider_patch.start()
+        self.addCleanup(self._llm_provider_patch.stop)
+
     def test_parses_source_answer_into_canonical_case(self) -> None:
         case = load_golden_answer_text(
             SOURCE_DIR / "pororo.txt",
@@ -44,7 +54,8 @@ class GoldenCaseToolTests(unittest.TestCase):
         self.assertEqual(special_star_map["gwaegang"].matched_pillars, ["day"])
 
     def test_builds_actual_golden_snapshot(self) -> None:
-        case = GoldenKnownAnswerCase.model_validate_json(
+        case = model_from_json(
+            GoldenKnownAnswerCase,
             (EXPECTED_DIR / "pororo.json").read_text(encoding="utf-8")
         )
 
@@ -60,10 +71,11 @@ class GoldenCaseToolTests(unittest.TestCase):
         self.assertIsInstance(special_star_map["gwaegang"].matched_pillars, list)
 
     def test_reports_mismatch_paths_in_structured_form(self) -> None:
-        case = GoldenKnownAnswerCase.model_validate_json(
+        case = model_from_json(
+            GoldenKnownAnswerCase,
             (EXPECTED_DIR / "pororo.json").read_text(encoding="utf-8")
         )
-        actual = case.expected.model_copy(deep=True)
+        actual = model_copy_compat(case.expected, deep=True)
         actual.basic_info.corrected_datetime = "1997-02-03 16:29"
 
         report = compare_golden_snapshots(case=case, actual=actual)
@@ -173,7 +185,8 @@ class GoldenCaseToolTests(unittest.TestCase):
         mismatches = []
 
         for expected_path in sorted(EXPECTED_DIR.glob("*.json")):
-            case = GoldenKnownAnswerCase.model_validate_json(
+            case = model_from_json(
+                GoldenKnownAnswerCase,
                 expected_path.read_text(encoding="utf-8")
             )
             actual = build_actual_golden_snapshot(case_input=case.input)
@@ -193,7 +206,8 @@ class GoldenCaseToolTests(unittest.TestCase):
         self.assertEqual(mismatches, [])
 
     def test_aru_display_values_follow_answer_sheet_convention(self) -> None:
-        case = GoldenKnownAnswerCase.model_validate_json(
+        case = model_from_json(
+            GoldenKnownAnswerCase,
             (EXPECTED_DIR / "aru.json").read_text(encoding="utf-8")
         )
 

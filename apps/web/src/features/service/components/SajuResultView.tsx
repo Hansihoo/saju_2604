@@ -89,6 +89,9 @@ const sectionViewCopy: Record<
     outlineLabel: string;
     basisLabel: string;
     basisItems: string[];
+    uncertaintyTitle: string;
+    uncertaintyIntro: string;
+    severityLabels: Record<"warning" | "critical", string>;
     sectionLabels: Record<SectionKey, string>;
   }
 > = {
@@ -96,6 +99,12 @@ const sectionViewCopy: Record<
     summaryLabel: "핵심 요약",
     outlineLabel: "빠르게 보기",
     basisLabel: "이 풀이가 보는 것",
+    uncertaintyTitle: "확인 필요 항목",
+    uncertaintyIntro: "입력값이나 시간 기준 때문에 확정하기 어려운 항목만 표시합니다.",
+    severityLabels: {
+      warning: "주의",
+      critical: "중요",
+    },
     basisItems: [
       "만세력 계산을 먼저 확인한 뒤 해석합니다.",
       "강점과 약점을 함께 보여주도록 구성했습니다.",
@@ -113,6 +122,12 @@ const sectionViewCopy: Record<
     summaryLabel: "Quick summary",
     outlineLabel: "Jump to section",
     basisLabel: "What this reading uses",
+    uncertaintyTitle: "Items to confirm",
+    uncertaintyIntro: "Only user-relevant uncertainty from the provided inputs is shown here.",
+    severityLabels: {
+      warning: "Warning",
+      critical: "Important",
+    },
     basisItems: [
       "The manse calculation is checked before the interpretation is written.",
       "The reading is designed to show both strengths and weak points.",
@@ -531,6 +546,19 @@ function ElementBalanceCard({ locale, result }: { locale: Locale; result: SajuPr
 }
 
 function formatAgeRange(cycle: ManseLuckCycle, locale: Locale) {
+  if (
+    cycle.start_age_years != null &&
+    cycle.start_age_months != null &&
+    cycle.change_age_years != null &&
+    cycle.change_age_months != null
+  ) {
+    if (locale === "ko") {
+      return `${cycle.start_age_years}세 ${cycle.start_age_months}개월-${cycle.change_age_years}세 ${cycle.change_age_months}개월`;
+    }
+
+    return `Age ${cycle.start_age_years}y ${cycle.start_age_months}m-${cycle.change_age_years}y ${cycle.change_age_months}m`;
+  }
+
   if (locale === "ko") {
     return `${cycle.start_age}세-${cycle.end_age}세`;
   }
@@ -798,6 +826,43 @@ function LuckTimelineTable({
         <p className="reading-disabled-note">{statusTexts.luckTimelineDisabledNote}</p>
       ) : null}
     </div>
+  );
+}
+
+function UncertaintySummaryNotice({
+  locale,
+  result,
+}: {
+  locale: Locale;
+  result: SajuPreviewResponse;
+}) {
+  const text = sectionViewCopy[locale];
+  const flags = result.result.uncertainty_summary.filter(
+    (flag) => flag.severity === "warning" || flag.severity === "critical",
+  );
+
+  if (!flags.length) {
+    return null;
+  }
+
+  return (
+    <section className="result-uncertainty-notice">
+      <div className="result-uncertainty-head">
+        <span className="result-panel-label">{text.uncertaintyTitle}</span>
+        <p>{text.uncertaintyIntro}</p>
+      </div>
+      <ul>
+        {flags.map((flag) => {
+          const severity = flag.severity === "critical" ? "critical" : "warning";
+          return (
+            <li className={`is-${severity}`} key={flag.code}>
+              <strong>{text.severityLabels[severity]}</strong>
+              <span>{flag.user_message}</span>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 
@@ -1191,6 +1256,8 @@ export function SajuResultView({ locale, result, onReset }: SajuResultViewProps)
               <p>{statusTexts.unknownTimeNoticeBody}</p>
             </section>
           ) : null}
+
+          <UncertaintySummaryNotice locale={locale} result={result} />
 
           <section className="reading-summary-card">
             <div className="reading-summary-head">

@@ -26,6 +26,19 @@ If a human is running the project in a normal terminal, this is still fine:
 pnpm dev
 ```
 
+For regression and accuracy checks:
+
+```powershell
+pnpm ensure:skyfield
+pnpm test:api
+pnpm test:accuracy
+pnpm verify:kasi
+```
+
+`pnpm ensure:skyfield` downloads and verifies the Skyfield `de440s.bsp` ephemeris before runtime. Normal API requests do not download this file.
+
+`pnpm verify:kasi` requires `KASI_SERVICE_KEY` and is an explicit live API spot check, not a normal test step.
+
 ## What each command does
 
 - `pnpm dev:bg:start`
@@ -46,6 +59,14 @@ pnpm dev
   Runs the FastAPI server with reload. Use this only in a normal local shell.
 - `pnpm dev:web:direct`
   Runs the Vite server in the current shell. Useful for manual debugging.
+- `pnpm test:api`
+  Ensures the Skyfield ephemeris, then runs API compile and unittest discovery with the LLM provider forced to fallback.
+- `pnpm test:accuracy`
+  Runs API tests, web build, reference table checks, diagnostic report generation, and golden validation.
+- `pnpm ensure:skyfield`
+  Downloads `de440s.bsp` if missing and verifies file size and SHA256.
+- `pnpm verify:kasi`
+  Runs selected live KASI API spot checks against the checked-in lunar reference table.
 
 ## Verification checklist
 

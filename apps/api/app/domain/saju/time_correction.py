@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta, timezone
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 try:
     from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -56,6 +56,48 @@ class RegionalSolarCorrectionResult:
     regional_time_offset_minutes: float
     daylight_saving_offset_minutes: int
     correction_basis: str
+
+
+@dataclass
+class BirthTimeContext:
+    legal_local_datetime: str
+    normalized_local_datetime: str
+    normalized_utc_datetime: str
+    timezone_id: str
+    utc_offset_minutes: int
+    dst_offset_minutes: int
+    normalized_solar_datetime: str
+    standard_local_datetime: str
+    mean_solar_datetime: str
+    legacy_corrected_solar_datetime: str
+    corrected_solar_datetime: str
+    longitude: float
+    standard_meridian: float
+    regional_time_offset_minutes: float
+    daylight_saving_offset_minutes: int
+    ambiguous: bool
+    fold: int
+    warnings: List[str]
+
+
+def _parse_normalized_solar_datetime(normalized_solar_datetime: str) -> datetime:
+    try:
+        return datetime.strptime(normalized_solar_datetime, "%Y-%m-%d %H:%M:%S")
+    except ValueError as exc:
+        raise TimeCorrectionError(
+            error_code="INVALID_NORMALIZED_SOLAR_DATETIME",
+            message="The solar datetime must use YYYY-MM-DD HH:MM:SS format.",
+            meta={"normalized_solar_datetime": normalized_solar_datetime},
+            stage="regional_solar_correction",
+        ) from exc
+
+
+def _format_solar_datetime(value: datetime) -> str:
+    return value.strftime("%Y-%m-%d %H:%M:%S")
+
+
+def _infer_standard_meridian(*, longitude: float, regional_time_offset_minutes: float) -> float:
+    return round(longitude - (regional_time_offset_minutes / 4.0), 3)
 
 
 def _parse_birth_time(raw_time: str) -> time:
@@ -159,15 +201,7 @@ def apply_regional_solar_correction(
     correction_basis: str,
 ) -> RegionalSolarCorrectionResult:
     """정규화된 양력 시각에 지역 경도 기반 보정을 적용한다."""
-    try:
-        source_solar_datetime = datetime.strptime(normalized_solar_datetime, "%Y-%m-%d %H:%M:%S")
-    except ValueError as exc:
-        raise TimeCorrectionError(
-            error_code="INVALID_NORMALIZED_SOLAR_DATETIME",
-            message="The solar datetime must use YYYY-MM-DD HH:MM:SS format.",
-            meta={"normalized_solar_datetime": normalized_solar_datetime},
-            stage="regional_solar_correction",
-        ) from exc
+    source_solar_datetime = _parse_normalized_solar_datetime(normalized_solar_datetime)
 
     correction_seconds = int(round((regional_time_offset_minutes + daylight_saving_offset_minutes) * 60))
     corrected_solar_datetime = source_solar_datetime + timedelta(seconds=correction_seconds)
@@ -179,4 +213,50 @@ def apply_regional_solar_correction(
         regional_time_offset_minutes=regional_time_offset_minutes,
         daylight_saving_offset_minutes=daylight_saving_offset_minutes,
         correction_basis=correction_basis,
+    )
+
+
+def build_birth_time_context(
+    *,
+    time_correction: TimeCorrectionResult,
+    normalized_solar_datetime: str,
+    regional_solar_correction: RegionalSolarCorrectionResult,
+) -> BirthTimeContext:
+    """Build debug-only birth time observations without changing the primary calculation path."""
+    source_solar_datetime = _parse_normalized_solar_datetime(normalized_solar_datetime)
+    standard_local_datetime = source_solar_datetime + timedelta(
+        minutes=regional_solar_correction.daylight_saving_offset_minutes
+    )
+    mean_solar_datetime = standard_local_datetime + timedelta(
+        seconds=int(round(regional_solar_correction.regional_time_offset_minutes * 60))
+    )
+    daylight_saving_offset_minutes = regional_solar_correction.daylight_saving_offset_minutes
+    warnings: List[str] = []
+    if time_correction.ambiguous:
+        warnings.append("ambiguous_local_time_fold_1_selected")
+    if daylight_saving_offset_minutes != 0:
+        warnings.append("daylight_saving_adjustment_applied")
+
+    return BirthTimeContext(
+        legal_local_datetime=time_correction.source_local_datetime,
+        normalized_local_datetime=time_correction.normalized_local_datetime,
+        normalized_utc_datetime=time_correction.normalized_utc_datetime,
+        timezone_id=time_correction.tzid,
+        utc_offset_minutes=time_correction.offset_minutes,
+        dst_offset_minutes=-daylight_saving_offset_minutes,
+        normalized_solar_datetime=normalized_solar_datetime,
+        standard_local_datetime=_format_solar_datetime(standard_local_datetime),
+        mean_solar_datetime=_format_solar_datetime(mean_solar_datetime),
+        legacy_corrected_solar_datetime=regional_solar_correction.corrected_solar_datetime,
+        corrected_solar_datetime=regional_solar_correction.corrected_solar_datetime,
+        longitude=regional_solar_correction.longitude,
+        standard_meridian=_infer_standard_meridian(
+            longitude=regional_solar_correction.longitude,
+            regional_time_offset_minutes=regional_solar_correction.regional_time_offset_minutes,
+        ),
+        regional_time_offset_minutes=regional_solar_correction.regional_time_offset_minutes,
+        daylight_saving_offset_minutes=daylight_saving_offset_minutes,
+        ambiguous=time_correction.ambiguous,
+        fold=time_correction.fold,
+        warnings=warnings,
     )

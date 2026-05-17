@@ -38,6 +38,10 @@ class InterpretationTimeContext(BaseModel):
     regional_time_offset_minutes: float
     daylight_saving_offset_minutes: int
     correction_basis: str
+    accuracy_mode: str = "legacy"
+    primary_time_basis: str = "legacy_corrected"
+    primary_input_datetime_to_lunar_python: str = ""
+    primary_midnight_rule: str = "sect1_23_changes_day"
 
 
 class InterpretationVisiblePillar(BaseModel):
@@ -70,6 +74,13 @@ class InterpretationEvidenceItem(BaseModel):
     summary: str
 
 
+class InterpretationUncertaintyFlag(BaseModel):
+    code: str
+    severity: Literal["warning", "critical"]
+    affected_fields: List[str]
+    user_message: str
+
+
 class InterpretationLuckCycle(BaseModel):
     start_age: int
     end_age: int
@@ -77,6 +88,12 @@ class InterpretationLuckCycle(BaseModel):
     end_year: int
     gan_zhi: str
     display_gan_zhi: str
+    start_age_years: Optional[int] = None
+    start_age_months: Optional[int] = None
+    start_age_total_months: Optional[int] = None
+    change_age_years: Optional[int] = None
+    change_age_months: Optional[int] = None
+    change_age_total_months: Optional[int] = None
     start_datetime: Optional[str] = None
     change_datetime: Optional[str] = None
 
@@ -202,6 +219,7 @@ class InterpretationPayload(BaseModel):
     ten_god_stems: Dict[str, str]
     signals: InterpretationSignalBlock
     evidence: List[InterpretationEvidenceItem]
+    uncertainty_summary: List[InterpretationUncertaintyFlag] = Field(default_factory=list)
     luck_cycles: List[InterpretationLuckCycle]
     current_flow: InterpretationCurrentFlowContext
     luck_cycle_analysis: List[InterpretationLuckCycleAnalysis] = Field(default_factory=list)

@@ -1,13 +1,17 @@
 """이 파일은 미리보기 응답을 조립하는 로직을 담는다."""
 
-from typing import List
+from dataclasses import asdict
+from typing import List, Optional
 
 from app.config import settings
 from app.domain.saju.analysis import AnalysisResult
 from app.domain.saju.calendar_normalization import CalendarNormalizationResult
 from app.domain.saju.engine import SajuCalculationResult
 from app.domain.saju.schemas import (
+    BirthTimeContextSummary,
     CalendarNormalizationSummary,
+    CandidateChartSummary,
+    CalculationBasisSummary,
     DebugCheckpoint,
     DebugTrace,
     EvidenceSection,
@@ -18,12 +22,21 @@ from app.domain.saju.schemas import (
     SajuPreviewResult,
     SajuResultSignals,
     TimeCorrectionSummary,
+    UncertaintyFlagSummary,
 )
+from app.domain.saju.services.accuracy_mode import CalculationBasis
 from app.domain.saju.services.birth_time_policy import resolve_birth_time_policy
 from app.domain.saju.services.build_interpretation_payload import build_interpretation_payload
 from app.domain.saju.services.build_manse import build_manse_data
+from app.domain.saju.services.detect_uncertainty import UncertaintyFlag
 from app.domain.saju.services.generate_interpretation import generate_interpretation_report
-from app.domain.saju.time_correction import RegionalSolarCorrectionResult, TimeCorrectionResult
+from app.domain.saju.services.generate_candidate_charts import CandidateChart
+from app.domain.saju.time_correction import (
+    BirthTimeContext,
+    RegionalSolarCorrectionResult,
+    TimeCorrectionResult,
+    build_birth_time_context,
+)
 
 
 def _summarize_visible_pillars(
@@ -66,6 +79,10 @@ def build_preview_response(
     analysis_result: AnalysisResult,
     trace_id: str,
     debug_requested: bool,
+    calculation_basis: CalculationBasis,
+    candidate_charts: Optional[List[CandidateChart]] = None,
+    uncertainty_flags: Optional[List[UncertaintyFlag]] = None,
+    birth_time_context: Optional[BirthTimeContext] = None,
 ) -> SajuPreviewResponse:
     """파이프라인 결과들을 모아 최종 preview API 응답으로 조립한다."""
     birth_time_policy = resolve_birth_time_policy(payload)
@@ -87,9 +104,29 @@ def build_preview_response(
     first_luck_cycle = saju_calculation.luck_cycles[0] if saju_calculation.luck_cycles else None
     limitations: List[str] = []
     if payload.is_birth_time_estimated:
-        limitations.append(
-            "Birth time is estimated, so the pipeline calculates with 00:00 internally and hides hour-pillar-dependent output until the real time is known."
+        interval = birth_time_policy.birth_time_interval
+        interval_text = (
+            f"{interval.start} to {interval.end}"
+            if interval is not None
+            else "the full birth date"
         )
+        limitations.append(
+            "Birth time is unknown. 00:00 is used only as an internal placeholder, "
+            f"and the possible birth-time interval is {interval_text}. "
+            "Hour-pillar, luck-cycle, and interval-sensitive outputs should be treated as unconfirmed."
+        )
+    uncertainty_flag_summaries = [
+        UncertaintyFlagSummary(**asdict(flag))
+        for flag in (uncertainty_flags or [])
+    ]
+    uncertainty_summary = [
+        flag
+        for flag in uncertainty_flag_summaries
+        if flag.severity in ("warning", "critical")
+    ]
+    calculation_basis_summary = CalculationBasisSummary(**asdict(calculation_basis))
+    is_placeholder_time = payload.is_birth_time_estimated
+    placeholder_reason = "birth_time_unknown" if is_placeholder_time else None
 
     evidence_sections = {
         "elements": EvidenceSection(
@@ -165,6 +202,8 @@ def build_preview_response(
         limitations=limitations,
         disabled_sections=birth_time_policy.disabled_sections,
         evidence_sections=evidence_sections,
+        calculation_basis=calculation_basis_summary,
+        uncertainty_summary=uncertainty_summary,
         hour_pillar_enabled=hour_pillar_enabled,
         signals=signals,
     )
@@ -188,6 +227,8 @@ def build_preview_response(
             offset_minutes=time_correction.offset_minutes,
             ambiguous=time_correction.ambiguous,
             fold=time_correction.fold,
+            is_placeholder_time=is_placeholder_time,
+            placeholder_reason=placeholder_reason,
         ),
         regional_solar_correction=RegionalSolarCorrectionSummary(
             source_solar_datetime=regional_solar_correction.source_solar_datetime,
@@ -196,6 +237,8 @@ def build_preview_response(
             regional_time_offset_minutes=regional_solar_correction.regional_time_offset_minutes,
             daylight_saving_offset_minutes=regional_solar_correction.daylight_saving_offset_minutes,
             correction_basis=regional_solar_correction.correction_basis,
+            is_placeholder_time=is_placeholder_time,
+            placeholder_reason=placeholder_reason,
         ),
         calendar_normalization=CalendarNormalizationSummary(
             calendar_type=calendar_normalization.calendar_type,
@@ -212,6 +255,8 @@ def build_preview_response(
             lunar_year=calendar_normalization.lunar_year,
             lunar_month=calendar_normalization.lunar_month,
             lunar_day=calendar_normalization.lunar_day,
+            is_placeholder_time=is_placeholder_time,
+            placeholder_reason=placeholder_reason,
         ),
         manse=manse,
         result=preview_result,
@@ -239,12 +284,26 @@ def build_preview_response(
         limitations=limitations,
         disabled_sections=birth_time_policy.disabled_sections,
         evidence_sections=evidence_sections,
+        calculation_basis=calculation_basis_summary,
+        uncertainty_summary=uncertainty_summary,
         hour_pillar_enabled=hour_pillar_enabled,
         signals=signals,
     )
 
     debug_trace = None
     if debug_requested:
+        resolved_birth_time_context = birth_time_context or build_birth_time_context(
+            time_correction=time_correction,
+            normalized_solar_datetime=calendar_normalization.normalized_solar_datetime,
+            regional_solar_correction=regional_solar_correction,
+        )
+        birth_time_context = BirthTimeContextSummary(
+            **asdict(resolved_birth_time_context)
+        )
+        candidate_chart_summaries = [
+            CandidateChartSummary(**asdict(candidate_chart))
+            for candidate_chart in (candidate_charts or [])
+        ]
         debug_trace = DebugTrace(
             stage_order=[
                 "input_validation",
@@ -335,8 +394,15 @@ def build_preview_response(
                 "birth_time": payload.birth_time,
                 "gender": payload.gender,
                 "region_id": payload.region_id,
+                "accuracy_mode": payload.accuracy_mode,
                 "trace_id": trace_id,
             },
+            accuracy_mode=payload.accuracy_mode,
+            calculation_basis=calculation_basis_summary,
+            birth_time_context=birth_time_context,
+            year_month_boundary_context=saju_calculation.year_month_boundary_context,
+            candidate_charts=candidate_chart_summaries,
+            uncertainty_flags=uncertainty_flag_summaries,
         )
 
     return SajuPreviewResponse(
@@ -358,6 +424,8 @@ def build_preview_response(
             offset_minutes=time_correction.offset_minutes,
             ambiguous=time_correction.ambiguous,
             fold=time_correction.fold,
+            is_placeholder_time=is_placeholder_time,
+            placeholder_reason=placeholder_reason,
         ),
         regional_solar_correction=RegionalSolarCorrectionSummary(
             source_solar_datetime=regional_solar_correction.source_solar_datetime,
@@ -366,6 +434,8 @@ def build_preview_response(
             regional_time_offset_minutes=regional_solar_correction.regional_time_offset_minutes,
             daylight_saving_offset_minutes=regional_solar_correction.daylight_saving_offset_minutes,
             correction_basis=regional_solar_correction.correction_basis,
+            is_placeholder_time=is_placeholder_time,
+            placeholder_reason=placeholder_reason,
         ),
         calendar_normalization=CalendarNormalizationSummary(
             calendar_type=calendar_normalization.calendar_type,
@@ -382,6 +452,8 @@ def build_preview_response(
             lunar_year=calendar_normalization.lunar_year,
             lunar_month=calendar_normalization.lunar_month,
             lunar_day=calendar_normalization.lunar_day,
+            is_placeholder_time=is_placeholder_time,
+            placeholder_reason=placeholder_reason,
         ),
         manse=manse,
         result=result,

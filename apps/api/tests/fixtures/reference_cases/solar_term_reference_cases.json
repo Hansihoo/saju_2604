@@ -1,0 +1,325 @@
+{
+  "schema_version": 1,
+  "category": "solar_term_reference_cases",
+  "description": "Reference collection list for solar-term boundary cases. Pending cases should be filled from KASI or an independent ephemeris table before becoming hard references.",
+  "cases": [
+    {
+      "case_id": "kasi_2018_ipchun_boundary",
+      "description": "2018 Ipchun boundary time from KASI annual almanac PDF.",
+      "input": {
+        "solar_term": "ipchun",
+        "date": "2018-02-04",
+        "timezone": "Asia/Seoul"
+      },
+      "expected": {
+        "solar_term_datetime": "2018-02-04T06:28:00+09:00",
+        "affected_fields": [
+          "year_pillar",
+          "month_pillar"
+        ],
+        "source_precision_seconds": 60
+      },
+      "source": {
+        "type": "kasi_almanac_pdf",
+        "name": "KASI astronomical almanac PDF solar terms",
+        "url": "https://www.kasi.re.kr/kor/publication/post/publication?cPage=2&clsf_cd=pub005",
+        "retrieved_at": "2026-05-16"
+      },
+      "tolerance": {
+        "seconds": 60
+      },
+      "notes": "Collected from KASI 2018 annual astronomical almanac PDF."
+    },
+    {
+      "case_id": "kasi_2019_ipchun_boundary",
+      "description": "2019 Ipchun boundary time from KASI annual almanac PDF.",
+      "input": {
+        "solar_term": "ipchun",
+        "date": "2019-02-04",
+        "timezone": "Asia/Seoul"
+      },
+      "expected": {
+        "solar_term_datetime": "2019-02-04T12:14:00+09:00",
+        "affected_fields": [
+          "year_pillar",
+          "month_pillar"
+        ],
+        "source_precision_seconds": 60
+      },
+      "source": {
+        "type": "kasi_almanac_pdf",
+        "name": "KASI astronomical almanac PDF solar terms",
+        "url": "https://www.kasi.re.kr/kor/publication/post/publication?cPage=1&clsf_cd=pub005",
+        "retrieved_at": "2026-05-16"
+      },
+      "tolerance": {
+        "seconds": 60
+      },
+      "notes": "Collected from KASI 2019 annual astronomical almanac PDF."
+    },
+    {
+      "case_id": "kasi_2020_ipchun_boundary",
+      "description": "2020 Ipchun boundary time from KASI annual almanac PDF.",
+      "input": {
+        "solar_term": "ipchun",
+        "date": "2020-02-04",
+        "timezone": "Asia/Seoul"
+      },
+      "expected": {
+        "solar_term_datetime": "2020-02-04T18:03:00+09:00",
+        "affected_fields": [
+          "year_pillar",
+          "month_pillar"
+        ],
+        "source_precision_seconds": 60
+      },
+      "source": {
+        "type": "kasi_almanac_pdf",
+        "name": "KASI astronomical almanac PDF solar terms",
+        "url": "https://astro.kasi.re.kr/file/astro_almanac_pdf/20200624134708539.pdf",
+        "retrieved_at": "2026-05-16"
+      },
+      "tolerance": {
+        "seconds": 60
+      },
+      "notes": "Collected from KASI 2020 annual astronomical almanac PDF."
+    },
+    {
+      "case_id": "kasi_2020_gyeongchip_boundary",
+      "description": "2020 Gyeongchip boundary time from KASI annual almanac PDF.",
+      "input": {
+        "solar_term": "gyeongchip",
+        "date": "2020-03-05",
+        "timezone": "Asia/Seoul"
+      },
+      "expected": {
+        "solar_term_datetime": "2020-03-05T11:57:00+09:00",
+        "affected_fields": [
+          "month_pillar"
+        ],
+        "source_precision_seconds": 60
+      },
+      "source": {
+        "type": "kasi_almanac_pdf",
+        "name": "KASI astronomical almanac PDF solar terms",
+        "url": "https://astro.kasi.re.kr/file/astro_almanac_pdf/20200624134708539.pdf",
+        "retrieved_at": "2026-05-16"
+      },
+      "tolerance": {
+        "seconds": 60
+      },
+      "notes": "Collected from KASI 2020 annual astronomical almanac PDF."
+    },
+    {
+      "case_id": "kasi_2020_cheongmyeong_boundary",
+      "description": "2020 Cheongmyeong boundary time from KASI annual almanac PDF.",
+      "input": {
+        "solar_term": "cheongmyeong",
+        "date": "2020-04-04",
+        "timezone": "Asia/Seoul"
+      },
+      "expected": {
+        "solar_term_datetime": "2020-04-04T16:38:00+09:00",
+        "affected_fields": [
+          "month_pillar"
+        ],
+        "source_precision_seconds": 60
+      },
+      "source": {
+        "type": "kasi_almanac_pdf",
+        "name": "KASI astronomical almanac PDF solar terms",
+        "url": "https://astro.kasi.re.kr/file/astro_almanac_pdf/20200624134708539.pdf",
+        "retrieved_at": "2026-05-16"
+      },
+      "tolerance": {
+        "seconds": 60
+      },
+      "notes": "Collected from KASI 2020 annual astronomical almanac PDF."
+    },
+    {
+      "case_id": "kasi_2020_ipha_boundary",
+      "description": "2020 Ipha boundary time from KASI annual almanac PDF.",
+      "input": {
+        "solar_term": "ipha",
+        "date": "2020-05-05",
+        "timezone": "Asia/Seoul"
+      },
+      "expected": {
+        "solar_term_datetime": "2020-05-05T09:51:00+09:00",
+        "affected_fields": [
+          "month_pillar"
+        ],
+        "source_precision_seconds": 60
+      },
+      "source": {
+        "type": "kasi_almanac_pdf",
+        "name": "KASI astronomical almanac PDF solar terms",
+        "url": "https://astro.kasi.re.kr/file/astro_almanac_pdf/20200624134708539.pdf",
+        "retrieved_at": "2026-05-16"
+      },
+      "tolerance": {
+        "seconds": 60
+      },
+      "notes": "Collected from KASI 2020 annual astronomical almanac PDF."
+    },
+    {
+      "case_id": "kasi_2024_ipchun_boundary",
+      "description": "2024 Ipchun boundary time for year/month pillar transition.",
+      "input": {
+        "solar_term": "ipchun",
+        "date": "2024-02-04",
+        "timezone": "Asia/Seoul"
+      },
+      "expected": {
+        "solar_term_datetime": "2024-02-04T17:27:00+09:00",
+        "affected_fields": [
+          "year_pillar",
+          "month_pillar"
+        ],
+        "source_precision_seconds": 60
+      },
+      "source": {
+        "type": "kasi_calendar_data",
+        "name": "KASI calendarData solar terms",
+        "url": "https://astro.kasi.re.kr/life/post/calendarData?year=2024",
+        "retrieved_at": "2026-05-16"
+      },
+      "tolerance": {
+        "seconds": 60
+      },
+      "notes": "Collected from KASI calendarData TXT. Official almanac/gazette confirmation remains tracked in the solar-term table row metadata."
+    },
+    {
+      "case_id": "kasi_2024_gyeongchip_boundary",
+      "description": "2024 Gyeongchip boundary time for month pillar transition.",
+      "input": {
+        "solar_term": "gyeongchip",
+        "date": "2024-03-05",
+        "timezone": "Asia/Seoul"
+      },
+      "expected": {
+        "solar_term_datetime": "2024-03-05T11:23:00+09:00",
+        "affected_fields": [
+          "month_pillar"
+        ],
+        "source_precision_seconds": 60
+      },
+      "source": {
+        "type": "kasi_calendar_data",
+        "name": "KASI calendarData solar terms",
+        "url": "https://astro.kasi.re.kr/life/post/calendarData?year=2024",
+        "retrieved_at": "2026-05-16"
+      },
+      "tolerance": {
+        "seconds": 60
+      },
+      "notes": "Collected from KASI calendarData TXT. Official almanac/gazette confirmation remains tracked in the solar-term table row metadata."
+    },
+    {
+      "case_id": "kasi_2024_cheongmyeong_boundary",
+      "description": "2024 Cheongmyeong boundary time for month pillar transition.",
+      "input": {
+        "solar_term": "cheongmyeong",
+        "date": "2024-04-04",
+        "timezone": "Asia/Seoul"
+      },
+      "expected": {
+        "solar_term_datetime": "2024-04-04T16:02:00+09:00",
+        "affected_fields": [
+          "month_pillar"
+        ],
+        "source_precision_seconds": 60
+      },
+      "source": {
+        "type": "kasi_calendar_data",
+        "name": "KASI calendarData solar terms",
+        "url": "https://astro.kasi.re.kr/life/post/calendarData?year=2024",
+        "retrieved_at": "2026-05-16"
+      },
+      "tolerance": {
+        "seconds": 60
+      },
+      "notes": "Collected from KASI calendarData TXT. Official almanac/gazette confirmation remains tracked in the solar-term table row metadata."
+    },
+    {
+      "case_id": "kasi_2024_ipha_boundary",
+      "description": "2024 Ipha boundary time for month pillar transition.",
+      "input": {
+        "solar_term": "ipha",
+        "date": "2024-05-05",
+        "timezone": "Asia/Seoul"
+      },
+      "expected": {
+        "solar_term_datetime": "2024-05-05T09:10:00+09:00",
+        "affected_fields": [
+          "month_pillar"
+        ],
+        "source_precision_seconds": 60
+      },
+      "source": {
+        "type": "kasi_calendar_data",
+        "name": "KASI calendarData solar terms",
+        "url": "https://astro.kasi.re.kr/life/post/calendarData?year=2024",
+        "retrieved_at": "2026-05-16"
+      },
+      "tolerance": {
+        "seconds": 60
+      },
+      "notes": "Collected from KASI calendarData TXT. Official almanac/gazette confirmation remains tracked in the solar-term table row metadata."
+    },
+    {
+      "case_id": "independent_ephemeris_2024_ipchun_minus_30m",
+      "description": "Independent ephemeris sample just before the 2024 Ipchun boundary.",
+      "input": {
+        "date": "2024-02-04",
+        "relative_to_solar_term": "minus_30_minutes",
+        "timezone": "Asia/Seoul"
+      },
+      "expected": {
+        "status": "pending_reference",
+        "needed_fields": [
+          "input_datetime",
+          "nearest_solar_term_datetime",
+          "delta_seconds"
+        ]
+      },
+      "source": {
+        "type": "external_pending",
+        "name": "Skyfield/Astropy/JPL independent ephemeris table",
+        "url": null,
+        "retrieved_at": null
+      },
+      "tolerance": {
+        "seconds": 60
+      },
+      "notes": "Use this to verify the near_solar_term critical threshold independently of lunar_python."
+    },
+    {
+      "case_id": "independent_ephemeris_2024_gyeongchip_plus_30m",
+      "description": "Independent ephemeris sample just after the 2024 Gyeongchip boundary.",
+      "input": {
+        "date": "2024-03-05",
+        "relative_to_solar_term": "plus_30_minutes",
+        "timezone": "Asia/Seoul"
+      },
+      "expected": {
+        "status": "pending_reference",
+        "needed_fields": [
+          "input_datetime",
+          "nearest_solar_term_datetime",
+          "delta_seconds"
+        ]
+      },
+      "source": {
+        "type": "external_pending",
+        "name": "Skyfield/Astropy/JPL independent ephemeris table",
+        "url": null,
+        "retrieved_at": null
+      },
+      "tolerance": {
+        "seconds": 60
+      },
+      "notes": "Use this to verify the near_solar_term critical threshold independently of lunar_python."
+    }
+  ]
+}

@@ -23,6 +23,7 @@ from app.domain.saju.interpretation import (
 )
 from app.domain.saju.llm_payload import InterpretationLuckCycle, InterpretationPayload
 from app.domain.saju.localization import contains_hangul, contains_hanja
+from app.domain.saju.prompts.interpretation_report import get_interpretation_report_prompt
 
 try:
     from openai import OpenAI
@@ -54,7 +55,7 @@ def _model_json_schema(model_class: Any) -> Dict[str, Any]:
     return model_class.schema()
 
 
-PROMPT_VERSION = "saju-report-v13"
+PROMPT_SPEC = get_interpretation_report_prompt()
 MIN_SUMMARY_LENGTH = 220
 MIN_SECTION_LENGTH = 850
 OUTPUT_EXCERPT_LIMIT = 280
@@ -72,38 +73,6 @@ SCHEMA_NOISE_KEYS = {
     "minItems",
     "maxItems",
 }
-BANNED_PHRASES = [
-    "반드시",
-    "무조건",
-    "운명적으로",
-    "100%",
-    "대박",
-    "큰돈을 번다",
-    "결혼한다",
-    "이혼한다",
-    "바람난다",
-    "사고가 난다",
-    "병이 생긴다",
-    "죽음",
-    "파산",
-    "망한다",
-]
-CORE_ANALYSIS_TECHNICAL_TERMS = [
-    "일간",
-    "십성",
-    "상관",
-    "인성",
-    "편관",
-    "정관",
-    "식신",
-    "재성",
-    "관성",
-    "신살",
-    "화개",
-    "귀문관",
-    "장성",
-    "괴강",
-]
 ELEMENT_LABELS = {
     "ko": {"wood": "목", "fire": "화", "earth": "토", "metal": "금", "water": "수"},
     "en": {
@@ -114,181 +83,6 @@ ELEMENT_LABELS = {
         "water": "Water",
     },
 }
-
-DEVELOPER_PROMPT = """
-You are a modern Korean saju interpretation writer for a fact-based saju web service.
-
-Core role:
-- The payload already contains computed manse and saju facts.
-- You are not a calculator. You are a user-facing interpretation writer.
-- Never recalculate saju, manse, timing correction, pillars, ten gods, stars, luck cycles, or scores.
-- Use only the provided payload as the source of truth.
-
-Language rules:
-- Follow profile.locale strictly.
-- If locale is ko, write in Korean Hangul only. Do not output Hanja.
-- If locale is en, write in English only. Do not output Korean or Hanja.
-
-Truthfulness rules:
-- Do not invent pillars, ten gods, elements, special stars, luck cycles, marriage outcomes, reunion, cheating, illness, accident, death, destiny, or timing.
-- Do not make deterministic predictions.
-- Avoid exaggerated certainty.
-- Do not expose numeric scores, score labels, point-based phrasing, or internal scoring logic.
-- If a score or signal exists in the payload, use it only to adjust tone and strength.
-- If birth time is estimated or unknown, clearly mention the limitation and do not use hour-pillar-based interpretation as certain.
-- Special stars must be used only as supporting indicators, never as the sole basis for a conclusion.
-
-Style goal:
-- Make the result easy to read but visibly grounded.
-- The user should feel: "This is readable, but it is not random."
-- Use simple everyday Korean first, especially in the main explanatory paragraphs.
-- The main body should not read like a saju glossary.
-- Use the plain meaning first, then put technical saju terms in "풀이 포인트" or "전문가 노트".
-- If a saju term is necessary in the main body, explain it immediately in everyday language.
-- Do not overload the user with technical terms.
-- The result should feel substantial, not like a teaser.
-- Prefer concrete life situations, tradeoffs, and practical reading logic over short generic summaries.
-- Keep the reading scannable. Do not write long unbroken paragraphs.
-- Every paragraph should be 1 to 2 sentences.
-- If one idea needs more explanation, split it into separate short paragraphs instead of one long item.
-- Bullet items should be short. Use one sentence per bullet when possible, and never put several dense explanations into one bullet.
-
-Output structure:
-- Return valid JSON that matches the existing schema.
-- Do not add new top-level fields.
-- Keep the existing section keys:
-  summary, core_analysis, love, career, wealth, luck_flow.
-- Put user-facing basis chips and expert notes inside each section body using markdown text.
-
-Writing format for each major section body:
-1. Start with a clear conclusion.
-2. Explain the interpretation in plain Korean with enough detail.
-3. Add practical advice.
-4. Add a short "풀이 포인트" block with 2 to 4 basis chips.
-5. Add a short "전문가 노트" block with 1 to 2 sentences explaining why the interpretation was made.
-
-Length requirements:
-- summary.overview should be 6 to 8 sentences.
-- Each major section body must be substantial: about 900 to 1400 Korean characters for ko, or similarly detailed in English.
-- Do not satisfy a section with only three bullets. Give the user enough context to understand why the conclusion follows from the payload.
-- If a section feels short, expand with "how it appears in real life", "what to watch", and "how to use it well".
-
-Use this section body pattern:
-
-### 핵심 결론
-Write 3 to 4 sentences.
-
-### 쉽게 풀어보면
-Write 5 to 8 sentences.
-Split those sentences into 3 to 4 short paragraphs.
-For ko, use the exact heading "쉽게 풀어보면". Do not use "현실 해석".
-For en, use "Plain reading".
-
-### 조언
-- Write 4 to 6 practical bullet points.
-- Each bullet should be one short idea. If a bullet needs two ideas, split it into two bullets.
-
-### 풀이 포인트
-[일간] [십성] [오행] [대운] style chips.
-Use only terms that exist in the payload.
-
-### 전문가 노트
-Write 1 to 2 sentences.
-Explain the logic simply.
-This is the proper place for technical basis such as 일간, 십성, 오행, 신살, 대운.
-Do not use raw evidence IDs.
-Do not use the English word "evidence".
-
-Section requirements:
-
-summary:
-- headline must be short and personalized.
-- overview must summarize the whole reading in 6 to 8 sentences.
-- Mention the strongest personality direction, current-period theme, and one caution.
-- Do not include raw pillar tables in the overview.
-
-core_analysis:
-- Include standout traits, comparison, strengths, cautions, and direction.
-- Use day master, element balance, ten gods, and major signals from the payload as hidden basis, but translate them into plain user-facing traits.
-- In "핵심 결론", "쉽게 풀어보면", and "조언", avoid dense terms such as 일간, 십성, 상관, 인성, 편관, 정관, 화개, 귀문관, 장성, 괴강.
-- Do not list many saju terms in consecutive sentences.
-- Put detailed saju terms in "풀이 포인트" or "전문가 노트", and briefly explain what they mean.
-- Prefer everyday phrases such as 기준이 뚜렷함, 분석과 정리, 표현력, 책임감, 몰입, 피로 누적, 관계의 부드러움, 속도 조절.
-- Avoid abstract repetition such as "흐름", "기운", "안정" too often.
-
-love:
-- Include relationship style, marriage tendency, good match, difficult match, advice, and current-period reading.
-- Use spouse house, partner star, love_facts, relevant ten gods, current_flow, and special stars if provided.
-- Do not promise marriage, reunion, breakup, cheating, or fate.
-- If 도화, 홍염, or similar stars appear, explain them as attraction or social attention indicators only.
-
-career:
-- Include work style, suitable environment, risks, strategy, and current-period reading.
-- Use month pillar, career_facts, officer/resource/output indicators, current_flow, and relevant special stars if provided.
-- Translate technical terms into practical work language such as planning, documentation, operations, responsibility, review, education, leadership, or execution.
-
-wealth:
-- Include money flow type, earning pattern, spending risk, management direction, and current-period reading.
-- Interpret wealth using wealth star, output star, peer star, element balance, missing elements, current_flow, and relevant special stars if provided.
-- If wealth star is weak or absent, do not say money luck is strong.
-- If output exists, explain income through results, productivity, skills, content, sales, or deliverables.
-- If peer is strong, explain competition, shared costs, relationship spending, or leakage risk.
-- Do not give investment instructions, stock advice, coin advice, or guaranteed profit predictions.
-
-luck_flow:
-- The luck_flow section must answer the user's real timing questions.
-- Use luck_flow_facts and luck_cycle_analysis as the main basis.
-- Do not merely describe the current and next luck cycles.
-- Explain what kind of period the user is in now.
-- Explain whether the current period is a preparation, expansion, adjustment, stabilization, or transition period.
-- Explain when the next major favorable period begins, based only on provided favorable_periods.
-- Explain which domain improves: love, career, wealth, relationships, stability, visibility, or responsibility.
-- Explain how long that favorable tendency lasts using provided periods only.
-- Explain what changes when moving from the current luck cycle to the next luck cycle.
-- Explain what the user should do now to use the next period well.
-- If locale is ko, prefer labels such as "지금은 어떤 시기인가", "좋아지는 시기는 언제인가", "어떤 운이 좋아지는가", "다음 대운에서 무엇이 바뀌는가", and "지금 해야 할 것".
-- If locale is en, prefer labels such as "what kind of period this is", "when the more favorable period begins", "which area improves", "what changes in the next cycle", and "what to do now".
-- Describe better/worse areas as tendencies and management points, never as guaranteed outcomes.
-- Do not list every luck cycle unless the schema or payload requires it.
-- Do not say "best period" unless the payload explicitly marks a cycle as favorable.
-- Use phrases like "상대적으로 유리한 구간", "힘이 실리는 시기", or "기반이 잡히는 시기" instead of deterministic claims.
-
-Tone:
-- Professional, readable, calm, and grounded.
-- No fortune-teller exaggeration.
-- No fear-based writing.
-- No vague filler.
-- Prefer concrete situations and choices.
-
-Banned expressions:
-- 반드시
-- 무조건
-- 운명적으로
-- 대박
-- 큰돈을 번다
-- 결혼한다
-- 이혼한다
-- 바람난다
-- 사고가 난다
-- 병이 생긴다
-- 죽음
-- 파산
-- 망한다
-
-Return valid JSON only.
-""".strip()
-
-REPAIR_PROMPT = """
-You repair JSON output for a modern Korean saju interpretation service.
-
-Rules:
-- Use the provided payload as the only source of truth.
-- Repair the draft JSON so it exactly matches the schema.
-- Keep the existing long-form style when possible.
-- Do not invent new facts.
-- Follow the locale rules strictly.
-- Return valid JSON only.
-""".strip()
 
 
 def _locale(payload: InterpretationPayload) -> str:
@@ -321,7 +115,11 @@ def _cycle_label(payload: InterpretationPayload, cycle: InterpretationLuckCycle 
     if cycle is None:
         return "확인 대기" if _locale(payload) == "ko" else "Not available"
     if _locale(payload) == "ko":
+        if cycle.start_age_years is not None and cycle.start_age_months is not None:
+            return f"{cycle.start_age_years}세 {cycle.start_age_months}개월부터 {cycle.display_gan_zhi}"
         return f"{cycle.start_age}세부터 {cycle.end_age}세까지 {cycle.display_gan_zhi}"
+    if cycle.start_age_years is not None and cycle.start_age_months is not None:
+        return f"age {cycle.start_age_years}y {cycle.start_age_months}m with {cycle.display_gan_zhi}"
     return f"{cycle.start_age}-{cycle.end_age} with {cycle.display_gan_zhi}"
 
 
@@ -984,14 +782,15 @@ The chart is currently read on top of {active_cycle}, and the next visible shift
             top_domain_label=top_domain_label,
         )
 
+    has_critical_uncertainty = any(flag.severity == "critical" for flag in payload.uncertainty_summary)
     report = InterpretationReport(
         provider="fallback",
         model="fallback",
-        prompt_version=PROMPT_VERSION,
+        prompt_version=PROMPT_SPEC.version,
         summary=InterpretationSummaryBlock(
             headline=_summary_headline(payload),
             overview=_summary_overview(payload),
-            confidence="low" if payload.profile.is_birth_time_estimated else "medium",
+            confidence="low" if payload.profile.is_birth_time_estimated or has_critical_uncertainty else "medium",
             evidence_ids=["elements", "luck_cycles"],
         ),
         core_analysis=_section("내 사주의 특징" if locale == "ko" else "Core traits", core_body, ["elements", "ten_gods"]),
@@ -999,7 +798,7 @@ The chart is currently read on top of {active_cycle}, and the next visible shift
         career=_section("직장운" if locale == "ko" else "Career", career_body, ["ten_gods", "luck_cycles"]),
         wealth=_section("금전운" if locale == "ko" else "Wealth", wealth_body, ["elements", "luck_cycles"]),
         luck_flow=_section("현재와 다음 흐름" if locale == "ko" else "Current and next flow", luck_flow_body, ["luck_cycles"]),
-        warnings=[],
+        warnings=[flag.code for flag in payload.uncertainty_summary],
     )
     return report
 
@@ -1036,7 +835,7 @@ def _make_diagnostics(
         configured_provider=settings.llm_provider,
         final_provider=final_provider,
         model=settings.openai_model if settings.llm_provider == "openai" else None,
-        prompt_version=PROMPT_VERSION,
+        prompt_version=PROMPT_SPEC.version,
         payload_chars=len(payload_json),
         duration_ms=duration_ms,
         final_response_id=final_response_id,
@@ -1068,7 +867,7 @@ def _build_openai_report(parsed: InterpretationLLMOutput) -> InterpretationRepor
     return InterpretationReport(
         provider="openai",
         model=settings.openai_model,
-        prompt_version=PROMPT_VERSION,
+        prompt_version=PROMPT_SPEC.version,
         summary=parsed.summary,
         core_analysis=parsed.core_analysis,
         love=parsed.love,
@@ -1102,7 +901,7 @@ def _call_openai_repair_interpretation(
             store=settings.llm_store,
             max_output_tokens=token_budget,
             input=[
-                {"role": "developer", "content": REPAIR_PROMPT},
+                {"role": "developer", "content": PROMPT_SPEC.repair_prompt},
                 {
                     "role": "user",
                     "content": json.dumps(
@@ -1222,7 +1021,7 @@ def _call_openai_structured_interpretation(
                 store=settings.llm_store,
                 max_output_tokens=token_budget,
                 input=[
-                    {"role": "developer", "content": DEVELOPER_PROMPT},
+                    {"role": "developer", "content": PROMPT_SPEC.developer_prompt},
                     {"role": "user", "content": payload_json},
                 ],
                 text={
@@ -1425,7 +1224,7 @@ def _main_explanation_text(body: str) -> str:
 
 def _core_analysis_technical_term_count(body: str) -> int:
     main_text = _main_explanation_text(body)
-    return sum(main_text.count(term) for term in CORE_ANALYSIS_TECHNICAL_TERMS)
+    return sum(main_text.count(term) for term in PROMPT_SPEC.core_analysis_technical_terms)
 
 
 def _validate_section(key: str, section: InterpretationNarrativeSection) -> List[str]:
@@ -1472,7 +1271,7 @@ def _validate_report(report: InterpretationReport, payload: InterpretationPayloa
             issues.append("relative_wording_without_percentile:numeric")
         if _contains_exposed_score(text):
             issues.append("score_exposed_in_user_text")
-        for phrase in BANNED_PHRASES:
+        for phrase in PROMPT_SPEC.validation_banned_phrases:
             if phrase in text:
                 issues.append(f"banned_phrase:{phrase}")
     issues.extend(_validate_language(report, payload))
@@ -1600,7 +1399,7 @@ def generate_interpretation_report(
             meta={
                 "provider": "openai",
                 "response_id": diagnostics.final_response_id,
-                "prompt_version": PROMPT_VERSION,
+                "prompt_version": PROMPT_SPEC.version,
                 "attempts": [_model_dump_json(attempt) for attempt in diagnostics.attempts],
             },
         )

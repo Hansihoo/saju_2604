@@ -1,0 +1,174 @@
+{
+  "completed_years": [
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025,
+    2026,
+    2027
+  ],
+  "failed_years": [],
+  "last_run_at": "2026-05-16T14:27:54+00:00",
+  "log_path": "apps\\api\\app\\domain\\saju\\data\\solar_terms_reference\\kasi_solar_terms_common_years.collection.log.jsonl",
+  "pending_years": [],
+  "requested_years": [
+    2018,
+    2019
+  ],
+  "resume_note": "Rerun the build command; complete years are skipped unless --refresh is set.",
+  "schema_version": 1,
+  "table_id": "kasi_solar_terms_common_years",
+  "year_status": {
+    "2011": {
+      "action": "fetched",
+      "retrieved_at": "2026-05-16T14:11:02+00:00",
+      "row_count": 24,
+      "rows_sha256": "ac17a6bb47e37ba5a00ceb64f031a2462ca39bcb270254565f06d2039d4ce5a0",
+      "source_method": "almanac_archive_html",
+      "status": "complete"
+    },
+    "2012": {
+      "action": "fetched",
+      "retrieved_at": "2026-05-16T14:11:04+00:00",
+      "row_count": 24,
+      "rows_sha256": "9adc79de9f7a0df454c523efeeb2e726adee760f83e01b83ac8c78f363348416",
+      "source_method": "almanac_archive_html",
+      "status": "complete"
+    },
+    "2013": {
+      "action": "fetched",
+      "retrieved_at": "2026-05-16T14:11:05+00:00",
+      "row_count": 24,
+      "rows_sha256": "7925206b240d732494c615e1cba519e6ae4fe8485562f8a4ec29d688b3f1e47b",
+      "source_method": "almanac_archive_html",
+      "status": "complete"
+    },
+    "2014": {
+      "action": "fetched",
+      "retrieved_at": "2026-05-16T14:11:07+00:00",
+      "row_count": 24,
+      "rows_sha256": "a3445e277c0430ce63d3667eb35beac41eb532e9fb908a6d13e6133afa1bbbef",
+      "source_method": "almanac_archive_html",
+      "status": "complete"
+    },
+    "2015": {
+      "action": "fetched",
+      "retrieved_at": "2026-05-16T14:11:08+00:00",
+      "row_count": 24,
+      "rows_sha256": "64d455d16ac5e41ec2cdad09ce114b96e2842d2e87ca748e8ff64c2c899fa1cd",
+      "source_method": "almanac_archive_html",
+      "status": "complete"
+    },
+    "2016": {
+      "action": "fetched",
+      "retrieved_at": "2026-05-16T14:11:10+00:00",
+      "row_count": 24,
+      "rows_sha256": "82075e8a45a91a0538547a568533612a00675f2eebc9dc6dcc380d889633d4b9",
+      "source_method": "almanac_archive_html",
+      "status": "complete"
+    },
+    "2017": {
+      "action": "fetched",
+      "retrieved_at": "2026-05-16T14:11:11+00:00",
+      "row_count": 24,
+      "rows_sha256": "63f61a248dda250310776320b5a73c61d66615d381d06ec1962cd00829c23fc3",
+      "source_method": "almanac_archive_html",
+      "status": "complete"
+    },
+    "2018": {
+      "action": "fetched",
+      "last_action": "skipped_existing",
+      "retrieved_at": "2026-05-16T14:27:39+00:00",
+      "row_count": 24,
+      "rows_sha256": "2235fb70e221d16874375c7b3d790895280d40fa0b46a508833d656ad79cd380",
+      "source_method": "almanac_pdf",
+      "status": "complete"
+    },
+    "2019": {
+      "action": "fetched",
+      "retrieved_at": "2026-05-16T14:27:53+00:00",
+      "row_count": 24,
+      "rows_sha256": "c2bf7e15939ed2c1a7fc191fefbdb4439697d08c6d445de39503281fe571ccbe",
+      "source_method": "almanac_pdf",
+      "status": "complete"
+    },
+    "2020": {
+      "action": "fetched",
+      "retrieved_at": "2026-05-16T14:20:57+00:00",
+      "row_count": 24,
+      "rows_sha256": "186820d7b2f7d2d7edbafe0e13028c18a374e3c4047c8c03b683d6e656eb0980",
+      "source_method": "almanac_pdf",
+      "status": "complete"
+    },
+    "2021": {
+      "action": "fetched",
+      "last_action": "skipped_existing",
+      "retrieved_at": "2026-05-16T13:03:25+00:00",
+      "row_count": 24,
+      "rows_sha256": "e57a989caa30e9bedf99af680ecc295a5794057b7e6e3bb26375fcc95cce7f0e",
+      "source_method": "calendar_data_download_txt",
+      "status": "complete"
+    },
+    "2022": {
+      "action": "fetched",
+      "last_action": "skipped_existing",
+      "retrieved_at": "2026-05-16T13:03:25+00:00",
+      "row_count": 24,
+      "rows_sha256": "a50ea54c264c2720d85cd66cfb860174b88e4ea8d0340d10c45b6b048b943cea",
+      "source_method": "calendar_data_download_txt",
+      "status": "complete"
+    },
+    "2023": {
+      "action": "fetched",
+      "last_action": "skipped_existing",
+      "retrieved_at": "2026-05-16T13:03:26+00:00",
+      "row_count": 24,
+      "rows_sha256": "9512d6c29b2e2a4ed381152dc489994a96c90a2b4242876529287d67671277c5",
+      "source_method": "calendar_data_download_txt",
+      "status": "complete"
+    },
+    "2024": {
+      "action": "skipped_existing",
+      "last_action": "skipped_existing",
+      "status": "complete"
+    },
+    "2025": {
+      "action": "fetched",
+      "last_action": "skipped_existing",
+      "retrieved_at": "2026-05-16T13:03:26+00:00",
+      "row_count": 24,
+      "rows_sha256": "01c05bb11534101fce1cb4eef12ad0fbe29314226ccf4e8e30368432e6906e01",
+      "source_method": "calendar_data_download_txt",
+      "status": "complete"
+    },
+    "2026": {
+      "action": "fetched",
+      "last_action": "skipped_existing",
+      "retrieved_at": "2026-05-16T13:03:27+00:00",
+      "row_count": 24,
+      "rows_sha256": "f866a2cc2d33b7faee095f4de3aa6a427511ddc8cce170e9b5eba9fe377deaad",
+      "source_method": "calendar_data_download_txt",
+      "status": "complete"
+    },
+    "2027": {
+      "action": "fetched",
+      "last_action": "skipped_existing",
+      "retrieved_at": "2026-05-16T13:03:28+00:00",
+      "row_count": 24,
+      "rows_sha256": "029002830d2b7bed3a1eb4bdc57237febe438631f276ae51041c33109aeece4a",
+      "source_method": "calendar_data_html",
+      "status": "complete"
+    }
+  }
+}

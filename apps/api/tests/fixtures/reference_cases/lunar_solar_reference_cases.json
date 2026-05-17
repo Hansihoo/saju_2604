@@ -1,0 +1,326 @@
+{
+  "schema_version": 1,
+  "category": "lunar_solar_reference_cases",
+  "description": "Reference collection list for lunar/solar conversion cases. Pending cases should be filled from official KASI records before becoming hard references.",
+  "cases": [
+    {
+      "case_id": "kasi_solar_1914_06_23",
+      "description": "KASI official solar-to-lunar conversion for the 1914 leap-month boundary eve.",
+      "input": {
+        "calendar_type": "solar",
+        "birth_date": "1914-06-23",
+        "birth_time": "00:00",
+        "is_lunar_leap_month": false
+      },
+      "expected": {
+        "normalized_solar_datetime": "1914-06-23 00:00:00",
+        "normalized_lunar_datetime": "1914-05-30 00:00:00",
+        "lunar_year": 1914,
+        "lunar_month": 5,
+        "lunar_day": 30,
+        "is_lunar_leap_month": false,
+        "iljin": "\u5e9a\u8fb0"
+      },
+      "source": {
+        "type": "official_reference",
+        "name": "KASI lunisolar calendar API",
+        "url": "https://www.data.go.kr/data/15012679/openapi.do",
+        "retrieved_at": "2026-05-16"
+      },
+      "tolerance": {
+        "seconds": 0
+      },
+      "notes": "Official KASI value; protects the date immediately before leap lunar 1914-05 begins."
+    },
+    {
+      "case_id": "kasi_lunar_1914_05_30_to_solar",
+      "description": "KASI official lunar-to-solar conversion for regular lunar 1914-05-30.",
+      "input": {
+        "calendar_type": "lunar",
+        "birth_date": "1914-05-30",
+        "birth_time": "00:00",
+        "is_lunar_leap_month": false
+      },
+      "expected": {
+        "normalized_solar_datetime": "1914-06-23 00:00:00",
+        "normalized_lunar_datetime": "1914-05-30 00:00:00",
+        "lunar_year": 1914,
+        "lunar_month": 5,
+        "lunar_day": 30,
+        "is_lunar_leap_month": false,
+        "iljin": "\u5e9a\u8fb0"
+      },
+      "source": {
+        "type": "official_reference",
+        "name": "KASI lunisolar calendar API",
+        "url": "https://www.data.go.kr/data/15012679/openapi.do",
+        "retrieved_at": "2026-05-16"
+      },
+      "tolerance": {
+        "seconds": 0
+      },
+      "notes": "Official KASI value; lunar_python rejects this edge date, so the local reference table protects it."
+    },
+    {
+      "case_id": "kasi_lunar_leap_1914_05_01_to_solar",
+      "description": "KASI official lunar-to-solar conversion for the first day of leap lunar 1914-05.",
+      "input": {
+        "calendar_type": "lunar",
+        "birth_date": "1914-05-01",
+        "birth_time": "00:00",
+        "is_lunar_leap_month": true
+      },
+      "expected": {
+        "normalized_solar_datetime": "1914-06-24 00:00:00",
+        "normalized_lunar_datetime": "1914-05-01 00:00:00",
+        "lunar_year": 1914,
+        "lunar_month": 5,
+        "lunar_day": 1,
+        "is_lunar_leap_month": true,
+        "iljin": "\u8f9b\u5df3"
+      },
+      "source": {
+        "type": "official_reference",
+        "name": "KASI lunisolar calendar API",
+        "url": "https://www.data.go.kr/data/15012679/openapi.do",
+        "retrieved_at": "2026-05-17"
+      },
+      "tolerance": {
+        "seconds": 0
+      },
+      "notes": "Official KASI value; protects the 1914 leap-month first-day boundary."
+    },
+    {
+      "case_id": "kasi_lunar_leap_1914_05_29_to_solar",
+      "description": "KASI official lunar-to-solar conversion for the last day before regular lunar 1914-06.",
+      "input": {
+        "calendar_type": "lunar",
+        "birth_date": "1914-05-29",
+        "birth_time": "00:00",
+        "is_lunar_leap_month": true
+      },
+      "expected": {
+        "normalized_solar_datetime": "1914-07-22 00:00:00",
+        "normalized_lunar_datetime": "1914-05-29 00:00:00",
+        "lunar_year": 1914,
+        "lunar_month": 5,
+        "lunar_day": 29,
+        "is_lunar_leap_month": true,
+        "iljin": "\u5df1\u9149"
+      },
+      "source": {
+        "type": "official_reference",
+        "name": "KASI lunisolar calendar API",
+        "url": "https://www.data.go.kr/data/15012679/openapi.do",
+        "retrieved_at": "2026-05-17"
+      },
+      "tolerance": {
+        "seconds": 0
+      },
+      "notes": "Official KASI value; protects the 1914 leap-month end boundary."
+    },
+    {
+      "case_id": "kasi_solar_1900_01_01_table_start",
+      "description": "KASI official table start boundary for solar-to-lunar conversion.",
+      "input": {
+        "calendar_type": "solar",
+        "birth_date": "1900-01-01",
+        "birth_time": "00:00",
+        "is_lunar_leap_month": false
+      },
+      "expected": {
+        "normalized_solar_datetime": "1900-01-01 00:00:00",
+        "normalized_lunar_datetime": "1899-12-01 00:00:00",
+        "lunar_year": 1899,
+        "lunar_month": 12,
+        "lunar_day": 1,
+        "is_lunar_leap_month": false,
+        "iljin": "\u7532\u620c"
+      },
+      "source": {
+        "type": "official_reference",
+        "name": "KASI lunisolar calendar API",
+        "url": "https://www.data.go.kr/data/15012679/openapi.do",
+        "retrieved_at": "2026-05-17"
+      },
+      "tolerance": {
+        "seconds": 0
+      },
+      "notes": "Official KASI value; protects the lower supported table boundary."
+    },
+    {
+      "case_id": "kasi_solar_1956_12_31",
+      "description": "KASI official year-end solar-to-lunar conversion.",
+      "input": {
+        "calendar_type": "solar",
+        "birth_date": "1956-12-31",
+        "birth_time": "00:00",
+        "is_lunar_leap_month": false
+      },
+      "expected": {
+        "normalized_solar_datetime": "1956-12-31 00:00:00",
+        "normalized_lunar_datetime": "1956-11-30 00:00:00",
+        "lunar_year": 1956,
+        "lunar_month": 11,
+        "lunar_day": 30,
+        "is_lunar_leap_month": false,
+        "iljin": "\u58ec\u7533"
+      },
+      "source": {
+        "type": "official_reference",
+        "name": "KASI lunisolar calendar API",
+        "url": "https://www.data.go.kr/data/15012679/openapi.do",
+        "retrieved_at": "2026-05-16"
+      },
+      "tolerance": {
+        "seconds": 0
+      },
+      "notes": "Official KASI value; also covers the year-end mismatch observed during investigation."
+    },
+    {
+      "case_id": "kasi_lunar_leap_2023_02_15",
+      "description": "KASI official leap lunar month normalization.",
+      "input": {
+        "calendar_type": "lunar",
+        "birth_date": "2023-02-15",
+        "birth_time": "10:30",
+        "is_lunar_leap_month": true
+      },
+      "expected": {
+        "normalized_solar_datetime": "2023-04-05 10:30:00",
+        "normalized_lunar_datetime": "2023-02-15 10:30:00",
+        "lunar_year": 2023,
+        "lunar_month": 2,
+        "lunar_day": 15,
+        "is_lunar_leap_month": true,
+        "iljin": "\u7678\u5df3"
+      },
+      "source": {
+        "type": "official_reference",
+        "name": "KASI lunisolar calendar API",
+        "url": "https://www.data.go.kr/data/15012679/openapi.do",
+        "retrieved_at": "2026-05-16"
+      },
+      "tolerance": {
+        "seconds": 0
+      },
+      "notes": "Official KASI value for leap lunar month handling."
+    },
+    {
+      "case_id": "kasi_lunar_2024_01_01_to_solar",
+      "description": "Korean lunar 2024-01-01 regular month conversion candidate.",
+      "input": {
+        "calendar_type": "lunar",
+        "birth_date": "2024-01-01",
+        "birth_time": "10:30",
+        "is_lunar_leap_month": false
+      },
+      "expected": {
+        "normalized_solar_datetime": "2024-02-10 10:30:00",
+        "normalized_lunar_datetime": "2024-01-01 10:30:00",
+        "lunar_year": 2024,
+        "lunar_month": 1,
+        "lunar_day": 1,
+        "is_lunar_leap_month": false,
+        "iljin": "\u7532\u8fb0"
+      },
+      "source": {
+        "type": "official_reference",
+        "name": "KASI lunisolar calendar API",
+        "url": "https://www.data.go.kr/data/15012679/openapi.do",
+        "retrieved_at": "2026-05-16"
+      },
+      "tolerance": {
+        "seconds": 0
+      },
+      "notes": "Official KASI hard reference filled from the 2026-05-16 API collection pass."
+    },
+    {
+      "case_id": "kasi_lunar_leap_2023_02_15_to_solar",
+      "description": "Korean leap lunar month conversion candidate.",
+      "input": {
+        "calendar_type": "lunar",
+        "birth_date": "2023-02-15",
+        "birth_time": "10:30",
+        "is_lunar_leap_month": true
+      },
+      "expected": {
+        "normalized_solar_datetime": "2023-04-05 10:30:00",
+        "normalized_lunar_datetime": "2023-02-15 10:30:00",
+        "lunar_year": 2023,
+        "lunar_month": 2,
+        "lunar_day": 15,
+        "is_lunar_leap_month": true,
+        "iljin": "\u7678\u5df3"
+      },
+      "source": {
+        "type": "official_reference",
+        "name": "KASI lunisolar calendar API",
+        "url": "https://www.data.go.kr/data/15012679/openapi.do",
+        "retrieved_at": "2026-05-16"
+      },
+      "tolerance": {
+        "seconds": 0
+      },
+      "notes": "Official KASI hard reference filled from the 2026-05-16 API collection pass."
+    },
+    {
+      "case_id": "kasi_solar_1988_05_20_to_lunar",
+      "description": "Solar-to-lunar conversion candidate for Korea DST-era sample date.",
+      "input": {
+        "calendar_type": "solar",
+        "birth_date": "1988-05-20",
+        "birth_time": "12:30",
+        "is_lunar_leap_month": false
+      },
+      "expected": {
+        "normalized_solar_datetime": "1988-05-20 12:30:00",
+        "normalized_lunar_datetime": "1988-04-05 12:30:00",
+        "lunar_year": 1988,
+        "lunar_month": 4,
+        "lunar_day": 5,
+        "is_lunar_leap_month": false,
+        "iljin": "\u4e59\u4ea5"
+      },
+      "source": {
+        "type": "official_reference",
+        "name": "KASI lunisolar calendar API",
+        "url": "https://www.data.go.kr/data/15012679/openapi.do",
+        "retrieved_at": "2026-05-16"
+      },
+      "tolerance": {
+        "seconds": 0
+      },
+      "notes": "Official KASI hard reference for a Korea DST-era sample date."
+    },
+    {
+      "case_id": "kasi_solar_2050_12_31_table_end",
+      "description": "KASI official table end boundary for solar-to-lunar conversion.",
+      "input": {
+        "calendar_type": "solar",
+        "birth_date": "2050-12-31",
+        "birth_time": "00:00",
+        "is_lunar_leap_month": false
+      },
+      "expected": {
+        "normalized_solar_datetime": "2050-12-31 00:00:00",
+        "normalized_lunar_datetime": "2050-11-18 00:00:00",
+        "lunar_year": 2050,
+        "lunar_month": 11,
+        "lunar_day": 18,
+        "is_lunar_leap_month": false,
+        "iljin": "\u4e59\u9149"
+      },
+      "source": {
+        "type": "official_reference",
+        "name": "KASI lunisolar calendar API",
+        "url": "https://www.data.go.kr/data/15012679/openapi.do",
+        "retrieved_at": "2026-05-17"
+      },
+      "tolerance": {
+        "seconds": 0
+      },
+      "notes": "Official KASI value; protects the upper supported table boundary."
+    }
+  ]
+}

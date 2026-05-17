@@ -1,0 +1,219 @@
+{
+  "schema_version": 1,
+  "category": "timezone_dst_reference_cases",
+  "description": "Hard reference cases for timezone normalization and DST behavior using Python zoneinfo/IANA tzdb as the external reference.",
+  "cases": [
+    {
+      "case_id": "zoneinfo_asia_seoul_regular_1994",
+      "description": "Regular Asia/Seoul local time without DST.",
+      "input": {
+        "operation": "normalize_birth_datetime",
+        "birth_date": "1994-10-13",
+        "birth_time": "08:30",
+        "tzid": "Asia/Seoul"
+      },
+      "expected": {
+        "normalized_local_datetime": "1994-10-13T08:30:00+09:00",
+        "normalized_utc_datetime": "1994-10-12T23:30:00+00:00",
+        "offset_minutes": 540,
+        "ambiguous": false,
+        "fold": 0,
+        "daylight_saving_offset_minutes": 0
+      },
+      "source": {
+        "type": "external_reference",
+        "name": "Python zoneinfo with IANA tzdb",
+        "url": "https://www.iana.org/time-zones",
+        "retrieved_at": "2026-05-16"
+      },
+      "tolerance": {
+        "seconds": 0
+      },
+      "notes": "Baseline Korean standard-time reference."
+    },
+    {
+      "case_id": "zoneinfo_asia_seoul_dst_1988",
+      "description": "Korea 1988 daylight-saving period sample.",
+      "input": {
+        "operation": "normalize_birth_datetime",
+        "birth_date": "1988-05-20",
+        "birth_time": "12:30",
+        "tzid": "Asia/Seoul"
+      },
+      "expected": {
+        "normalized_local_datetime": "1988-05-20T12:30:00+10:00",
+        "normalized_utc_datetime": "1988-05-20T02:30:00+00:00",
+        "offset_minutes": 600,
+        "ambiguous": false,
+        "fold": 0,
+        "daylight_saving_offset_minutes": -60
+      },
+      "source": {
+        "type": "external_reference",
+        "name": "Python zoneinfo with IANA tzdb",
+        "url": "https://www.iana.org/time-zones",
+        "retrieved_at": "2026-05-16"
+      },
+      "tolerance": {
+        "seconds": 0
+      },
+      "notes": "Hard reference for the known 1988 Korea DST case."
+    },
+    {
+      "case_id": "zoneinfo_new_york_ambiguous_fall_2024",
+      "description": "Ambiguous local time during New York fall DST transition.",
+      "input": {
+        "operation": "normalize_birth_datetime",
+        "birth_date": "2024-11-03",
+        "birth_time": "01:30",
+        "tzid": "America/New_York"
+      },
+      "expected": {
+        "normalized_local_datetime": "2024-11-03T01:30:00-05:00",
+        "normalized_utc_datetime": "2024-11-03T06:30:00+00:00",
+        "offset_minutes": -300,
+        "ambiguous": true,
+        "fold": 1
+      },
+      "source": {
+        "type": "external_reference",
+        "name": "Python zoneinfo with IANA tzdb",
+        "url": "https://www.iana.org/time-zones",
+        "retrieved_at": "2026-05-16"
+      },
+      "tolerance": {
+        "seconds": 0
+      },
+      "notes": "The engine chooses fold=1 deterministically for ambiguous local times."
+    },
+    {
+      "case_id": "zoneinfo_new_york_nonexistent_spring_2024",
+      "description": "Non-existent local time during New York spring DST transition.",
+      "input": {
+        "operation": "normalize_birth_datetime",
+        "birth_date": "2024-03-10",
+        "birth_time": "02:30",
+        "tzid": "America/New_York"
+      },
+      "expected": {
+        "error_code": "NON_EXISTENT_LOCAL_TIME"
+      },
+      "source": {
+        "type": "external_reference",
+        "name": "Python zoneinfo with IANA tzdb",
+        "url": "https://www.iana.org/time-zones",
+        "retrieved_at": "2026-05-16"
+      },
+      "tolerance": {
+        "seconds": 0
+      },
+      "notes": "Hard reference that invalid wall-clock times are rejected instead of silently normalized."
+    },
+    {
+      "case_id": "zoneinfo_asia_seoul_dst_end_before_1988",
+      "description": "Korea 1988 daylight-saving end day before standard-time offset resumes.",
+      "input": {
+        "operation": "normalize_birth_datetime",
+        "birth_date": "1988-10-09",
+        "birth_time": "01:30",
+        "tzid": "Asia/Seoul"
+      },
+      "expected": {
+        "normalized_local_datetime": "1988-10-09T01:30:00+10:00",
+        "normalized_utc_datetime": "1988-10-08T15:30:00+00:00",
+        "offset_minutes": 600,
+        "ambiguous": false,
+        "fold": 0,
+        "daylight_saving_offset_minutes": -60
+      },
+      "source": {
+        "type": "external_reference",
+        "name": "Python zoneinfo with IANA tzdb",
+        "url": "https://www.iana.org/time-zones",
+        "retrieved_at": "2026-05-16"
+      },
+      "tolerance": {
+        "seconds": 0
+      },
+      "notes": "Guards the Korean DST end boundary before the offset returns to +09:00."
+    },
+    {
+      "case_id": "zoneinfo_asia_seoul_after_dst_end_1988",
+      "description": "Korea 1988 daylight-saving end day after standard-time offset resumes.",
+      "input": {
+        "operation": "normalize_birth_datetime",
+        "birth_date": "1988-10-09",
+        "birth_time": "03:30",
+        "tzid": "Asia/Seoul"
+      },
+      "expected": {
+        "normalized_local_datetime": "1988-10-09T03:30:00+09:00",
+        "normalized_utc_datetime": "1988-10-08T18:30:00+00:00",
+        "offset_minutes": 540,
+        "ambiguous": false,
+        "fold": 0,
+        "daylight_saving_offset_minutes": 0
+      },
+      "source": {
+        "type": "external_reference",
+        "name": "Python zoneinfo with IANA tzdb",
+        "url": "https://www.iana.org/time-zones",
+        "retrieved_at": "2026-05-16"
+      },
+      "tolerance": {
+        "seconds": 0
+      },
+      "notes": "Guards the Korean DST end boundary after the offset returns to +09:00."
+    },
+    {
+      "case_id": "zoneinfo_berlin_ambiguous_fall_2024",
+      "description": "Ambiguous local time during Berlin fall DST transition.",
+      "input": {
+        "operation": "normalize_birth_datetime",
+        "birth_date": "2024-10-27",
+        "birth_time": "02:30",
+        "tzid": "Europe/Berlin"
+      },
+      "expected": {
+        "normalized_local_datetime": "2024-10-27T02:30:00+01:00",
+        "normalized_utc_datetime": "2024-10-27T01:30:00+00:00",
+        "offset_minutes": 60,
+        "ambiguous": true,
+        "fold": 1
+      },
+      "source": {
+        "type": "external_reference",
+        "name": "Python zoneinfo with IANA tzdb",
+        "url": "https://www.iana.org/time-zones",
+        "retrieved_at": "2026-05-16"
+      },
+      "tolerance": {
+        "seconds": 0
+      },
+      "notes": "A second ambiguous-time zone keeps the fold policy from being New-York-specific."
+    },
+    {
+      "case_id": "zoneinfo_berlin_nonexistent_spring_2024",
+      "description": "Non-existent local time during Berlin spring DST transition.",
+      "input": {
+        "operation": "normalize_birth_datetime",
+        "birth_date": "2024-03-31",
+        "birth_time": "02:30",
+        "tzid": "Europe/Berlin"
+      },
+      "expected": {
+        "error_code": "NON_EXISTENT_LOCAL_TIME"
+      },
+      "source": {
+        "type": "external_reference",
+        "name": "Python zoneinfo with IANA tzdb",
+        "url": "https://www.iana.org/time-zones",
+        "retrieved_at": "2026-05-16"
+      },
+      "tolerance": {
+        "seconds": 0
+      },
+      "notes": "A second nonexistent-time zone keeps validation from being New-York-specific."
+    }
+  ]
+}

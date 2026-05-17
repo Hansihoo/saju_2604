@@ -10,6 +10,7 @@ from lunar_python import Solar
 from lunar_python.util import LunarUtil
 
 from app.domain.saju.engine import Gender, LuckCycle
+from app.domain.saju.services.solar_term_boundaries import find_adjacent_jie_boundary
 
 
 LuckDirection = Literal["forward", "backward"]
@@ -39,8 +40,21 @@ def get_adjacent_month_boundary(
     normalized_birth_dt: datetime,
     direction: LuckDirection,
     target_standard_offset_minutes: int | None = None,
+    timezone_id: str | None = None,
 ) -> datetime:
     """adjacent month 경계을 반환한다."""
+    if timezone_id:
+        reference_boundary = find_adjacent_jie_boundary(
+            normalized_birth_dt,
+            direction,
+            timezone_id=timezone_id,
+        )
+        if reference_boundary is not None and reference_boundary.provider in {
+            "solar_term_reference_table",
+            "skyfield",
+        }:
+            return datetime.strptime(reference_boundary.datetime_text, "%Y-%m-%d %H:%M:%S")
+
     solar = Solar.fromYmdHms(
         normalized_birth_dt.year,
         normalized_birth_dt.month,
@@ -79,6 +93,33 @@ def get_display_start_age(
     return floor(precise_start_age_years + 0.5)
 
 
+def get_completed_age_months(birth_dt: datetime, target_dt: datetime) -> int:
+    """Return completed age months without rounding."""
+    total_months = (target_dt.year - birth_dt.year) * 12 + (target_dt.month - birth_dt.month)
+    target_marker = (
+        target_dt.day,
+        target_dt.hour,
+        target_dt.minute,
+        target_dt.second,
+        target_dt.microsecond,
+    )
+    birth_marker = (
+        birth_dt.day,
+        birth_dt.hour,
+        birth_dt.minute,
+        birth_dt.second,
+        birth_dt.microsecond,
+    )
+    if target_marker < birth_marker:
+        total_months -= 1
+    return max(total_months, 0)
+
+
+def get_age_year_month_components(total_months: int) -> tuple[int, int]:
+    """Split completed age months into years and remaining months."""
+    return total_months // 12, total_months % 12
+
+
 def shift_ganzhi(pillar: str, steps: int) -> str:
     """ganzhi을 이동한다."""
     if pillar not in SEXAGENARY_CYCLE:
@@ -96,6 +137,7 @@ def calculate_luck_cycles(
     day_pillar: str | None = None,
     cycle_count: int = 10,
     target_standard_offset_minutes: int | None = None,
+    timezone_id: str | None = None,
 ) -> List[LuckCycle]:
     """대운 방향과 시작 나이를 계산해 대운 목록을 만든다."""
     del day_pillar  # Reserved for downstream rule extensions and debug reporting.
@@ -106,6 +148,7 @@ def calculate_luck_cycles(
         normalized_birth_dt,
         direction,
         target_standard_offset_minutes=target_standard_offset_minutes,
+        timezone_id=timezone_id,
     )
 
     if direction == "forward":
@@ -139,6 +182,10 @@ def calculate_luck_cycles(
         start_year = normalized_birth_dt.year + start_age
         cycle_start_dt = first_cycle_start_dt + timedelta(days=TROPICAL_YEAR_DAYS * 10 * index)
         cycle_change_dt = cycle_start_dt + decade_duration
+        start_age_total_months = get_completed_age_months(normalized_birth_dt, cycle_start_dt)
+        start_age_years, start_age_months = get_age_year_month_components(start_age_total_months)
+        change_age_total_months = get_completed_age_months(normalized_birth_dt, cycle_change_dt)
+        change_age_years, change_age_months = get_age_year_month_components(change_age_total_months)
         luck_cycles.append(
             LuckCycle(
                 index=index + 1,
@@ -147,6 +194,12 @@ def calculate_luck_cycles(
                 end_year=start_year + 9,
                 start_age=start_age,
                 end_age=start_age + 9,
+                start_age_years=start_age_years,
+                start_age_months=start_age_months,
+                start_age_total_months=start_age_total_months,
+                change_age_years=change_age_years,
+                change_age_months=change_age_months,
+                change_age_total_months=change_age_total_months,
                 direction=direction,
                 exact_start_age_years=exact_start_age_years,
                 precise_start_age_years=precise_start_age_years,
