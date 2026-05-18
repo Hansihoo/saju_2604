@@ -1,21 +1,36 @@
-import type { ReactNode } from "react";
 import {
+  type MouseEvent,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import {
+  FreePreviewCard,
+  FreePreviewDiagnosis,
+  FreePreviewDiagnosisKey,
   InterpretationNarrativeSection,
+  InterpretationReport,
   ManseLuckCycle,
+  SajuPreviewRequest,
   SajuPreviewResponse,
 } from "../../../shared/api/contracts";
+import { createSajuFreeDetail } from "../../../shared/api/saju";
 import { Locale, getCopy } from "../../../shared/copy";
 import { formatManseText } from "../../shared/manseDisplay";
 
 type SajuResultViewProps = {
   locale: Locale;
   result: SajuPreviewResponse;
+  detailPayload?: SajuPreviewRequest | null;
   onReset: () => void;
 };
 
 type SectionKey = "core_analysis" | "love" | "career" | "wealth" | "luck_flow";
 type VisiblePillarKey = "year" | "month" | "day" | "time";
 type ElementKey = "wood" | "fire" | "earth" | "metal" | "water";
+type DetailLoadState = "idle" | "loading" | "ready" | "error";
 
 const visiblePillarKeys = ["year", "month", "day", "time"] as const;
 const elementKeys: ElementKey[] = ["wood", "fire", "earth", "metal", "water"];
@@ -93,6 +108,21 @@ const sectionViewCopy: Record<
     uncertaintyIntro: string;
     severityLabels: Record<"warning" | "critical", string>;
     sectionLabels: Record<SectionKey, string>;
+    heroLabel: string;
+    solarTermBadge: string;
+    timeCorrectionBadge: string;
+    birthTimeWarningBadge: string;
+    boundaryWarningBadge: string;
+    generalWarningBadge: string;
+    coreDiagnosisLabel: string;
+    insightLabel: string;
+    previewFallback: string;
+    cards: {
+      core: { title: string; subtitle: string; cta: string };
+      workMoney: { title: string; subtitle: string; cta: string };
+      love: { title: string; subtitle: string; cta: string };
+      luck: { title: string; subtitle: string; cta: string };
+    };
   }
 > = {
   ko: {
@@ -117,6 +147,37 @@ const sectionViewCopy: Record<
       wealth: "금전운",
       luck_flow: "대운 흐름",
     },
+    heroLabel: "정밀 사주 리포트",
+    solarTermBadge: "절기 기준",
+    timeCorrectionBadge: "시간대 보정",
+    birthTimeWarningBadge: "출생시간 확인 필요",
+    boundaryWarningBadge: "경계값 확인 필요",
+    generalWarningBadge: "확인 필요 항목 있음",
+    coreDiagnosisLabel: "핵심 진단",
+    insightLabel: "핵심 카드",
+    previewFallback: "상세 해석을 준비 중입니다.",
+    cards: {
+      core: {
+        title: "내 사주 특징",
+        subtitle: "성향, 강점, 반복되는 패턴",
+        cta: "내 성향 자세히 보기",
+      },
+      workMoney: {
+        title: "일과 돈의 흐름",
+        subtitle: "일하는 방식과 돈이 쌓이는 구조",
+        cta: "일과 돈의 흐름 보기",
+      },
+      love: {
+        title: "연애와 결혼 흐름",
+        subtitle: "관계 스타일과 장기 관계 성향",
+        cta: "관계 패턴 보기",
+      },
+      luck: {
+        title: "현재 운과 대운 흐름",
+        subtitle: "지금 시기와 다음 변화",
+        cta: "지금 시기 보기",
+      },
+    },
   },
   en: {
     summaryLabel: "Quick summary",
@@ -140,6 +201,133 @@ const sectionViewCopy: Record<
       wealth: "Wealth",
       luck_flow: "Luck flow",
     },
+    heroLabel: "Precision saju report",
+    solarTermBadge: "Solar-term basis",
+    timeCorrectionBadge: "Time-zone corrected",
+    birthTimeWarningBadge: "Birth time needs review",
+    boundaryWarningBadge: "Boundary needs review",
+    generalWarningBadge: "Items need review",
+    coreDiagnosisLabel: "Core diagnosis",
+    insightLabel: "Quick insight cards",
+    previewFallback: "The detailed reading is being prepared.",
+    cards: {
+      core: {
+        title: "Core traits",
+        subtitle: "Tendencies, strengths, and repeating patterns",
+        cta: "Read core traits",
+      },
+      workMoney: {
+        title: "Work and money flow",
+        subtitle: "Work style and how money can accumulate",
+        cta: "View work and money",
+      },
+      love: {
+        title: "Love and long-term relationships",
+        subtitle: "Relationship style and long-term patterns",
+        cta: "View relationship pattern",
+      },
+      luck: {
+        title: "Current and next luck flow",
+        subtitle: "Current timing and the next shift",
+        cta: "View current timing",
+      },
+    },
+  },
+};
+
+const insightCardMeta: Record<
+  Locale,
+  Record<
+    "core" | "workMoney" | "love" | "luck",
+    {
+      chips: string[];
+      basis: string;
+    }
+  >
+> = {
+  ko: {
+    core: {
+      chips: ["기준", "강점", "반복 패턴"],
+      basis: "일간·오행·십성 구조를 함께 반영했습니다.",
+    },
+    workMoney: {
+      chips: ["일하는 방식", "수입 구조", "관리 포인트"],
+      basis: "직장운과 금전운을 연결해서 해석했습니다.",
+    },
+    love: {
+      chips: ["관계 스타일", "잘 맞는 상대", "장기 관계"],
+      basis: "배우자궁·관계 신호·현재 흐름을 함께 봅니다.",
+    },
+    luck: {
+      chips: ["현재 시기", "다음 변화", "준비할 것"],
+      basis: "현재 대운과 다음 대운의 변화를 중심으로 봅니다.",
+    },
+  },
+  en: {
+    core: {
+      chips: ["Standards", "Strengths", "Patterns"],
+      basis: "Reflects the day master, five elements, and ten-god structure together.",
+    },
+    workMoney: {
+      chips: ["Work style", "Income structure", "Management point"],
+      basis: "Connects the career and wealth readings instead of treating them separately.",
+    },
+    love: {
+      chips: ["Relationship style", "Good fit", "Long-term bond"],
+      basis: "Reviews spouse-house, relationship signals, and the current flow together.",
+    },
+    luck: {
+      chips: ["Current timing", "Next shift", "Preparation"],
+      basis: "Centers on the current luck cycle and the next luck-cycle transition.",
+    },
+  },
+};
+
+const diagnosisTitleByKey: Record<Locale, Record<FreePreviewDiagnosisKey, string>> = {
+  ko: {
+    strongest_point: "가장 강한 점",
+    repeating_pattern: "반복되는 패턴",
+    current_task: "지금 시기 과제",
+  },
+  en: {
+    strongest_point: "Strongest point",
+    repeating_pattern: "Repeating pattern",
+    current_task: "Current task",
+  },
+};
+
+const detailLazyCopy: Record<
+  Locale,
+  {
+    label: string;
+    title: string;
+    body: string;
+    button: string;
+    loadingTitle: string;
+    loadingBody: string;
+    fallbackNotice: string;
+    errorTitle: string;
+  }
+> = {
+  ko: {
+    label: "무료 상세 리포트",
+    title: "상세 리포트를 이어서 읽을 수 있습니다",
+    body: "첫 화면 요약을 먼저 읽은 뒤, 내 사주 특징과 일과 돈, 관계, 대운 흐름을 더 자세히 펼쳐 봅니다.",
+    button: "상세 리포트 불러오기",
+    loadingTitle: "상세 리포트를 불러오는 중입니다",
+    loadingBody: "계산된 사주 payload를 바탕으로 무료 상세 해석을 준비하고 있습니다.",
+    fallbackNotice: "상세 리포트 호출이 지연되어 기본 상세 결과를 표시합니다.",
+    errorTitle: "상세 리포트를 불러오지 못했습니다",
+  },
+  en: {
+    label: "Free detail report",
+    title: "Continue with the detailed report",
+    body: "After the first-screen preview, load the detailed reading for core traits, work and money, relationships, and luck flow.",
+    button: "Load detailed report",
+    loadingTitle: "Loading the detailed report",
+    loadingBody: "The free detail reading is being prepared from the calculated saju payload.",
+    fallbackNotice: "The detail request was delayed, so the embedded detail report is shown instead.",
+    errorTitle: "Could not load the detailed report",
   },
 };
 
@@ -511,7 +699,9 @@ function ElementBalanceCard({ locale, result }: { locale: Locale; result: SajuPr
                   <i style={{ backgroundColor: item.color }} />
                   {item.label}
                 </span>
-                <strong>{item.percentage}%</strong>
+                <strong>
+                  {locale === "ko" ? `${item.count}${text.countUnit}` : `${item.count}`}
+                </strong>
               </div>
               <div className="element-balance-track">
                 <span className="element-balance-average-marker" />
@@ -531,9 +721,6 @@ function ElementBalanceCard({ locale, result }: { locale: Locale; result: SajuPr
       </div>
 
       <div className="element-balance-chips">
-        <span>
-          {text.balance} <strong>{result.manse.analysis.balance_score}</strong>
-        </span>
         <span>
           {text.dominant} <strong>{getElementListText(dominantElements, locale)}</strong>
         </span>
@@ -837,7 +1024,26 @@ function UncertaintySummaryNotice({
   result: SajuPreviewResponse;
 }) {
   const text = sectionViewCopy[locale];
-  const flags = result.result.uncertainty_summary.filter(
+  const formatMessage = (message: string) => {
+    if (locale !== "ko") {
+      return message;
+    }
+
+    if (message.includes("midnight rule")) {
+      return "자정 기준 적용 방식에 따라 일주가 달라질 수 있습니다.";
+    }
+
+    if (message.includes("hour pillar changes")) {
+      return "표준시와 지역시차 보정 기준에 따라 시주가 달라질 수 있습니다.";
+    }
+
+    if (message.includes("candidate chart differs")) {
+      return "보정 기준 후보 중 일부가 현재 기준 사주와 다르게 계산됩니다.";
+    }
+
+    return message;
+  };
+  const flags = (result.result.uncertainty_summary ?? []).filter(
     (flag) => flag.severity === "warning" || flag.severity === "critical",
   );
 
@@ -857,7 +1063,7 @@ function UncertaintySummaryNotice({
           return (
             <li className={`is-${severity}`} key={flag.code}>
               <strong>{text.severityLabels[severity]}</strong>
-              <span>{flag.user_message}</span>
+              <span>{formatMessage(flag.user_message)}</span>
             </li>
           );
         })}
@@ -940,6 +1146,165 @@ function splitReadableText(text: string, maxSentences = 2, maxChars = 170) {
   }
 
   return chunks;
+}
+
+function truncateText(text: string, maxLength: number) {
+  const compact = text.replace(/\s+/g, " ").trim();
+
+  if (compact.length <= maxLength) {
+    return compact;
+  }
+
+  return `${compact.slice(0, Math.max(0, maxLength - 3)).trimEnd()}...`;
+}
+
+function stripInlineMarkdown(text: string) {
+  return text
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/__([^_]+)__/g, "$1")
+    .replace(/[_*~]/g, "")
+    .replace(/<[^>]+>/g, "")
+    .trim();
+}
+
+const previewSentencePattern = /[^.!?。！？]+[.!?。！？]+(?:["”’)]*)?|[^.!?。！？]+$/g;
+
+function splitPreviewSentences(text: string) {
+  return (
+    text
+      .match(previewSentencePattern)
+      ?.map((sentence) => sentence.trim())
+      .filter(Boolean) ?? []
+  );
+}
+
+function truncatePreviewAtBoundary(text: string, maxLength: number) {
+  const compact = text
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.replace(/\s+/g, " ").trim())
+    .filter(Boolean)
+    .join("\n\n");
+
+  if (compact.length <= maxLength) {
+    return compact;
+  }
+
+  const flattened = compact.replace(/\n{2,}/g, " ");
+  const sentences = splitPreviewSentences(flattened);
+  let preview = "";
+
+  for (const sentence of sentences) {
+    const next = preview ? `${preview} ${sentence}` : sentence;
+    if (next.length > maxLength - 3) {
+      break;
+    }
+    preview = next;
+  }
+
+  if (preview.length >= Math.min(220, maxLength * 0.55)) {
+    return `${preview.trimEnd()}...`;
+  }
+
+  return `${flattened.slice(0, Math.max(0, maxLength - 3)).trimEnd()}...`;
+}
+
+function stripPreviewContinuationMark(text: string) {
+  return text.replace(/\s*\.{3}$/g, "").trim();
+}
+
+function extractPreviewFromMarkdown(
+  body: string | null | undefined,
+  maxLength = 420,
+  fallbackText = "상세 해석을 준비 중입니다.",
+) {
+  const raw = typeof body === "string" ? body : "";
+
+  if (!raw.trim()) {
+    return fallbackText;
+  }
+
+  const paragraphs = raw
+    .split(/\n\s*\n/g)
+    .map((block) =>
+      block
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter((line) => {
+          if (!line) {
+            return false;
+          }
+          if (/^#{1,6}\s+/.test(line)) {
+            return false;
+          }
+          if (isMarkdownSeparatorRow(line) || isMarkdownTableRow(line)) {
+            return false;
+          }
+          return true;
+        })
+        .map((line) =>
+          stripInlineMarkdown(
+            line
+              .replace(/^[-*+]\s+/, "")
+              .replace(/^>\s+/, "")
+              .replace(/^((\d+[.)])|([①-⑩])|(\d+️⃣))\s*/, ""),
+          ),
+        )
+        .filter(Boolean)
+        .join(" "),
+    )
+    .map((paragraph) => paragraph.replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+
+  if (!paragraphs.length) {
+    return fallbackText;
+  }
+
+  const selectedParagraphs: string[] = [];
+  let sentenceCount = 0;
+
+  for (const paragraph of paragraphs.slice(0, 3)) {
+    const sentences = splitPreviewSentences(paragraph);
+    const remainingSentences = Math.max(0, 8 - sentenceCount);
+    const nextParagraph = sentences.length
+      ? sentences.slice(0, remainingSentences || 1).join(" ")
+      : paragraph;
+
+    if (!nextParagraph) {
+      continue;
+    }
+
+    const candidate = [...selectedParagraphs, nextParagraph].join("\n\n");
+
+    if (selectedParagraphs.length && candidate.length > maxLength && sentenceCount >= 5) {
+      break;
+    }
+
+    selectedParagraphs.push(nextParagraph);
+    sentenceCount += sentences.length ? Math.min(sentences.length, remainingSentences || 1) : 1;
+
+    if (sentenceCount >= 8) {
+      break;
+    }
+
+    if (sentenceCount >= 5 && candidate.length >= Math.min(320, maxLength * 0.75)) {
+      break;
+    }
+  }
+
+  return truncatePreviewAtBoundary(selectedParagraphs.join("\n\n"), maxLength);
+}
+
+function extractFirstPreviewSentence(
+  body: string | null | undefined,
+  maxLength: number,
+  fallbackText: string,
+) {
+  const preview = extractPreviewFromMarkdown(body, maxLength, fallbackText);
+  const firstSentence = splitPreviewSentences(preview.replace(/\n{2,}/g, " "))?.[0]?.trim();
+
+  return truncateText(firstSentence || preview, maxLength);
 }
 
 function renderRichBody(text: string) {
@@ -1156,17 +1521,463 @@ function NarrativeSection({
   );
 }
 
-export function SajuResultView({ locale, result, onReset }: SajuResultViewProps) {
+type InsightCardData = {
+  title: string;
+  subtitle: string;
+  chips: string[];
+  preview?: string;
+  previewParagraphs?: string[];
+  userTakeaway?: string;
+  nextQuestion?: string;
+  basis: string;
+  cta: string;
+  href: string;
+};
+
+const publicPreviewForbiddenPatterns = [
+  /\bbalance_score\b/i,
+  /\binternal_grade\b/i,
+  /\bevidence_id\b/i,
+  /\bscore\b/i,
+  /점수:/,
+  /등급:/,
+  /100점/,
+  /100%/,
+];
+
+function containsPrivatePreviewToken(text: string) {
+  return publicPreviewForbiddenPatterns.some((pattern) => pattern.test(text));
+}
+
+function safePreviewText(text: string | null | undefined, fallbackText: string) {
+  const value = typeof text === "string" ? text.trim() : "";
+
+  if (!value || containsPrivatePreviewToken(value)) {
+    return fallbackText;
+  }
+
+  return value;
+}
+
+function safePreviewParagraphs(
+  paragraphs: Array<string | null | undefined> | null | undefined,
+  fallbackText: string,
+) {
+  const safeParagraphs = (paragraphs ?? [])
+    .map((paragraph) => (typeof paragraph === "string" ? paragraph.trim() : ""))
+    .filter((paragraph) => paragraph && !containsPrivatePreviewToken(paragraph));
+
+  return safeParagraphs.length ? safeParagraphs : [fallbackText];
+}
+
+function groupHeroOverviewParagraphs(paragraphs: string[]) {
+  const cleanParagraphs = paragraphs.map((paragraph) => paragraph.trim()).filter(Boolean);
+
+  if (cleanParagraphs.length <= 3) {
+    return cleanParagraphs;
+  }
+
+  const targetGroupCount = cleanParagraphs.length >= 7 ? 3 : 2;
+  const groupSize = Math.ceil(cleanParagraphs.length / targetGroupCount);
+  const grouped: string[] = [];
+
+  for (let index = 0; index < cleanParagraphs.length; index += groupSize) {
+    grouped.push(cleanParagraphs.slice(index, index + groupSize).join(" "));
+  }
+
+  return grouped;
+}
+
+function normalizeNarrativeSection(
+  section: InterpretationNarrativeSection | null | undefined,
+  fallbackTitle: string,
+): InterpretationNarrativeSection {
+  return {
+    title: section?.title?.trim() || fallbackTitle,
+    body: section?.body || "",
+    evidence_ids: section?.evidence_ids ?? [],
+  };
+}
+
+function getHeroWarningBadges(result: SajuPreviewResponse, locale: Locale) {
+  const text = sectionViewCopy[locale];
+  const flags = (result.result.uncertainty_summary ?? []).filter(
+    (flag) => flag.severity === "warning" || flag.severity === "critical",
+  );
+  const badges: string[] = [];
+  const hasBirthTimeWarning =
+    !result.result.hour_pillar_enabled ||
+    flags.some((flag) => {
+      const terms = `${flag.code} ${flag.affected_fields.join(" ")}`.toLowerCase();
+      return (
+        terms.includes("birth") ||
+        terms.includes("time") ||
+        terms.includes("hour") ||
+        terms.includes("placeholder")
+      );
+    });
+  const hasBoundaryWarning = flags.some((flag) => {
+    const terms = `${flag.code} ${flag.affected_fields.join(" ")}`.toLowerCase();
+    return (
+      terms.includes("boundary") ||
+      terms.includes("midnight") ||
+      terms.includes("solar_term") ||
+      terms.includes("year_month")
+    );
+  });
+
+  if (hasBirthTimeWarning) {
+    badges.push(text.birthTimeWarningBadge);
+  }
+
+  if (hasBoundaryWarning) {
+    badges.push(text.boundaryWarningBadge);
+  }
+
+  if (flags.length && !badges.length) {
+    badges.push(text.generalWarningBadge);
+  }
+
+  return badges;
+}
+
+function scrollToAnchor(href: string) {
+  if (!href.startsWith("#")) {
+    return;
+  }
+
+  window.setTimeout(() => {
+    document.querySelector(href)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, 80);
+}
+
+function InsightCard({
+  card,
+  onCtaClick,
+}: {
+  card: InsightCardData;
+  onCtaClick?: (href: string) => void;
+}) {
+  const previewParagraphs = card.previewParagraphs?.length
+    ? card.previewParagraphs
+    : (card.preview ?? "")
+        .split(/\n{2,}/)
+        .map((paragraph) => paragraph.trim())
+        .filter(Boolean);
+
+  return (
+    <article className="insightCard">
+      <div>
+        <h3 className="insightCardTitle">{card.title}</h3>
+        <p className="insightCardSubtitle">{card.subtitle}</p>
+      </div>
+      <div className="insightCardChips" aria-label={card.title}>
+        {card.chips.map((chip) => (
+          <span key={chip}>{chip}</span>
+        ))}
+      </div>
+      <div className="insightCardPreview">
+        {previewParagraphs.map((paragraph, index) => (
+          <p key={`${card.title}-preview-${index}`}>{paragraph}</p>
+        ))}
+      </div>
+      {card.userTakeaway ? <p className="insightCardTakeaway">{card.userTakeaway}</p> : null}
+      {card.nextQuestion ? <p className="insightCardQuestion">{card.nextQuestion}</p> : null}
+      <p className="insightCardBasis">{card.basis}</p>
+      <a
+        className="insightCardCta"
+        href={card.href}
+        onClick={(event) => {
+          if (!onCtaClick) {
+            return;
+          }
+          event.preventDefault();
+          onCtaClick(card.href);
+        }}
+      >
+        {card.cta}
+      </a>
+    </article>
+  );
+}
+
+function getFreePreviewCardDisplay(
+  key: FreePreviewCard["key"],
+  locale: Locale,
+) {
+  const viewTexts = sectionViewCopy[locale];
+
+  switch (key) {
+    case "core":
+      return {
+        title: viewTexts.cards.core.title,
+        subtitle: viewTexts.cards.core.subtitle,
+        cta: viewTexts.cards.core.cta,
+        href: "#core-analysis",
+        basis: insightCardMeta[locale].core.basis,
+        chips: insightCardMeta[locale].core.chips,
+      };
+    case "work_money":
+      return {
+        title: viewTexts.cards.workMoney.title,
+        subtitle: viewTexts.cards.workMoney.subtitle,
+        cta: viewTexts.cards.workMoney.cta,
+        href: "#work-money-reading",
+        basis: insightCardMeta[locale].workMoney.basis,
+        chips: insightCardMeta[locale].workMoney.chips,
+      };
+    case "love":
+      return {
+        title: viewTexts.cards.love.title,
+        subtitle: viewTexts.cards.love.subtitle,
+        cta: viewTexts.cards.love.cta,
+        href: "#love-reading",
+        basis: insightCardMeta[locale].love.basis,
+        chips: insightCardMeta[locale].love.chips,
+      };
+    case "luck_flow":
+      return {
+        title: viewTexts.cards.luck.title,
+        subtitle: viewTexts.cards.luck.subtitle,
+        cta: viewTexts.cards.luck.cta,
+        href: "#luck-flow-reading",
+        basis: insightCardMeta[locale].luck.basis,
+        chips: insightCardMeta[locale].luck.chips,
+      };
+  }
+}
+
+function buildFreePreviewInsightCards(
+  cards: FreePreviewCard[],
+  locale: Locale,
+  fallbackText: string,
+): InsightCardData[] {
+  const cardByKey = new Map(cards.map((card) => [card.key, card]));
+  const order: Array<FreePreviewCard["key"]> = ["core", "work_money", "love", "luck_flow"];
+  const insightCards: InsightCardData[] = [];
+
+  for (const key of order) {
+    const card = cardByKey.get(key);
+    if (!card) {
+      continue;
+    }
+
+    const display = getFreePreviewCardDisplay(key, locale);
+    const chips = card.chips
+      .map((chip) => safePreviewText(chip, ""))
+      .filter(Boolean);
+
+    insightCards.push({
+      title: display.title,
+      subtitle: safePreviewText(card.subtitle, display.subtitle),
+      chips: chips.length ? chips : display.chips,
+      previewParagraphs: safePreviewParagraphs(card.preview_paragraphs, fallbackText),
+      userTakeaway: safePreviewText(card.user_takeaway, ""),
+      nextQuestion: safePreviewText(card.next_question, ""),
+      basis: safePreviewText(card.basis_line, display.basis),
+      cta: display.cta,
+      href: display.href,
+    });
+  }
+
+  return insightCards;
+}
+
+function CoreDiagnosisBlock({
+  diagnoses,
+  locale,
+  fallbackText,
+}: {
+  diagnoses: FreePreviewDiagnosis[];
+  locale: Locale;
+  fallbackText: string;
+}) {
+  const diagnosisByKey = new Map(diagnoses.map((diagnosis) => [diagnosis.key, diagnosis]));
+  const order: FreePreviewDiagnosisKey[] = ["strongest_point", "repeating_pattern", "current_task"];
+  const items = order
+    .map((key) => {
+      const diagnosis = diagnosisByKey.get(key);
+      if (!diagnosis) {
+        return null;
+      }
+
+      return {
+        key,
+        title: diagnosisTitleByKey[locale][key] || diagnosis.title,
+        body: safePreviewText(diagnosis.body, fallbackText),
+      };
+    })
+    .filter((item): item is { key: FreePreviewDiagnosisKey; title: string; body: string } =>
+      Boolean(item),
+    );
+
+  if (!items.length) {
+    return null;
+  }
+
+  return (
+    <section className="coreDiagnosisBlock" aria-label={sectionViewCopy[locale].coreDiagnosisLabel}>
+      <span className="result-panel-label">{sectionViewCopy[locale].coreDiagnosisLabel}</span>
+      <div className="coreDiagnosisGrid">
+        {items.map((item) => (
+          <article className="coreDiagnosisCard" key={item.key}>
+            <h3>{item.title}</h3>
+            <p>{item.body}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function SajuResultView({ locale, result, detailPayload, onReset }: SajuResultViewProps) {
   const texts = getCopy(locale);
   const viewTexts = sectionViewCopy[locale];
+  const detailTexts = detailLazyCopy[locale];
   const statusTexts = disabledStateCopy[locale];
   const isBirthTimeUnknown = !result.result.hour_pillar_enabled;
   const visiblePillars = result.result.signals.visible_pillar_values
     .map((value) => formatManseText(value, locale))
     .join(" / ");
-  const interpretation = result.result.interpretation;
+  const freePreview = result.result.free_preview;
+  const embeddedInterpretation = result.result.interpretation ?? null;
+  const [detailReport, setDetailReport] = useState<InterpretationReport | null>(() =>
+    freePreview ? null : embeddedInterpretation,
+  );
+  const [detailStatus, setDetailStatus] = useState<DetailLoadState>(() =>
+    freePreview ? "idle" : embeddedInterpretation ? "ready" : "idle",
+  );
+  const [detailError, setDetailError] = useState<string | null>(null);
+  const [pendingScrollTarget, setPendingScrollTarget] = useState<string | null>(null);
+  const detailLoaderRef = useRef<HTMLElement | null>(null);
+  const interpretation = detailReport ?? (!freePreview ? embeddedInterpretation : null);
 
-  if (!interpretation) {
+  useEffect(() => {
+    setDetailReport(freePreview ? null : embeddedInterpretation);
+    setDetailStatus(freePreview ? "idle" : embeddedInterpretation ? "ready" : "idle");
+    setDetailError(null);
+    setPendingScrollTarget(null);
+  }, [embeddedInterpretation, freePreview, result.trace_id]);
+
+  const loadFreeDetail = useCallback(
+    async (targetHref?: string) => {
+      if (!freePreview) {
+        if (targetHref) {
+          scrollToAnchor(targetHref);
+        }
+        return;
+      }
+
+      if (detailReport) {
+        if (targetHref) {
+          scrollToAnchor(targetHref);
+        }
+        return;
+      }
+
+      if (detailStatus === "loading") {
+        if (targetHref) {
+          setPendingScrollTarget(targetHref);
+        }
+        return;
+      }
+
+      if (targetHref) {
+        setPendingScrollTarget(targetHref);
+      }
+
+      if (!detailPayload) {
+        if (embeddedInterpretation) {
+          setDetailReport(embeddedInterpretation);
+          setDetailStatus("ready");
+          setDetailError(detailTexts.fallbackNotice);
+        } else {
+          setDetailStatus("error");
+          setDetailError(detailTexts.errorTitle);
+        }
+        return;
+      }
+
+      setDetailStatus("loading");
+      setDetailError(null);
+
+      try {
+        const response = await createSajuFreeDetail(detailPayload, detailPayload.debug);
+        setDetailReport(response.detail_report ?? response.interpretation);
+        setDetailStatus("ready");
+      } catch (_error) {
+        if (embeddedInterpretation) {
+          setDetailReport(embeddedInterpretation);
+          setDetailStatus("ready");
+          setDetailError(detailTexts.fallbackNotice);
+          return;
+        }
+
+        setDetailStatus("error");
+        setDetailError(detailTexts.errorTitle);
+      }
+    },
+    [
+      detailPayload,
+      detailReport,
+      detailStatus,
+      detailTexts.errorTitle,
+      detailTexts.fallbackNotice,
+      embeddedInterpretation,
+      freePreview,
+    ],
+  );
+
+  useEffect(() => {
+    if (!pendingScrollTarget || !detailReport) {
+      return;
+    }
+
+    scrollToAnchor(pendingScrollTarget);
+    setPendingScrollTarget(null);
+  }, [detailReport, pendingScrollTarget]);
+
+  useEffect(() => {
+    if (!freePreview || detailReport || detailStatus !== "idle" || !detailLoaderRef.current) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          void loadFreeDetail();
+        }
+      },
+      { rootMargin: "260px 0px" },
+    );
+    observer.observe(detailLoaderRef.current);
+
+    return () => observer.disconnect();
+  }, [detailReport, detailStatus, freePreview, loadFreeDetail]);
+
+  const handleInsightCtaClick = useCallback(
+    (href: string) => {
+      if (freePreview && !detailReport) {
+        void loadFreeDetail(href);
+        return;
+      }
+
+      scrollToAnchor(href);
+    },
+    [detailReport, freePreview, loadFreeDetail],
+  );
+
+  const handleDetailNavClick = useCallback(
+    (event: MouseEvent<HTMLAnchorElement>, href: string) => {
+      if (freePreview && !detailReport) {
+        event.preventDefault();
+        void loadFreeDetail(href);
+      }
+    },
+    [detailReport, freePreview, loadFreeDetail],
+  );
+
+  if (!interpretation && !freePreview) {
     return (
       <section className="result-screen">
         <div className="result-header">
@@ -1187,51 +1998,122 @@ export function SajuResultView({ locale, result, onReset }: SajuResultViewProps)
     );
   }
 
-  const sections: Array<{
+  const coreSection = normalizeNarrativeSection(
+    interpretation?.core_analysis,
+    viewTexts.cards.core.title,
+  );
+  const careerSection = normalizeNarrativeSection(
+    interpretation?.career,
+    viewTexts.sectionLabels.career,
+  );
+  const wealthSection = normalizeNarrativeSection(
+    interpretation?.wealth,
+    viewTexts.sectionLabels.wealth,
+  );
+  const loveSection = normalizeNarrativeSection(
+    interpretation?.love,
+    viewTexts.cards.love.title,
+  );
+  const luckFlowSection = normalizeNarrativeSection(
+    interpretation?.luck_flow,
+    viewTexts.cards.luck.title,
+  );
+  const legacySummaryHeadline =
+    interpretation?.summary?.headline?.trim() || result.result.overview || texts.resultTitle;
+  const legacySummaryOverview =
+    interpretation?.summary?.overview?.trim() || result.result.overview || viewTexts.previewFallback;
+  const summaryHeadline = freePreview
+    ? safePreviewText(freePreview.headline, legacySummaryHeadline)
+    : legacySummaryHeadline;
+  const summaryOverview = freePreview
+    ? groupHeroOverviewParagraphs(
+        safePreviewParagraphs(freePreview.hero_overview, legacySummaryOverview),
+      ).join("\n\n")
+    : groupHeroOverviewParagraphs(splitReadableText(legacySummaryOverview, 3, 260)).join("\n\n");
+  const heroWarningBadges = getHeroWarningBadges(result, locale);
+  const cardMeta = insightCardMeta[locale];
+  const workPreview = truncatePreviewAtBoundary(
+    `${stripPreviewContinuationMark(
+      extractPreviewFromMarkdown(careerSection.body, 260, viewTexts.previewFallback),
+    )}\n\n${stripPreviewContinuationMark(
+      extractPreviewFromMarkdown(wealthSection.body, 260, viewTexts.previewFallback),
+    )}`,
+    520,
+  );
+  const legacyInsightCards: InsightCardData[] = [
+    {
+      title: viewTexts.cards.core.title,
+      subtitle: viewTexts.cards.core.subtitle,
+      chips: cardMeta.core.chips,
+      preview: extractPreviewFromMarkdown(coreSection.body, 460, viewTexts.previewFallback),
+      basis: cardMeta.core.basis,
+      cta: viewTexts.cards.core.cta,
+      href: "#core-analysis",
+    },
+    {
+      title: viewTexts.cards.workMoney.title,
+      subtitle: viewTexts.cards.workMoney.subtitle,
+      chips: cardMeta.workMoney.chips,
+      preview: workPreview,
+      basis: cardMeta.workMoney.basis,
+      cta: viewTexts.cards.workMoney.cta,
+      href: "#work-money-reading",
+    },
+    {
+      title: viewTexts.cards.love.title,
+      subtitle: viewTexts.cards.love.subtitle,
+      chips: cardMeta.love.chips,
+      preview: extractPreviewFromMarkdown(loveSection.body, 460, viewTexts.previewFallback),
+      basis: cardMeta.love.basis,
+      cta: viewTexts.cards.love.cta,
+      href: "#love-reading",
+    },
+    {
+      title: viewTexts.cards.luck.title,
+      subtitle: viewTexts.cards.luck.subtitle,
+      chips: cardMeta.luck.chips,
+      preview: extractPreviewFromMarkdown(luckFlowSection.body, 460, viewTexts.previewFallback),
+      basis: cardMeta.luck.basis,
+      cta: viewTexts.cards.luck.cta,
+      href: "#luck-flow-reading",
+    },
+  ];
+  const freePreviewCards = freePreview
+    ? buildFreePreviewInsightCards(freePreview.cards, locale, viewTexts.previewFallback)
+    : [];
+  const insightCards = freePreviewCards.length ? freePreviewCards : legacyInsightCards;
+  const detailNavSections: Array<{
     key: SectionKey;
     anchorId: string;
     badge: string;
     section: InterpretationNarrativeSection;
-    prelude?: ReactNode;
   }> = [
     {
       key: "core_analysis",
       anchorId: "core-analysis",
-      badge: viewTexts.sectionLabels.core_analysis,
-      section: interpretation.core_analysis,
-      prelude: (
-        <>
-          <ElementBalanceCard locale={locale} result={result} />
-          <DetailedPillarTable locale={locale} result={result} />
-        </>
-      ),
+      badge: viewTexts.cards.core.title,
+      section: coreSection,
+    },
+    {
+      key: "career",
+      anchorId: "work-money-reading",
+      badge: viewTexts.cards.workMoney.title,
+      section: careerSection,
     },
     {
       key: "love",
       anchorId: "love-reading",
-      badge: viewTexts.sectionLabels.love,
-      section: interpretation.love,
-    },
-    {
-      key: "career",
-      anchorId: "career-reading",
-      badge: viewTexts.sectionLabels.career,
-      section: interpretation.career,
-    },
-    {
-      key: "wealth",
-      anchorId: "wealth-reading",
-      badge: viewTexts.sectionLabels.wealth,
-      section: interpretation.wealth,
+      badge: viewTexts.cards.love.title,
+      section: loveSection,
     },
     {
       key: "luck_flow",
       anchorId: "luck-flow-reading",
-      badge: viewTexts.sectionLabels.luck_flow,
-      section: interpretation.luck_flow,
-      prelude: <LuckTimelineTable locale={locale} result={result} />,
+      badge: viewTexts.cards.luck.title,
+      section: luckFlowSection,
     },
   ];
+  const hasDetailReport = Boolean(interpretation);
 
   return (
     <section className="result-screen">
@@ -1257,38 +2139,128 @@ export function SajuResultView({ locale, result, onReset }: SajuResultViewProps)
             </section>
           ) : null}
 
-          <UncertaintySummaryNotice locale={locale} result={result} />
-
-          <section className="reading-summary-card">
-            <div className="reading-summary-head">
-              <span className="result-panel-label">{viewTexts.summaryLabel}</span>
-              <p className="reading-summary-pillars">{visiblePillars}</p>
+          <section className="resultHero">
+            <div className="resultHeroTop">
+              <span className="result-panel-label">{viewTexts.heroLabel}</span>
             </div>
-            <h3>{interpretation.summary.headline}</h3>
-            <CompactPillarTable locale={locale} result={result} />
-            <div className="reading-article reading-summary-body">
-              {renderRichBody(interpretation.summary.overview)}
+            <h2 className="resultHeroHeadline">{summaryHeadline}</h2>
+            <div className="reading-article resultHeroOverview">
+              {renderRichBody(summaryOverview)}
+            </div>
+            <div className="resultHeroBadges" aria-label={viewTexts.heroLabel}>
+              <span>{viewTexts.solarTermBadge}</span>
+              <span>{viewTexts.timeCorrectionBadge}</span>
+              {heroWarningBadges.map((badge) => (
+                <span className="is-warning" key={badge}>
+                  {badge}
+                </span>
+              ))}
             </div>
           </section>
 
-          {sections.map((section, index) => (
-            <NarrativeSection
-              key={section.key}
-              section={section.section}
-              anchorId={section.anchorId}
-              badge={section.badge}
-              index={index + 1}
-              prelude={section.prelude}
+          {freePreview ? (
+            <CoreDiagnosisBlock
+              diagnoses={freePreview.core_diagnoses}
+              locale={locale}
+              fallbackText={viewTexts.previewFallback}
             />
-          ))}
+          ) : null}
+
+          <section className="insightBlock" aria-label={viewTexts.insightLabel}>
+            <span className="result-panel-label">{viewTexts.insightLabel}</span>
+            <div className="insightGrid">
+              {insightCards.map((card) => (
+                <InsightCard
+                  card={card}
+                  key={card.title}
+                  onCtaClick={handleInsightCtaClick}
+                />
+              ))}
+            </div>
+          </section>
+
+          <UncertaintySummaryNotice locale={locale} result={result} />
+          <CompactPillarTable locale={locale} result={result} />
+
+          {hasDetailReport ? (
+            <>
+              {detailError ? <p className="detailLazyNotice">{detailError}</p> : null}
+              <NarrativeSection
+                section={coreSection}
+                anchorId="core-analysis"
+                badge={viewTexts.cards.core.title}
+                index={1}
+                prelude={
+                  <>
+                    <ElementBalanceCard locale={locale} result={result} />
+                    <DetailedPillarTable locale={locale} result={result} />
+                  </>
+                }
+              />
+
+              <section className="detailGroup" id="work-money-reading">
+                <div className="detailGroupHead">
+                  <span className="result-panel-label">{viewTexts.cards.workMoney.title}</span>
+                  <p>{viewTexts.cards.workMoney.subtitle}</p>
+                </div>
+                <NarrativeSection
+                  section={careerSection}
+                  anchorId="career-reading"
+                  badge={viewTexts.sectionLabels.career}
+                  index={2}
+                />
+                <NarrativeSection
+                  section={wealthSection}
+                  anchorId="wealth-reading"
+                  badge={viewTexts.sectionLabels.wealth}
+                  index={3}
+                />
+              </section>
+
+              <NarrativeSection
+                section={loveSection}
+                anchorId="love-reading"
+                badge={viewTexts.cards.love.title}
+                index={4}
+              />
+
+              <NarrativeSection
+                section={luckFlowSection}
+                anchorId="luck-flow-reading"
+                badge={viewTexts.cards.luck.title}
+                index={5}
+                prelude={<LuckTimelineTable locale={locale} result={result} />}
+              />
+            </>
+          ) : (
+            <section className="detailLazyPanel" id="free-detail" ref={detailLoaderRef}>
+              <span className="result-panel-label">{detailTexts.label}</span>
+              <h3>{detailStatus === "loading" ? detailTexts.loadingTitle : detailTexts.title}</h3>
+              <p>{detailStatus === "loading" ? detailTexts.loadingBody : detailTexts.body}</p>
+              {detailError ? <p className="detailLazyError">{detailError}</p> : null}
+              <button
+                className="detailLazyButton"
+                type="button"
+                disabled={detailStatus === "loading"}
+                onClick={() => void loadFreeDetail("#core-analysis")}
+              >
+                {detailStatus === "loading" ? detailTexts.loadingTitle : detailTexts.button}
+              </button>
+            </section>
+          )}
         </div>
 
         <aside className="result-side-column">
           <section className="result-side-panel">
             <span className="result-panel-label">{viewTexts.outlineLabel}</span>
             <nav className="result-section-nav" aria-label={viewTexts.outlineLabel}>
-              {sections.map((section) => (
-                <a className="result-section-link" href={`#${section.anchorId}`} key={section.key}>
+              {detailNavSections.map((section) => (
+                <a
+                  className="result-section-link"
+                  href={`#${section.anchorId}`}
+                  key={section.key}
+                  onClick={(event) => handleDetailNavClick(event, `#${section.anchorId}`)}
+                >
                   <span>{section.badge}</span>
                   <strong>{section.section.title}</strong>
                 </a>

@@ -53,6 +53,7 @@ export type PipelineStatus = {
   saju_calculation: string;
   analysis_engine: string;
   llm_formatting: string;
+  free_preview_formatting?: string;
 };
 
 export type EvidenceSection = {
@@ -386,6 +387,40 @@ export type InterpretationReport = {
   diagnostics?: InterpretationDiagnostics | null;
 };
 
+export type FreePreviewDiagnosisKey = "strongest_point" | "repeating_pattern" | "current_task";
+
+export type FreePreviewCardKey = "core" | "work_money" | "love" | "luck_flow";
+
+export type FreePreviewDiagnosis = {
+  key: FreePreviewDiagnosisKey;
+  title: string;
+  body: string;
+};
+
+export type FreePreviewCard = {
+  key: FreePreviewCardKey;
+  title: string;
+  subtitle: string;
+  chips: string[];
+  preview_paragraphs: string[];
+  user_takeaway: string;
+  next_question: string;
+  basis_line: string;
+};
+
+export type FreePreviewReport = {
+  schema_version: "free-preview-v1";
+  provider: "openai" | "fallback";
+  model?: string | null;
+  prompt_version: string;
+  headline: string;
+  hero_overview: string[];
+  core_diagnoses: FreePreviewDiagnosis[];
+  cards: FreePreviewCard[];
+  warnings: string[];
+  diagnostics?: InterpretationDiagnostics | null;
+};
+
 export type SajuPreviewResponse = {
   trace_id: string;
   response_mode: "preview";
@@ -421,6 +456,7 @@ export type SajuPreviewResponse = {
     wealth: string;
     action_advice: string;
     interpretation?: InterpretationReport | null;
+    free_preview?: FreePreviewReport | null;
     limitations: string[];
     disabled_sections: string[];
     evidence_sections: Record<string, EvidenceSection>;
@@ -446,4 +482,13 @@ export type SajuPreviewResponse = {
     candidate_charts?: CandidateChart[];
     uncertainty_flags?: UncertaintyFlag[];
   } | null;
+};
+
+export type SajuFreeDetailResponse = {
+  trace_id: string;
+  response_mode: "free_detail";
+  pipeline_status: PipelineStatus;
+  interpretation: InterpretationReport;
+  detail_report: InterpretationReport;
+  debug_trace?: SajuPreviewResponse["debug_trace"];
 };

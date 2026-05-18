@@ -10,6 +10,7 @@ from app.diagnostics import capture_saju_request_event, to_json_safe
 from app.domain.saju.schemas import (
     RegionSearchResponse,
     RegionSuggestion,
+    SajuFreeDetailResponse,
     SajuPreviewRequest,
     SajuPreviewResponse,
 )
@@ -82,6 +83,50 @@ def create_saju_preview(
         trace_id=request.state.trace_id,
         debug_requested=request.state.debug_requested,
         service_name=settings.app_name,
+    )
+    if _is_http_request(request):
+        capture_saju_request_event(
+            enabled=settings.request_log_enabled,
+            log_path=settings.request_log_path,
+            max_bytes=settings.request_log_max_bytes,
+            backup_count=settings.request_log_backup_count,
+            service=settings.app_name,
+            trace_id=request.state.trace_id,
+            method=_request_method(request),
+            path=_request_path(request),
+            status_code=200,
+            payload=payload_snapshot,
+            debug_requested=request.state.debug_requested,
+            stage="completed",
+            meta={"pipeline_status": response.pipeline_status},
+        )
+    return response
+
+
+@router.post("/saju/free-detail", response_model=SajuFreeDetailResponse)
+def create_saju_free_detail(
+    payload: SajuPreviewRequest,
+    request: Request,
+) -> SajuFreeDetailResponse:
+    """Return the free detailed interpretation as a lazy-loadable report."""
+    payload_snapshot = to_json_safe(payload)
+    request.state.saju_preview_payload = payload_snapshot
+    preview_response = create_saju_preview_response(
+        payload=payload,
+        trace_id=request.state.trace_id,
+        debug_requested=request.state.debug_requested,
+        service_name=settings.app_name,
+    )
+    interpretation = preview_response.result.interpretation
+    if interpretation is None:  # pragma: no cover - defensive guard; generator returns fallback on LLM failure.
+        raise RuntimeError("free detail interpretation was not generated")
+
+    response = SajuFreeDetailResponse(
+        trace_id=preview_response.trace_id,
+        pipeline_status=preview_response.pipeline_status,
+        interpretation=interpretation,
+        detail_report=interpretation,
+        debug_trace=preview_response.debug_trace,
     )
     if _is_http_request(request):
         capture_saju_request_event(

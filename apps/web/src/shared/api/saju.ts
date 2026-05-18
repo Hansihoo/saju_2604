@@ -2,6 +2,7 @@ import {
   ApiHealth,
   RegionSearchResponse,
   RegionSuggestion,
+  SajuFreeDetailResponse,
   SajuPreviewRequest,
   SajuPreviewResponse,
 } from "./contracts";
@@ -12,6 +13,7 @@ export type {
   RegionSearchResponse,
   SajuPreviewRequest,
   SajuPreviewResponse,
+  SajuFreeDetailResponse,
 } from "./contracts";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
@@ -56,4 +58,20 @@ export async function createSajuPreview(
   });
 
   return parseJsonResponse<SajuPreviewResponse>(response);
+}
+
+export async function createSajuFreeDetail(
+  payload: SajuPreviewRequest,
+  debug: boolean,
+): Promise<SajuFreeDetailResponse> {
+  const response = await fetch(`${API_BASE_URL}/saju/free-detail`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(debug ? { "X-Saju-Debug": "1" } : {}),
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return parseJsonResponse<SajuFreeDetailResponse>(response);
 }

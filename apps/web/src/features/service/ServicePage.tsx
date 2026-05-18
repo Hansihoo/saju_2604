@@ -50,7 +50,12 @@ export function ServicePage({
       />
 
       {result ? (
-        <SajuResultView locale={locale} result={result} onReset={() => onResultChange(null)} />
+        <SajuResultView
+          locale={locale}
+          result={result}
+          detailPayload={form.lastSubmittedPayload}
+          onReset={() => onResultChange(null)}
+        />
       ) : isLoadingView ? (
         <SajuLoadingView locale={locale} />
       ) : (

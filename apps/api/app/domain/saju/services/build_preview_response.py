@@ -1,12 +1,14 @@
 """이 파일은 미리보기 응답을 조립하는 로직을 담는다."""
 
 from dataclasses import asdict
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from app.config import settings
+from app.diagnostics import log_stage
 from app.domain.saju.analysis import AnalysisResult
 from app.domain.saju.calendar_normalization import CalendarNormalizationResult
 from app.domain.saju.engine import SajuCalculationResult
+from app.domain.saju.interpretation import FreePreviewReport
 from app.domain.saju.schemas import (
     BirthTimeContextSummary,
     CalendarNormalizationSummary,
@@ -29,6 +31,10 @@ from app.domain.saju.services.birth_time_policy import resolve_birth_time_policy
 from app.domain.saju.services.build_interpretation_payload import build_interpretation_payload
 from app.domain.saju.services.build_manse import build_manse_data
 from app.domain.saju.services.detect_uncertainty import UncertaintyFlag
+from app.domain.saju.services.generate_free_preview import (
+    build_fallback_free_preview_report,
+    generate_free_preview_report,
+)
 from app.domain.saju.services.generate_interpretation import generate_interpretation_report
 from app.domain.saju.services.generate_candidate_charts import CandidateChart
 from app.domain.saju.time_correction import (
@@ -66,6 +72,43 @@ def _build_result_signals(
         leadership_score=analysis_result.leadership_score,
         internal_grade=analysis_result.internal_grade,
     )
+
+
+def _generate_free_preview_safely(
+    *,
+    interpretation_payload,
+    trace_id: str,
+    service_name: str,
+) -> Tuple[Optional[FreePreviewReport], str]:
+    try:
+        free_preview = generate_free_preview_report(
+            payload=interpretation_payload,
+            trace_id=trace_id,
+            service_name=service_name,
+        )
+        status = "success" if free_preview.provider == "openai" else "fallback"
+        return free_preview, status
+    except Exception as exc:  # pragma: no cover - defensive boundary for preview API resilience.
+        log_stage(
+            service=service_name,
+            trace_id=trace_id,
+            stage="free_preview_formatting",
+            event="fallback_used",
+            error_code=exc.__class__.__name__,
+            meta={"reason": "free_preview_exception"},
+        )
+        try:
+            return build_fallback_free_preview_report(interpretation_payload), "fallback"
+        except Exception as fallback_exc:  # pragma: no cover - last-resort API resilience.
+            log_stage(
+                service=service_name,
+                trace_id=trace_id,
+                stage="free_preview_formatting",
+                event="failed",
+                error_code=fallback_exc.__class__.__name__,
+                meta={"reason": "free_preview_fallback_exception"},
+            )
+            return None, "failed"
 
 
 def build_preview_response(
@@ -262,6 +305,11 @@ def build_preview_response(
         result=preview_result,
         debug_trace=None,
     ))
+    free_preview, free_preview_status = _generate_free_preview_safely(
+        interpretation_payload=interpretation_payload,
+        trace_id=trace_id,
+        service_name=settings.app_name,
+    )
     interpretation = generate_interpretation_report(
         payload=interpretation_payload,
         trace_id=trace_id,
@@ -281,6 +329,7 @@ def build_preview_response(
         wealth=preview_result.wealth,
         action_advice=preview_result.action_advice,
         interpretation=interpretation,
+        free_preview=free_preview,
         limitations=limitations,
         disabled_sections=birth_time_policy.disabled_sections,
         evidence_sections=evidence_sections,
@@ -314,6 +363,7 @@ def build_preview_response(
                 "saju_calculation",
                 "analysis_engine",
                 "llm_formatting",
+                "free_preview_formatting",
             ],
             failed_stage="llm_formatting" if interpretation.provider == "fallback" else None,
             checkpoints=[
@@ -387,6 +437,37 @@ def build_preview_response(
                         else None
                     ),
                 ),
+                DebugCheckpoint(
+                    stage="free_preview_formatting",
+                    status=(
+                        "passed"
+                        if free_preview_status == "success"
+                        else "failed" if free_preview_status in {"fallback", "failed"} else "skipped"
+                    ),
+                    note=(
+                        "Free preview finished via "
+                        f"{free_preview.provider if free_preview is not None else 'none'}."
+                        + (
+                            f" Fallback reason: {free_preview.diagnostics.fallback_reason}."
+                            if (
+                                free_preview is not None
+                                and free_preview.provider == "fallback"
+                                and free_preview.diagnostics
+                                and free_preview.diagnostics.fallback_reason
+                            )
+                            else ""
+                        )
+                    ),
+                    error_code=(
+                        free_preview.diagnostics.fallback_reason
+                        if (
+                            free_preview is not None
+                            and free_preview.provider == "fallback"
+                            and free_preview.diagnostics
+                        )
+                        else "free_preview_failed" if free_preview_status == "failed" else None
+                    ),
+                ),
             ],
             request_echo={
                 "calendar_type": payload.calendar_type,
@@ -414,6 +495,7 @@ def build_preview_response(
             saju_calculation="passed",
             analysis_engine="passed",
             llm_formatting=llm_status,
+            free_preview_formatting=free_preview_status,
         ),
         region=region,
         time_correction=TimeCorrectionSummary(

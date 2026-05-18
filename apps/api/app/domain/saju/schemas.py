@@ -6,10 +6,11 @@ from typing import Dict, List, Literal, Optional
 from pydantic import BaseModel, Field, constr
 
 from app.domain.saju.analysis import InternalGrade
-from app.domain.saju.interpretation import InterpretationReport
+from app.domain.saju.interpretation import FreePreviewReport, InterpretationReport
 
 
 PipelineState = Literal["passed", "failed", "skipped", "disabled"]
+FreePreviewFormattingState = Literal["success", "fallback", "failed", "skipped"]
 try:
     BirthTimeStr = constr(pattern=r"^\d{2}:\d{2}$")
 except TypeError:
@@ -63,6 +64,7 @@ class PipelineStatus(BaseModel):
     saju_calculation: PipelineState = "skipped"
     analysis_engine: PipelineState = "skipped"
     llm_formatting: PipelineState = "skipped"
+    free_preview_formatting: FreePreviewFormattingState = "skipped"
 
 
 class EvidenceSection(BaseModel):
@@ -322,6 +324,7 @@ class SajuPreviewResult(BaseModel):
     wealth: str
     action_advice: str
     interpretation: Optional[InterpretationReport] = None
+    free_preview: Optional[FreePreviewReport] = None
     limitations: List[str]
     disabled_sections: List[str]
     evidence_sections: Dict[str, EvidenceSection]
@@ -408,4 +411,13 @@ class SajuPreviewResponse(BaseModel):
     calendar_normalization: CalendarNormalizationSummary
     manse: ManseData
     result: SajuPreviewResult
+    debug_trace: Optional[DebugTrace] = None
+
+
+class SajuFreeDetailResponse(BaseModel):
+    trace_id: str
+    response_mode: Literal["free_detail"] = "free_detail"
+    pipeline_status: PipelineStatus
+    interpretation: InterpretationReport
+    detail_report: InterpretationReport
     debug_trace: Optional[DebugTrace] = None

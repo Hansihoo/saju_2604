@@ -1,6 +1,11 @@
 import { KeyboardEvent, useEffect, useRef, useState } from "react";
 
-import { AccuracyMode, RegionSuggestion, SajuPreviewResponse } from "../../shared/api/contracts";
+import {
+  AccuracyMode,
+  RegionSuggestion,
+  SajuPreviewRequest,
+  SajuPreviewResponse,
+} from "../../shared/api/contracts";
 import { createSajuPreview, searchRegionSuggestions } from "../../shared/api/saju";
 import { Locale, getCopy } from "../../shared/copy";
 
@@ -43,6 +48,7 @@ export function useSajuInputForm({
     initialValues?.accuracyMode ?? "legacy",
   );
   const [isLunarLeapMonth, setIsLunarLeapMonth] = useState(false);
+  const [lastSubmittedPayload, setLastSubmittedPayload] = useState<SajuPreviewRequest | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -185,21 +191,20 @@ export function useSajuInputForm({
     setError(null);
 
     try {
-      const response = await createSajuPreview(
-        {
-          locale,
-          calendar_type: calendarType,
-          birth_date: birthDate,
-          birth_time: birthTime,
-          is_birth_time_estimated: isBirthTimeEstimated,
-          is_lunar_leap_month: isLunarLeapMonth,
-          gender,
-          region_id: selectedRegion.id,
-          accuracy_mode: accuracyMode,
-          debug,
-        },
+      const payload: SajuPreviewRequest = {
+        locale,
+        calendar_type: calendarType,
+        birth_date: birthDate,
+        birth_time: birthTime,
+        is_birth_time_estimated: isBirthTimeEstimated,
+        is_lunar_leap_month: isLunarLeapMonth,
+        gender,
+        region_id: selectedRegion.id,
+        accuracy_mode: accuracyMode,
         debug,
-      );
+      };
+      setLastSubmittedPayload(payload);
+      const response = await createSajuPreview(payload, debug);
       onSuccess(response);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : texts.noResult);
@@ -223,6 +228,7 @@ export function useSajuInputForm({
     calendarType,
     accuracyMode,
     isLunarLeapMonth,
+    lastSubmittedPayload,
     loading,
     error,
     regionBoxRef,

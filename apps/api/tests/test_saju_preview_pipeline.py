@@ -3,7 +3,7 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from app.api.routes import create_saju_preview
+from app.api.routes import create_saju_free_detail, create_saju_preview
 from app.domain.saju.pydantic_compat import model_to_dict
 from app.domain.saju.schemas import SajuPreviewRequest
 
@@ -52,6 +52,8 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         self.assertEqual(response.debug_trace.checkpoints[6].status, "passed")
         self.assertEqual(response.debug_trace.checkpoints[7].stage, "llm_formatting")
         self.assertEqual(response.debug_trace.checkpoints[7].status, "failed")
+        self.assertEqual(response.debug_trace.checkpoints[8].stage, "free_preview_formatting")
+        self.assertEqual(response.debug_trace.checkpoints[8].status, "failed")
         self.assertEqual(response.debug_trace.failed_stage, "llm_formatting")
         self.assertIn("Internal grade", response.debug_trace.checkpoints[6].note)
         self.assertIn("\u7532\u8fb0", response.debug_trace.checkpoints[5].note)
@@ -141,9 +143,10 @@ class SajuPreviewPipelineTests(unittest.TestCase):
             r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$",
         )
         self.assertEqual(response.pipeline_status.llm_formatting, "failed")
+        self.assertEqual(response.pipeline_status.free_preview_formatting, "fallback")
         self.assertIsNotNone(response.result.interpretation)
         self.assertEqual(response.result.interpretation.provider, "fallback")
-        self.assertEqual(response.result.interpretation.prompt_version, "saju-report-v14")
+        self.assertEqual(response.result.interpretation.prompt_version, "saju-report-v15")
         self.assertIsNotNone(response.result.interpretation.diagnostics)
         self.assertEqual(
             response.result.interpretation.diagnostics.fallback_reason,
@@ -152,6 +155,13 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         self.assertTrue(response.result.interpretation.summary.evidence_ids)
         self.assertTrue(response.result.interpretation.core_analysis.evidence_ids)
         self.assertTrue(response.result.interpretation.love.body)
+        self.assertIsNotNone(response.result.free_preview)
+        self.assertEqual(response.result.free_preview.schema_version, "free-preview-v1")
+        self.assertEqual(response.result.free_preview.provider, "fallback")
+        self.assertEqual(response.result.free_preview.prompt_version, "saju-free-preview-v1")
+        self.assertEqual(len(response.result.free_preview.core_diagnoses), 3)
+        self.assertEqual(len(response.result.free_preview.cards), 4)
+        self.assertIn("free_preview", model_to_dict(response)["result"])
         self.assertTrue(response.result.overview)
 
     def test_late_zi_uses_local_civil_time_for_iljin_query_and_hour_pillar(self) -> None:
@@ -257,6 +267,8 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         self.assertNotIn("\uc11c\uc6b8", response.result.interpretation.summary.overview)
         self.assertNotIn("\uc5f0\uc560\uc6b4", response.result.interpretation.love.title)
         self.assertIn("Love", response.result.interpretation.love.title)
+        self.assertIsNotNone(response.result.free_preview)
+        self.assertEqual(response.result.free_preview.provider, "fallback")
 
     def test_preview_pipeline_uses_explicit_luck_cycle_formula(self) -> None:
         request = SimpleNamespace(
@@ -297,6 +309,68 @@ class SajuPreviewPipelineTests(unittest.TestCase):
             r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$",
         )
         self.assertIn("\u7678\u5df3", response.result.evidence_sections["luck_cycles"].summary)
+
+    def test_preview_response_survives_free_preview_generation_failure(self) -> None:
+        request = SimpleNamespace(
+            state=SimpleNamespace(
+                trace_id="test-trace-free-preview-failure",
+                debug_requested=True,
+            )
+        )
+        payload = SajuPreviewRequest(
+            calendar_type="solar",
+            birth_date="2024-02-10",
+            birth_time="10:30",
+            is_birth_time_estimated=False,
+            is_lunar_leap_month=False,
+            gender="male",
+            region_id="kr-seoul",
+            debug=True,
+        )
+
+        with patch(
+            "app.domain.saju.services.build_preview_response.generate_free_preview_report",
+            side_effect=RuntimeError("free preview unavailable"),
+        ):
+            response = create_saju_preview(payload=payload, request=request)
+
+        self.assertEqual(response.response_mode, "preview")
+        self.assertEqual(response.pipeline_status.saju_calculation, "passed")
+        self.assertEqual(response.pipeline_status.free_preview_formatting, "fallback")
+        self.assertIsNotNone(response.result.interpretation)
+        self.assertIsNotNone(response.result.free_preview)
+        self.assertEqual(response.result.free_preview.provider, "fallback")
+        self.assertEqual(response.manse.meta.day_master, "\u7532")
+
+    def test_free_detail_endpoint_returns_existing_interpretation_schema(self) -> None:
+        request = SimpleNamespace(
+            state=SimpleNamespace(
+                trace_id="test-trace-free-detail",
+                debug_requested=False,
+            )
+        )
+        payload = SajuPreviewRequest(
+            locale="ko",
+            calendar_type="solar",
+            birth_date="1996-06-19",
+            birth_time="15:03",
+            is_birth_time_estimated=False,
+            is_lunar_leap_month=False,
+            gender="female",
+            region_id="kr-seoul-special",
+            debug=False,
+        )
+
+        response = create_saju_free_detail(payload=payload, request=request)
+
+        self.assertEqual(response.response_mode, "free_detail")
+        self.assertEqual(response.pipeline_status.saju_calculation, "passed")
+        self.assertEqual(response.detail_report, response.interpretation)
+        self.assertEqual(response.interpretation.schema_version, "m2-llm-v5")
+        self.assertEqual(response.interpretation.prompt_version, "saju-report-v15")
+        self.assertEqual(response.interpretation.provider, "fallback")
+        self.assertEqual(response.interpretation.core_analysis.title, "내 사주 특징")
+        self.assertEqual(response.interpretation.luck_flow.title, "현재 운과 대운 흐름")
 
 
 if __name__ == "__main__":
