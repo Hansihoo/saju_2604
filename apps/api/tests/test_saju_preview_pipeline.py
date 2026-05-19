@@ -1,11 +1,21 @@
 import json
+import re
 import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from app.api.routes import create_saju_free_detail, create_saju_preview
+from app.api.routes import (
+    create_saju_free_detail,
+    create_saju_preview,
+    prepare_saju_detail_bundle,
+    render_saju_detail,
+)
 from app.domain.saju.pydantic_compat import model_to_dict
-from app.domain.saju.schemas import SajuPreviewRequest
+from app.domain.saju.schemas import (
+    SajuDetailPrepareRequest,
+    SajuDetailRenderRequest,
+    SajuPreviewRequest,
+)
 
 
 class SajuPreviewPipelineTests(unittest.TestCase):
@@ -371,6 +381,114 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         self.assertEqual(response.interpretation.provider, "fallback")
         self.assertEqual(response.interpretation.core_analysis.title, "내 사주 특징")
         self.assertEqual(response.interpretation.luck_flow.title, "현재 운과 대운 흐름")
+
+    def test_detail_prepare_and_render_endpoints_use_cached_detail_bundle(self) -> None:
+        request = SimpleNamespace(
+            state=SimpleNamespace(
+                trace_id="test-trace-detail-insight",
+                debug_requested=False,
+            )
+        )
+        payload = SajuPreviewRequest(
+            locale="ko",
+            calendar_type="solar",
+            birth_date="1996-06-19",
+            birth_time="15:03",
+            is_birth_time_estimated=False,
+            is_lunar_leap_month=False,
+            gender="female",
+            region_id="kr-seoul-special",
+            debug=False,
+        )
+
+        with patch(
+            "app.domain.saju.services.generate_detail_insights.settings.llm_provider",
+            "fallback",
+        ):
+            prepared = prepare_saju_detail_bundle(
+                report_id="test-report",
+                payload=SajuDetailPrepareRequest(input=payload, detail_type="love_timing"),
+                request=request,
+            )
+            prepared_again = prepare_saju_detail_bundle(
+                report_id="test-report",
+                payload=SajuDetailPrepareRequest(input=payload, detail_type="wealth_timing"),
+                request=request,
+            )
+            rendered = render_saju_detail(
+                report_id="test-report",
+                payload=SajuDetailRenderRequest(
+                    detail_type="love_timing",
+                    input_hash=prepared.input_hash,
+                    locale="ko",
+                ),
+                request=request,
+            )
+            rendered_again = render_saju_detail(
+                report_id="test-report",
+                payload=SajuDetailRenderRequest(
+                    detail_type="love_timing",
+                    input_hash=prepared.input_hash,
+                    locale="ko",
+                ),
+                request=request,
+            )
+
+        self.assertEqual(prepared.response_mode, "detail_prepare")
+        self.assertFalse(prepared.cached)
+        self.assertTrue(prepared_again.cached)
+        self.assertEqual(prepared.input_hash, prepared_again.input_hash)
+        self.assertIn("love_timing", prepared.available_detail_types)
+        self.assertEqual(prepared.bundle.schema_version, "saju-detail-v1")
+        self.assertIn("love_timing", prepared.bundle.detail_analysis_bundle)
+        self.assertEqual(rendered.response_mode, "detail_render")
+        self.assertEqual(rendered.detail_type, "love_timing")
+        self.assertFalse(rendered.cached)
+        self.assertTrue(rendered_again.cached)
+        self.assertEqual(rendered.provider, rendered_again.provider)
+        self.assertEqual(rendered.report.schema_version, "saju-detail-render-v1")
+        combined = json.dumps(model_to_dict(rendered.report), ensure_ascii=False)
+        for forbidden in ("무료", "유료", "프리미엄", "결제", "score", "internal_grade", "evidence_id"):
+            self.assertNotIn(forbidden, combined)
+        self.assertIsNone(re.search(r"[\u3400-\u9fff]", combined))
+
+    def test_compatibility_detail_requires_partner_flow(self) -> None:
+        request = SimpleNamespace(
+            state=SimpleNamespace(
+                trace_id="test-trace-compatibility-detail",
+                debug_requested=False,
+            )
+        )
+        payload = SajuPreviewRequest(
+            locale="ko",
+            calendar_type="solar",
+            birth_date="1996-06-19",
+            birth_time="15:03",
+            is_birth_time_estimated=False,
+            is_lunar_leap_month=False,
+            gender="female",
+            region_id="kr-seoul-special",
+            debug=False,
+        )
+
+        with patch(
+            "app.domain.saju.services.generate_detail_insights.settings.llm_provider",
+            "fallback",
+        ):
+            rendered = render_saju_detail(
+                report_id="test-report-compat",
+                payload=SajuDetailRenderRequest(
+                    detail_type="compatibility_compare",
+                    input=payload,
+                    locale="ko",
+                ),
+                request=request,
+            )
+
+        self.assertEqual(rendered.detail_type, "compatibility_compare")
+        self.assertIn("상대 정보", rendered.report.summary)
+        self.assertFalse(rendered.report.body.periods)
+        self.assertIn("상대 정보 없이 실제 궁합 결과를 만들지 않습니다.", rendered.report.body.cautions)
 
 
 if __name__ == "__main__":

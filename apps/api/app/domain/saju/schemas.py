@@ -6,7 +6,13 @@ from typing import Dict, List, Literal, Optional
 from pydantic import BaseModel, Field, constr
 
 from app.domain.saju.analysis import InternalGrade
-from app.domain.saju.interpretation import FreePreviewReport, InterpretationReport
+from app.domain.saju.interpretation import (
+    FreePreviewReport,
+    InterpretationReport,
+    SajuDetailPreparedReport,
+    SajuDetailRenderedReport,
+    SajuDetailType,
+)
 
 
 PipelineState = Literal["passed", "failed", "skipped", "disabled"]
@@ -421,3 +427,40 @@ class SajuFreeDetailResponse(BaseModel):
     interpretation: InterpretationReport
     detail_report: InterpretationReport
     debug_trace: Optional[DebugTrace] = None
+
+
+class SajuDetailPrepareRequest(BaseModel):
+    input: SajuPreviewRequest
+    input_hash: Optional[str] = None
+    detail_type: Optional[SajuDetailType] = None
+
+
+class SajuDetailPrepareResponse(BaseModel):
+    trace_id: str
+    response_mode: Literal["detail_prepare"] = "detail_prepare"
+    report_id: str
+    input_hash: str
+    cached: bool
+    available_detail_types: List[SajuDetailType]
+    bundle: SajuDetailPreparedReport
+
+
+class SajuDetailRenderRequest(BaseModel):
+    detail_type: SajuDetailType
+    input: Optional[SajuPreviewRequest] = None
+    input_hash: Optional[str] = None
+    locale: Literal["ko", "en"] = "ko"
+
+
+class SajuDetailRenderResponse(BaseModel):
+    trace_id: str
+    response_mode: Literal["detail_render"] = "detail_render"
+    report_id: str
+    input_hash: str
+    detail_type: SajuDetailType
+    provider: Literal["openai", "fallback"]
+    model: Optional[str] = None
+    prompt_version: str
+    cached: bool
+    report: SajuDetailRenderedReport
+    warnings: List[str] = Field(default_factory=list)

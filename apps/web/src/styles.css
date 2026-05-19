@@ -944,6 +944,180 @@ button {
   color: #667085;
 }
 
+.reading-section-extra {
+  margin-top: 6px;
+}
+
+.sectionInsightBlock {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid #e4e7ec;
+  border-radius: 8px;
+  background: #fbfcfd;
+}
+
+.sectionInsightBlock h4 {
+  margin: 0;
+  color: #111111;
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.sectionInsightGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.sectionInsightCard {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  min-height: 96px;
+  padding: 14px;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111111;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sectionInsightCard:hover,
+.sectionInsightCard.is-active {
+  border-color: #111111;
+  background: #f8fafc;
+}
+
+.sectionInsightCard:disabled {
+  cursor: wait;
+  color: #667085;
+}
+
+.sectionInsightCard span {
+  font-size: 0.92rem;
+  font-weight: 800;
+  line-height: 1.45;
+  word-break: keep-all;
+}
+
+.sectionInsightCard p {
+  margin: 0;
+  color: #667085;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  word-break: keep-all;
+}
+
+.detailRevealPanel {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.detailRevealPanel.is-loading {
+  background: #f8fafc;
+}
+
+.detailRevealPanel.is-error {
+  border-color: #fecdca;
+  background: #fffbfa;
+}
+
+.detailRevealPanel.is-error p {
+  color: #b42318;
+}
+
+.detailRevealHead {
+  display: grid;
+  gap: 6px;
+}
+
+.detailRevealHead h4 {
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1.45;
+}
+
+.detailRevealHead p,
+.detailRevealConclusion,
+.detailRevealPanel > p {
+  margin: 0;
+  color: #344054;
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+
+.detailRevealPeriods {
+  display: grid;
+  gap: 10px;
+}
+
+.detailRevealPeriods article {
+  display: grid;
+  gap: 5px;
+  padding: 13px 14px;
+  border: 1px solid #eaecf0;
+  border-radius: 8px;
+  background: #fcfcfd;
+}
+
+.detailRevealPeriods span {
+  color: #667085;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.detailRevealPeriods strong {
+  color: #111111;
+  font-size: 0.94rem;
+}
+
+.detailRevealPeriods p,
+.detailRevealList li {
+  margin: 0;
+  color: #475467;
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+.detailRevealList {
+  display: grid;
+  gap: 8px;
+}
+
+.detailRevealList strong {
+  color: #111111;
+  font-size: 0.88rem;
+}
+
+.detailRevealList ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.detailRevealChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.detailRevealChips span {
+  padding: 5px 9px;
+  border: 1px solid #e4e7ec;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #475467;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
 .reading-summary-card {
   padding: 24px 28px 26px;
 }
@@ -2187,6 +2361,10 @@ button {
   .insightGrid {
     grid-template-columns: 1fr;
   }
+
+  .sectionInsightGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 640px) {
@@ -2248,6 +2426,11 @@ button {
     grid-template-columns: 1fr;
   }
 
+  .sectionInsightGrid,
+  .detailRevealPeriods {
+    grid-template-columns: 1fr;
+  }
+
   .coreDiagnosisGrid {
     grid-template-columns: 1fr;
   }
@@ -2306,6 +2489,11 @@ button {
   .reading-section-shell,
   .result-side-panel {
     padding: 18px;
+  }
+
+  .sectionInsightBlock,
+  .detailRevealPanel {
+    padding: 14px;
   }
 
   .insightCard {

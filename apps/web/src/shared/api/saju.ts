@@ -2,6 +2,9 @@ import {
   ApiHealth,
   RegionSearchResponse,
   RegionSuggestion,
+  SajuDetailPrepareResponse,
+  SajuDetailRenderResponse,
+  SajuDetailType,
   SajuFreeDetailResponse,
   SajuPreviewRequest,
   SajuPreviewResponse,
@@ -14,6 +17,9 @@ export type {
   SajuPreviewRequest,
   SajuPreviewResponse,
   SajuFreeDetailResponse,
+  SajuDetailPrepareResponse,
+  SajuDetailRenderResponse,
+  SajuDetailType,
 } from "./contracts";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
@@ -74,4 +80,47 @@ export async function createSajuFreeDetail(
   });
 
   return parseJsonResponse<SajuFreeDetailResponse>(response);
+}
+
+export async function prepareSajuDetailBundle(
+  reportId: string,
+  payload: SajuPreviewRequest,
+  detailType?: SajuDetailType,
+): Promise<SajuDetailPrepareResponse> {
+  const response = await fetch(`${API_BASE_URL}/saju/reports/${encodeURIComponent(reportId)}/detail-prepare`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(payload.debug ? { "X-Saju-Debug": "1" } : {}),
+    },
+    body: JSON.stringify({
+      input: payload,
+      detail_type: detailType,
+    }),
+  });
+
+  return parseJsonResponse<SajuDetailPrepareResponse>(response);
+}
+
+export async function renderSajuDetailInsight(
+  reportId: string,
+  payload: SajuPreviewRequest,
+  detailType: SajuDetailType,
+  inputHash?: string,
+): Promise<SajuDetailRenderResponse> {
+  const response = await fetch(`${API_BASE_URL}/saju/reports/${encodeURIComponent(reportId)}/detail-render`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(payload.debug ? { "X-Saju-Debug": "1" } : {}),
+    },
+    body: JSON.stringify({
+      detail_type: detailType,
+      input: payload,
+      input_hash: inputHash,
+      locale: payload.locale,
+    }),
+  });
+
+  return parseJsonResponse<SajuDetailRenderResponse>(response);
 }

@@ -492,3 +492,67 @@ export type SajuFreeDetailResponse = {
   detail_report: InterpretationReport;
   debug_trace?: SajuPreviewResponse["debug_trace"];
 };
+
+export type SajuDetailType =
+  | "love_timing"
+  | "ideal_partner"
+  | "wealth_timing"
+  | "career_timing"
+  | "yearly_caution"
+  | "monthly_flow"
+  | "relationship_support"
+  | "health_condition"
+  | "compatibility_compare";
+
+export type SajuDetailPreparedReport = {
+  schema_version: "saju-detail-v1";
+  report_id: string;
+  input_hash: string;
+  prepared_at: string;
+  base_context: Record<string, unknown>;
+  detail_analysis_bundle: Record<string, Record<string, unknown>>;
+};
+
+export type SajuDetailPeriod = {
+  label: string;
+  period: string;
+  description: string;
+};
+
+export type SajuDetailRenderedReport = {
+  schema_version: "saju-detail-render-v1";
+  detail_type: SajuDetailType;
+  title: string;
+  summary: string;
+  body: {
+    conclusion: string;
+    periods: SajuDetailPeriod[];
+    cautions: string[];
+    advice: string[];
+    basis_chips: string[];
+  };
+};
+
+export type SajuDetailPrepareResponse = {
+  trace_id: string;
+  response_mode: "detail_prepare";
+  report_id: string;
+  input_hash: string;
+  cached: boolean;
+  available_detail_types: SajuDetailType[];
+  bundle: SajuDetailPreparedReport;
+};
+
+export type SajuDetailRenderResponse = {
+  trace_id: string;
+  response_mode: "detail_render";
+  report_id: string;
+  input_hash: string;
+  detail_type: SajuDetailType;
+  provider: "openai" | "fallback";
+  model?: string | null;
+  prompt_version: string;
+  cached: boolean;
+  report: SajuDetailRenderedReport;
+  warnings: string[];
+};

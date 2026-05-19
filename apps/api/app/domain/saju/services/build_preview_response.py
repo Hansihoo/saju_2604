@@ -126,6 +126,7 @@ def build_preview_response(
     candidate_charts: Optional[List[CandidateChart]] = None,
     uncertainty_flags: Optional[List[UncertaintyFlag]] = None,
     birth_time_context: Optional[BirthTimeContext] = None,
+    render_reports: bool = True,
 ) -> SajuPreviewResponse:
     """파이프라인 결과들을 모아 최종 preview API 응답으로 조립한다."""
     birth_time_policy = resolve_birth_time_policy(payload)
@@ -251,7 +252,7 @@ def build_preview_response(
         signals=signals,
     )
 
-    interpretation_payload = build_interpretation_payload(request=payload, response=SajuPreviewResponse(
+    base_response = SajuPreviewResponse(
         trace_id=trace_id,
         pipeline_status=PipelineStatus(
             time_correction="passed",
@@ -304,7 +305,11 @@ def build_preview_response(
         manse=manse,
         result=preview_result,
         debug_trace=None,
-    ))
+    )
+    if not render_reports:
+        return base_response
+
+    interpretation_payload = build_interpretation_payload(request=payload, response=base_response)
     free_preview, free_preview_status = _generate_free_preview_safely(
         interpretation_payload=interpretation_payload,
         trace_id=trace_id,

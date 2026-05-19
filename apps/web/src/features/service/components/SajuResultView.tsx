@@ -13,10 +13,16 @@ import {
   InterpretationNarrativeSection,
   InterpretationReport,
   ManseLuckCycle,
+  SajuDetailRenderedReport,
+  SajuDetailType,
   SajuPreviewRequest,
   SajuPreviewResponse,
 } from "../../../shared/api/contracts";
-import { createSajuFreeDetail } from "../../../shared/api/saju";
+import {
+  createSajuFreeDetail,
+  prepareSajuDetailBundle,
+  renderSajuDetailInsight,
+} from "../../../shared/api/saju";
 import { Locale, getCopy } from "../../../shared/copy";
 import { formatManseText } from "../../shared/manseDisplay";
 
@@ -31,6 +37,7 @@ type SectionKey = "core_analysis" | "love" | "career" | "wealth" | "luck_flow";
 type VisiblePillarKey = "year" | "month" | "day" | "time";
 type ElementKey = "wood" | "fire" | "earth" | "metal" | "water";
 type DetailLoadState = "idle" | "loading" | "ready" | "error";
+type InsightLoadState = "idle" | "loading" | "ready" | "error";
 
 const visiblePillarKeys = ["year", "month", "day", "time"] as const;
 const elementKeys: ElementKey[] = ["wood", "fire", "earth", "metal", "water"];
@@ -330,6 +337,157 @@ const detailLazyCopy: Record<
       "The detailed reading is being prepared from the chart information already calculated. Longer reports can take a little more time.",
     fallbackNotice: "The detail request was delayed, so the embedded detail report is shown instead.",
     errorTitle: "Could not load the detailed report",
+  },
+};
+
+type SectionInsightCopy = {
+  detailType: SajuDetailType;
+  title: string;
+  description: string;
+};
+
+const sectionInsightCopy: Record<
+  Locale,
+  {
+    headings: {
+      core: string;
+      career: string;
+      wealth: string;
+      love: string;
+      luck: string;
+    };
+    status: {
+      loading: string;
+      error: string;
+      compatibilityTitle: string;
+      compatibilityBody: string;
+    };
+    items: Record<SajuDetailType, SectionInsightCopy>;
+  }
+> = {
+  ko: {
+    headings: {
+      core: "생활에서 더 살펴볼 부분",
+      career: "더 살펴볼 일의 흐름",
+      wealth: "더 살펴볼 돈의 흐름",
+      love: "더 살펴볼 관계 흐름",
+      luck: "올해와 월별 흐름",
+    },
+    status: {
+      loading: "확장 해석을 준비하고 있습니다. 내용에 따라 시간이 조금 걸릴 수 있습니다.",
+      error: "지금은 확장 해석을 불러오지 못했습니다. 잠시 후 다시 열어 주세요.",
+      compatibilityTitle: "상대 정보가 필요합니다",
+      compatibilityBody: "상대의 생년월일, 출생시간, 성별, 출생지역을 입력하면 두 사람의 관계 흐름을 따로 비교할 수 있습니다.",
+    },
+    items: {
+      relationship_support: {
+        detailType: "relationship_support",
+        title: "인간관계와 귀인 보기",
+        description: "도움 되는 사람과 피로해지기 쉬운 관계 패턴을 봅니다.",
+      },
+      health_condition: {
+        detailType: "health_condition",
+        title: "건강과 컨디션 보기",
+        description: "오행 균형과 현재 흐름을 바탕으로 생활 리듬 관리 포인트를 봅니다.",
+      },
+      career_timing: {
+        detailType: "career_timing",
+        title: "이직과 커리어 전환 시기 보기",
+        description: "움직임을 검토하기 좋은 시기와 보수적으로 봐야 할 시기를 나눠 봅니다.",
+      },
+      wealth_timing: {
+        detailType: "wealth_timing",
+        title: "금전 흐름이 좋아지는 시기 보기",
+        description: "수입 기회와 지출 누수가 함께 보이는 시기를 봅니다.",
+      },
+      love_timing: {
+        detailType: "love_timing",
+        title: "연애운이 좋아지는 시기 보기",
+        description: "관계 기회가 늘기 쉬운 시기를 세운과 월운 기준으로 봅니다.",
+      },
+      ideal_partner: {
+        detailType: "ideal_partner",
+        title: "나와 잘 맞는 사람 유형 보기",
+        description: "내 사주 구조를 편하게 해주는 상대 유형을 봅니다.",
+      },
+      compatibility_compare: {
+        detailType: "compatibility_compare",
+        title: "상대와 궁합 비교하기",
+        description: "상대 정보를 입력하면 두 사람의 관계 흐름을 비교합니다.",
+      },
+      yearly_caution: {
+        detailType: "yearly_caution",
+        title: "올해 조심할 흐름 보기",
+        description: "올해 관계, 일, 돈에서 조심할 흐름을 정리합니다.",
+      },
+      monthly_flow: {
+        detailType: "monthly_flow",
+        title: "월별 흐름 보기",
+        description: "체감하기 쉬운 월별 실행 타이밍을 봅니다.",
+      },
+    },
+  },
+  en: {
+    headings: {
+      core: "More to review in daily life",
+      career: "More about work timing",
+      wealth: "More about money flow",
+      love: "More relationship timing",
+      luck: "This year and monthly flow",
+    },
+    status: {
+      loading: "Preparing the expanded insight. Longer details can take a little more time.",
+      error: "The expanded insight could not be loaded. Try opening it again in a moment.",
+      compatibilityTitle: "Partner information is needed",
+      compatibilityBody: "Enter the other person's birth date, time, gender, and region to compare the relationship flow separately.",
+    },
+    items: {
+      relationship_support: {
+        detailType: "relationship_support",
+        title: "View helpful relationships",
+        description: "See people who can help and patterns that may become tiring.",
+      },
+      health_condition: {
+        detailType: "health_condition",
+        title: "View condition and rhythm",
+        description: "Review lifestyle rhythm points from element balance and current timing.",
+      },
+      career_timing: {
+        detailType: "career_timing",
+        title: "View career transition timing",
+        description: "Separate timing for movement from timing that should stay conservative.",
+      },
+      wealth_timing: {
+        detailType: "wealth_timing",
+        title: "View money-flow timing",
+        description: "Review periods where income opportunity and leakage both need attention.",
+      },
+      love_timing: {
+        detailType: "love_timing",
+        title: "View relationship timing",
+        description: "Review periods when relationship openings can become easier.",
+      },
+      ideal_partner: {
+        detailType: "ideal_partner",
+        title: "View a fitting person type",
+        description: "See traits that may feel less draining for your structure.",
+      },
+      compatibility_compare: {
+        detailType: "compatibility_compare",
+        title: "Compare with another person",
+        description: "Enter partner information to compare the relationship flow.",
+      },
+      yearly_caution: {
+        detailType: "yearly_caution",
+        title: "View what to watch this year",
+        description: "Review caution points in relationships, work, and money.",
+      },
+      monthly_flow: {
+        detailType: "monthly_flow",
+        title: "View monthly flow",
+        description: "See practical month-by-month timing points.",
+      },
+    },
   },
 };
 
@@ -1525,12 +1683,14 @@ function NarrativeSection({
   badge,
   index,
   prelude,
+  afterContent,
 }: {
   section: InterpretationNarrativeSection;
   anchorId: string;
   badge: string;
   index: number;
   prelude?: ReactNode;
+  afterContent?: ReactNode;
 }) {
   return (
     <section className="reading-section-panel" id={anchorId}>
@@ -1544,6 +1704,7 @@ function NarrativeSection({
         </div>
         {prelude ? <div className="reading-section-prelude">{prelude}</div> : null}
         <div className="reading-article">{renderRichBody(section.body)}</div>
+        {afterContent ? <div className="reading-section-extra">{afterContent}</div> : null}
       </div>
     </section>
   );
@@ -1729,6 +1890,155 @@ function InsightCard({
   );
 }
 
+type SectionInsightState = {
+  status: InsightLoadState;
+  report?: SajuDetailRenderedReport;
+  error?: string | null;
+};
+
+function DetailRevealPanel({
+  detailType,
+  state,
+  locale,
+}: {
+  detailType: SajuDetailType;
+  state: SectionInsightState | undefined;
+  locale: Locale;
+}) {
+  const copy = sectionInsightCopy[locale];
+  const status = state?.status ?? "idle";
+
+  if (detailType === "compatibility_compare" && status !== "loading" && !state?.report) {
+    return (
+      <div className="detailRevealPanel">
+        <h4>{copy.status.compatibilityTitle}</h4>
+        <p>{copy.status.compatibilityBody}</p>
+      </div>
+    );
+  }
+
+  if (status === "loading") {
+    return (
+      <div className="detailRevealPanel is-loading">
+        <p>{copy.status.loading}</p>
+      </div>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <div className="detailRevealPanel is-error">
+        <p>{state?.error || copy.status.error}</p>
+      </div>
+    );
+  }
+
+  const report = state?.report;
+  if (!report) {
+    return null;
+  }
+
+  return (
+    <div className="detailRevealPanel">
+      <div className="detailRevealHead">
+        <h4>{report.title}</h4>
+        <p>{report.summary}</p>
+      </div>
+      <p className="detailRevealConclusion">{report.body.conclusion}</p>
+      {report.body.periods.length ? (
+        <div className="detailRevealPeriods">
+          {report.body.periods.map((period) => (
+            <article key={`${period.label}-${period.period}`}>
+              <span>{period.label}</span>
+              <strong>{period.period}</strong>
+              <p>{period.description}</p>
+            </article>
+          ))}
+        </div>
+      ) : null}
+      {report.body.cautions.length ? (
+        <div className="detailRevealList">
+          <strong>{locale === "ko" ? "주의해서 볼 점" : "Watch points"}</strong>
+          <ul>
+            {report.body.cautions.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      {report.body.advice.length ? (
+        <div className="detailRevealList">
+          <strong>{locale === "ko" ? "실행 포인트" : "Action points"}</strong>
+          <ul>
+            {report.body.advice.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      {report.body.basis_chips.length ? (
+        <div className="detailRevealChips">
+          {report.body.basis_chips.map((chip) => (
+            <span key={chip}>{chip}</span>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function SectionInsightChips({
+  heading,
+  items,
+  states,
+  activeDetailType,
+  locale,
+  onOpen,
+}: {
+  heading: string;
+  items: SectionInsightCopy[];
+  states: Partial<Record<SajuDetailType, SectionInsightState>>;
+  activeDetailType: SajuDetailType | null;
+  locale: Locale;
+  onOpen: (detailType: SajuDetailType) => void;
+}) {
+  const activeItem = activeDetailType
+    ? items.find((item) => item.detailType === activeDetailType)
+    : undefined;
+
+  return (
+    <div className="sectionInsightBlock">
+      <h4>{heading}</h4>
+      <div className="sectionInsightGrid">
+        {items.map((item) => {
+          const state = states[item.detailType];
+          const isActive = activeDetailType === item.detailType;
+          const isLoading = state?.status === "loading";
+          return (
+            <button
+              className={`sectionInsightCard${isActive ? " is-active" : ""}`}
+              disabled={isLoading}
+              key={item.detailType}
+              type="button"
+              onClick={() => onOpen(item.detailType)}
+            >
+              <span>{item.title}</span>
+              <p>{isLoading ? sectionInsightCopy[locale].status.loading : item.description}</p>
+            </button>
+          );
+        })}
+      </div>
+      {activeItem ? (
+        <DetailRevealPanel
+          detailType={activeItem.detailType}
+          locale={locale}
+          state={states[activeItem.detailType]}
+        />
+      ) : null}
+    </div>
+  );
+}
+
 function getFreePreviewCardDisplay(
   key: FreePreviewCard["key"],
   locale: Locale,
@@ -1877,6 +2187,13 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
   );
   const [detailError, setDetailError] = useState<string | null>(null);
   const [pendingScrollTarget, setPendingScrollTarget] = useState<string | null>(null);
+  const [detailBundleHash, setDetailBundleHash] = useState<string | null>(null);
+  const [activeSectionInsights, setActiveSectionInsights] = useState<Record<string, SajuDetailType>>(
+    {},
+  );
+  const [sectionInsightStates, setSectionInsightStates] = useState<
+    Partial<Record<SajuDetailType, SectionInsightState>>
+  >({});
   const detailLoaderRef = useRef<HTMLElement | null>(null);
   const interpretation = detailReport ?? (!freePreview ? embeddedInterpretation : null);
 
@@ -1885,6 +2202,9 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
     setDetailStatus(freePreview ? "idle" : embeddedInterpretation ? "ready" : "idle");
     setDetailError(null);
     setPendingScrollTarget(null);
+    setDetailBundleHash(null);
+    setActiveSectionInsights({});
+    setSectionInsightStates({});
   }, [embeddedInterpretation, freePreview, result.trace_id]);
 
   const loadFreeDetail = useCallback(
@@ -2003,6 +2323,77 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
       }
     },
     [detailReport, freePreview, loadFreeDetail],
+  );
+
+  const openSectionInsight = useCallback(
+    async (sectionKey: string, detailType: SajuDetailType) => {
+      setActiveSectionInsights((current) => ({
+        ...current,
+        [sectionKey]: detailType,
+      }));
+
+      const existingState = sectionInsightStates[detailType];
+      if (existingState?.status === "ready" || existingState?.status === "loading") {
+        return;
+      }
+
+      if (detailType === "compatibility_compare") {
+        setSectionInsightStates((current) => ({
+          ...current,
+          [detailType]: { status: "ready" },
+        }));
+        return;
+      }
+
+      if (!detailPayload) {
+        setSectionInsightStates((current) => ({
+          ...current,
+          [detailType]: {
+            status: "error",
+            error: sectionInsightCopy[locale].status.error,
+          },
+        }));
+        return;
+      }
+
+      setSectionInsightStates((current) => ({
+        ...current,
+        [detailType]: { status: "loading" },
+      }));
+
+      try {
+        let inputHash = detailBundleHash;
+        if (!inputHash) {
+          const prepared = await prepareSajuDetailBundle(result.trace_id, detailPayload, detailType);
+          inputHash = prepared.input_hash;
+          setDetailBundleHash(inputHash);
+        }
+
+        const rendered = await renderSajuDetailInsight(
+          result.trace_id,
+          detailPayload,
+          detailType,
+          inputHash,
+        );
+        setDetailBundleHash(rendered.input_hash);
+        setSectionInsightStates((current) => ({
+          ...current,
+          [detailType]: {
+            status: "ready",
+            report: rendered.report,
+          },
+        }));
+      } catch (_error) {
+        setSectionInsightStates((current) => ({
+          ...current,
+          [detailType]: {
+            status: "error",
+            error: sectionInsightCopy[locale].status.error,
+          },
+        }));
+      }
+    },
+    [detailBundleHash, detailPayload, locale, result.trace_id, sectionInsightStates],
   );
 
   if (!interpretation && !freePreview) {
@@ -2142,6 +2533,21 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
     },
   ];
   const hasDetailReport = Boolean(interpretation);
+  const insightCopy = sectionInsightCopy[locale];
+  const renderSectionInsights = (
+    sectionKey: string,
+    heading: string,
+    detailTypes: SajuDetailType[],
+  ) => (
+    <SectionInsightChips
+      activeDetailType={activeSectionInsights[sectionKey] ?? null}
+      heading={heading}
+      items={detailTypes.map((detailType) => insightCopy.items[detailType])}
+      locale={locale}
+      states={sectionInsightStates}
+      onOpen={(detailType) => void openSectionInsight(sectionKey, detailType)}
+    />
+  );
 
   return (
     <section className="result-screen">
@@ -2224,6 +2630,10 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
                     <DetailedPillarTable locale={locale} result={result} />
                   </>
                 }
+                afterContent={renderSectionInsights("core", insightCopy.headings.core, [
+                  "relationship_support",
+                  "health_condition",
+                ])}
               />
 
               <section className="detailGroup" id="work-money-reading">
@@ -2236,12 +2646,18 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
                   anchorId="career-reading"
                   badge={viewTexts.sectionLabels.career}
                   index={2}
+                  afterContent={renderSectionInsights("career", insightCopy.headings.career, [
+                    "career_timing",
+                  ])}
                 />
                 <NarrativeSection
                   section={wealthSection}
                   anchorId="wealth-reading"
                   badge={viewTexts.sectionLabels.wealth}
                   index={3}
+                  afterContent={renderSectionInsights("wealth", insightCopy.headings.wealth, [
+                    "wealth_timing",
+                  ])}
                 />
               </section>
 
@@ -2250,6 +2666,11 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
                 anchorId="love-reading"
                 badge={viewTexts.cards.love.title}
                 index={4}
+                afterContent={renderSectionInsights("love", insightCopy.headings.love, [
+                  "love_timing",
+                  "ideal_partner",
+                  "compatibility_compare",
+                ])}
               />
 
               <NarrativeSection
@@ -2258,6 +2679,10 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
                 badge={viewTexts.cards.luck.title}
                 index={5}
                 prelude={<LuckTimelineTable locale={locale} result={result} />}
+                afterContent={renderSectionInsights("luck", insightCopy.headings.luck, [
+                  "yearly_caution",
+                  "monthly_flow",
+                ])}
               />
             </>
           ) : (

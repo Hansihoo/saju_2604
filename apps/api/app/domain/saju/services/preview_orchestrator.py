@@ -28,6 +28,7 @@ def create_saju_preview_response(
     trace_id: str,
     debug_requested: bool,
     service_name: str,
+    render_reports: bool = True,
 ) -> SajuPreviewResponse:
     """사주 미리보기 파이프라인 전단계를 실행하고 최종 응답을 만든다."""
     birth_time_policy = resolve_birth_time_policy(payload)
@@ -244,4 +245,5 @@ def create_saju_preview_response(
         candidate_charts=candidate_charts,
         uncertainty_flags=uncertainty_flags,
         birth_time_context=birth_time_context,
+        render_reports=render_reports,
     )
