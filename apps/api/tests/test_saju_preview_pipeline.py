@@ -158,7 +158,7 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         self.assertIsNotNone(response.result.free_preview)
         self.assertEqual(response.result.free_preview.schema_version, "free-preview-v1")
         self.assertEqual(response.result.free_preview.provider, "fallback")
-        self.assertEqual(response.result.free_preview.prompt_version, "saju-free-preview-v1")
+        self.assertEqual(response.result.free_preview.prompt_version, "saju-free-preview-v3")
         self.assertEqual(len(response.result.free_preview.core_diagnoses), 3)
         self.assertEqual(len(response.result.free_preview.cards), 4)
         self.assertIn("free_preview", model_to_dict(response)["result"])

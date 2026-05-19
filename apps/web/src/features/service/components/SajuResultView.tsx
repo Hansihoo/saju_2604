@@ -310,22 +310,24 @@ const detailLazyCopy: Record<
   }
 > = {
   ko: {
-    label: "무료 상세 리포트",
+    label: "상세 리포트",
     title: "상세 리포트를 이어서 읽을 수 있습니다",
     body: "첫 화면 요약을 먼저 읽은 뒤, 내 사주 특징과 일과 돈, 관계, 대운 흐름을 더 자세히 펼쳐 봅니다.",
     button: "상세 리포트 불러오기",
     loadingTitle: "상세 리포트를 불러오는 중입니다",
-    loadingBody: "계산된 사주 payload를 바탕으로 무료 상세 해석을 준비하고 있습니다.",
+    loadingBody:
+      "앞에서 계산한 사주 정보를 바탕으로 상세 해석을 준비하고 있습니다. 내용이 길어 시간이 조금 오래 걸릴 수 있습니다.",
     fallbackNotice: "상세 리포트 호출이 지연되어 기본 상세 결과를 표시합니다.",
     errorTitle: "상세 리포트를 불러오지 못했습니다",
   },
   en: {
-    label: "Free detail report",
+    label: "Detailed report",
     title: "Continue with the detailed report",
     body: "After the first-screen preview, load the detailed reading for core traits, work and money, relationships, and luck flow.",
     button: "Load detailed report",
     loadingTitle: "Loading the detailed report",
-    loadingBody: "The free detail reading is being prepared from the calculated saju payload.",
+    loadingBody:
+      "The detailed reading is being prepared from the chart information already calculated. Longer reports can take a little more time.",
     fallbackNotice: "The detail request was delayed, so the embedded detail report is shown instead.",
     errorTitle: "Could not load the detailed report",
   },
@@ -1024,13 +1026,39 @@ function UncertaintySummaryNotice({
   result: SajuPreviewResponse;
 }) {
   const text = sectionViewCopy[locale];
-  const formatMessage = (message: string) => {
+  const formatMessage = (
+    flag: SajuPreviewResponse["result"]["uncertainty_summary"][number],
+  ) => {
+    const message = flag.user_message;
     if (locale !== "ko") {
       return message;
     }
 
+    const messagesByCode: Record<string, string> = {
+      day_pillar_uncertain_due_to_unknown_time:
+        "출생시간을 모르면 자정 전후 경계 때문에 하루 기준을 확정하기 어렵습니다.",
+      year_or_month_pillar_may_change:
+        "출생시간 후보 범위 안에 절기 경계가 있어 해석 기준이 달라질 수 있습니다.",
+      midnight_rule_changes_day_pillar: "자정 기준 적용 방식에 따라 일주가 달라질 수 있습니다.",
+      midnight_rule_changes_hour_pillar: "자정 기준 적용 방식에 따라 시주가 달라질 수 있습니다.",
+      standard_vs_mean_solar_changes_hour_pillar:
+        "표준시와 지역시차 보정 기준에 따라 시주가 달라질 수 있습니다.",
+      luck_cycle_start_age_changed: "보정 기준 후보에 따라 대운 시작 나이가 달라질 수 있습니다.",
+      primary_differs_from_candidate: "보정 기준 후보 중 일부가 현재 기준 사주와 다르게 계산됩니다.",
+      near_solar_term: "입력 시간이 절기 경계에 가까워 일부 해석 기준이 달라질 수 있습니다.",
+    };
+
+    const translated = messagesByCode[flag.code];
+    if (translated) {
+      return translated;
+    }
+
     if (message.includes("midnight rule")) {
       return "자정 기준 적용 방식에 따라 일주가 달라질 수 있습니다.";
+    }
+
+    if (message.includes("unknown birth-time interval includes the late-zi boundary")) {
+      return "출생시간을 모르면 자정 전후 경계 때문에 하루 기준을 확정하기 어렵습니다.";
     }
 
     if (message.includes("hour pillar changes")) {
@@ -1063,7 +1091,7 @@ function UncertaintySummaryNotice({
           return (
             <li className={`is-${severity}`} key={flag.code}>
               <strong>{text.severityLabels[severity]}</strong>
-              <span>{formatMessage(flag.user_message)}</span>
+              <span>{formatMessage(flag)}</span>
             </li>
           );
         })}

@@ -30,6 +30,24 @@ def _combined_user_text(report) -> str:
     return "\n".join(chunks)
 
 
+def _first_screen_plain_text(report) -> str:
+    chunks = [report.headline, *report.hero_overview]
+    for diagnosis in report.core_diagnoses:
+        chunks.append(diagnosis.body)
+    for card in report.cards:
+        chunks.extend(
+            [
+                card.title,
+                card.subtitle,
+                *card.chips,
+                *card.preview_paragraphs,
+                card.user_takeaway,
+                card.next_question,
+            ]
+        )
+    return "\n".join(chunks)
+
+
 class GenerateFreePreviewTests(unittest.TestCase):
     def test_fallback_free_preview_satisfies_schema_and_validation(self) -> None:
         payload = make_payload()
@@ -37,8 +55,8 @@ class GenerateFreePreviewTests(unittest.TestCase):
 
         self.assertEqual(report.schema_version, "free-preview-v1")
         self.assertEqual(report.provider, "fallback")
-        self.assertEqual(report.prompt_version, "saju-free-preview-v1")
-        self.assertEqual(len(report.hero_overview), 9)
+        self.assertEqual(report.prompt_version, "saju-free-preview-v3")
+        self.assertEqual(len(report.hero_overview), 8)
         self.assertEqual(
             [item.key for item in report.core_diagnoses],
             ["strongest_point", "repeating_pattern", "current_task"],
@@ -74,6 +92,7 @@ class GenerateFreePreviewTests(unittest.TestCase):
             "점수:",
             "등급:",
             "100%",
+            "무료",
             "甲",
             "乙",
             "丙",
@@ -81,15 +100,57 @@ class GenerateFreePreviewTests(unittest.TestCase):
         ):
             self.assertNotIn(forbidden, combined)
 
+    def test_fallback_first_screen_uses_plain_language(self) -> None:
+        prompt = get_free_preview_report_prompt()
+        report = build_fallback_free_preview_report(make_payload())
+        first_screen = _first_screen_plain_text(report)
+
+        for term in prompt.first_screen_jargon_terms:
+            self.assertNotIn(term, first_screen)
+
+    def test_fallback_uses_hook_titles_and_limits_abstract_repetition(self) -> None:
+        report = build_fallback_free_preview_report(make_payload())
+        titles = [card.title for card in report.cards]
+        old_titles = [
+            "내 사주 특징",
+            "일과 돈의 흐름",
+            "연애와 결혼 흐름",
+            "현재 운과 대운 흐름",
+        ]
+        hero_and_cards = "\n".join([*report.hero_overview, *titles, *sum((card.preview_paragraphs for card in report.cards), [])])
+
+        for old_title in old_titles:
+            self.assertNotIn(old_title, titles)
+        self.assertTrue(any("?" in title or "왜" in title or "때입니다" in title for title in titles))
+        self.assertLessEqual(hero_and_cards.count("기준"), 4)
+        self.assertLessEqual(hero_and_cards.count("흐름"), 4)
+        self.assertLessEqual(hero_and_cards.count("정리"), 4)
+
+    def test_basis_line_may_keep_short_technical_basis(self) -> None:
+        payload = make_payload()
+        report = build_fallback_free_preview_report(payload)
+        report.cards[0].basis_line += " 일간 월주 대운 재성 배우자궁 신묘 경인"
+
+        issues = _validate_free_preview_report(report, payload)
+
+        self.assertNotIn("first_screen_jargon:일간", issues)
+        self.assertNotIn("first_screen_jargon:대운", issues)
+        self.assertNotIn("first_screen_jargon:신묘", issues)
+
     def test_prompt_spec_describes_free_preview_shape(self) -> None:
         prompt = get_free_preview_report_prompt()
 
-        self.assertEqual(prompt.version, "saju-free-preview-v1")
+        self.assertEqual(prompt.version, "saju-free-preview-v3")
         self.assertIn("FreePreviewReport", prompt.repair_prompt)
         self.assertIn("hero_overview", prompt.developer_prompt)
         self.assertIn("work_money", prompt.developer_prompt)
         self.assertIn("Korean Hangul only", prompt.developer_prompt)
+        self.assertIn("Plain-language first-screen rules", prompt.developer_prompt)
         self.assertIn("무조건", prompt.validation_banned_phrases)
+        self.assertIn("무료", prompt.validation_banned_phrases)
+        self.assertIn("대운", prompt.first_screen_jargon_terms)
+        self.assertIn("기준", prompt.first_screen_abstract_terms)
+        self.assertIn("hook-like", prompt.developer_prompt)
 
     def test_validator_blocks_generic_headline(self) -> None:
         payload = make_payload()
@@ -118,6 +179,42 @@ class GenerateFreePreviewTests(unittest.TestCase):
 
         self.assertIn("banned_phrase:반드시", issues)
         self.assertIn("banned_phrase:결혼한다", issues)
+
+    def test_validator_blocks_free_word_in_user_text(self) -> None:
+        payload = make_payload()
+        report = build_fallback_free_preview_report(payload)
+        report.cards[0].preview_paragraphs[0] += " 무료로 제공되는 내용입니다."
+
+        issues = _validate_free_preview_report(report, payload)
+
+        self.assertIn("banned_phrase:무료", issues)
+
+    def test_validator_blocks_jargon_in_first_screen_text(self) -> None:
+        payload = make_payload()
+        report = build_fallback_free_preview_report(payload)
+        report.hero_overview[0] += " 현재는 신묘 대운의 영향을 받습니다."
+        report.cards[1].preview_paragraphs[0] += " 월주와 재성을 먼저 봅니다."
+
+        issues = _validate_free_preview_report(report, payload)
+
+        self.assertIn("first_screen_jargon:신묘", issues)
+        self.assertIn("first_screen_jargon:대운", issues)
+        self.assertIn("first_screen_jargon:월주", issues)
+        self.assertIn("first_screen_jargon:재성", issues)
+
+    def test_validator_blocks_overused_abstract_terms(self) -> None:
+        payload = make_payload()
+        report = build_fallback_free_preview_report(payload)
+        report.hero_overview = [
+            "기준 기준 기준 기준 기준 문장입니다.",
+            *report.hero_overview[1:],
+        ]
+        report.cards[0].preview_paragraphs[0] += " 흐름 흐름 흐름 흐름 흐름"
+
+        issues = _validate_free_preview_report(report, payload)
+
+        self.assertIn("abstract_term_overused:기준", issues)
+        self.assertIn("abstract_term_overused:흐름", issues)
 
     def test_validator_blocks_hanja_in_korean_output(self) -> None:
         payload = make_payload(locale="ko")
@@ -169,7 +266,7 @@ class GenerateFreePreviewTests(unittest.TestCase):
                     configured_provider="openai",
                     final_provider="openai",
                     model="gpt-5.4-mini",
-                    prompt_version="saju-free-preview-v1",
+                    prompt_version="saju-free-preview-v3",
                     payload_chars=123,
                     duration_ms=999,
                     final_response_id="resp_test",
