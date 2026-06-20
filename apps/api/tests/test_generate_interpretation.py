@@ -587,6 +587,45 @@ class GenerateInterpretationTests(unittest.TestCase):
         self.assertEqual(report.provider, "fallback")
         self.assertEqual(report.diagnostics.fallback_reason, "provider_not_openai")
 
+    def test_codex_provider_uses_codex_path_without_openai_key(self) -> None:
+        payload = make_payload()
+        codex_report = make_report()
+        codex_report.provider = "codex"
+        codex_report.model = "codex-cli"
+        diagnostics = InterpretationDiagnostics(
+            configured_provider="codex",
+            final_provider="codex",
+            model="codex-cli",
+            prompt_version="saju-report-v15",
+            payload_chars=123,
+            duration_ms=999,
+            final_response_id="codex-test",
+            attempts=[],
+        )
+
+        with patch(
+            "app.domain.saju.services.generate_interpretation.settings.llm_provider",
+            "codex",
+        ), patch(
+            "app.domain.saju.services.generate_interpretation.settings.openai_api_key",
+            "",
+        ), patch(
+            "app.domain.saju.services.generate_interpretation._call_openai_structured_interpretation",
+            side_effect=AssertionError("OpenAI path must not be called in Codex mode"),
+        ), patch(
+            "app.domain.saju.services.generate_interpretation._call_codex_structured_interpretation",
+            return_value=(codex_report, diagnostics),
+        ):
+            report = generate_interpretation_report(
+                payload=payload,
+                trace_id="test-codex",
+                service_name="suju-insight",
+            )
+
+        self.assertEqual(report.provider, "codex")
+        self.assertIsNotNone(report.diagnostics)
+        self.assertEqual(report.diagnostics.final_provider, "codex")
+
 
 if __name__ == "__main__":
     unittest.main()

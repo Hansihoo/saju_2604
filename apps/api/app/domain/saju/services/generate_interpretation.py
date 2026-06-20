@@ -24,6 +24,7 @@ from app.domain.saju.interpretation import (
 from app.domain.saju.llm_payload import InterpretationLuckCycle, InterpretationPayload
 from app.domain.saju.localization import contains_hangul, contains_hanja
 from app.domain.saju.prompts.interpretation_report import get_interpretation_report_prompt
+from app.domain.saju.services.codex_provider import CodexProviderError, call_codex_json
 
 try:
     from openai import OpenAI
@@ -972,7 +973,7 @@ def _make_diagnostics(
     return InterpretationDiagnostics(
         configured_provider=settings.llm_provider,
         final_provider=final_provider,
-        model=settings.openai_model if settings.llm_provider == "openai" else None,
+        model=_provider_model(final_provider),
         prompt_version=PROMPT_SPEC.version,
         payload_chars=len(payload_json),
         duration_ms=duration_ms,
@@ -981,6 +982,14 @@ def _make_diagnostics(
         validation_issues=validation_issues or [],
         attempts=attempts or [],
     )
+
+
+def _provider_model(provider: str) -> str | None:
+    if provider == "openai":
+        return settings.openai_model
+    if provider == "codex":
+        return settings.codex_model or "codex-cli"
+    return None
 
 
 def _attach_diagnostics(
@@ -1002,9 +1011,13 @@ def _attach_diagnostics(
 
 
 def _build_openai_report(parsed: InterpretationLLMOutput) -> InterpretationReport:
+    return _build_provider_report(parsed, provider="openai")
+
+
+def _build_provider_report(parsed: InterpretationLLMOutput, *, provider: str) -> InterpretationReport:
     return InterpretationReport(
-        provider="openai",
-        model=settings.openai_model,
+        provider=provider,  # type: ignore[arg-type]
+        model=_provider_model(provider),
         prompt_version=PROMPT_SPEC.version,
         summary=parsed.summary,
         core_analysis=parsed.core_analysis,
@@ -1283,6 +1296,98 @@ def _call_openai_structured_interpretation(
     )
 
 
+def _call_codex_structured_interpretation(
+    payload: InterpretationPayload,
+) -> Tuple[InterpretationReport | None, InterpretationDiagnostics]:
+    payload_json = json.dumps(_model_dump_json(payload), ensure_ascii=False)
+    started = time.perf_counter()
+    try:
+        result = call_codex_json(
+            developer_prompt=PROMPT_SPEC.developer_prompt,
+            user_payload=_model_dump_json(payload),
+            output_schema=_model_json_schema(InterpretationLLMOutput),
+            schema_name="saju_interpretation",
+            extra_instructions=(
+                "Use only the supplied saju payload. Do not calculate new pillars, scores, or events.",
+                "The response object must contain summary, core_analysis, love, career, wealth, and luck_flow only.",
+            ),
+        )
+        parsed = _parse_interpretation_output(result.output_text)
+        attempt = InterpretationAttemptDiagnostic(
+            attempt_index=1,
+            mode="generate",
+            token_budget=max(settings.llm_max_output_tokens, 1),
+            status="success",
+            response_id=result.response_id,
+            output_chars=len(result.output_text),
+            output_excerpt=_clean_excerpt(result.output_text),
+        )
+        return _build_provider_report(parsed, provider="codex"), _make_diagnostics(
+            final_provider="codex",
+            payload_json=payload_json,
+            duration_ms=result.duration_ms,
+            attempts=[attempt],
+            final_response_id=result.response_id,
+        )
+    except JSONDecodeError as exc:
+        fallback_reason = "json_decode_error"
+        attempt = InterpretationAttemptDiagnostic(
+            attempt_index=1,
+            mode="generate",
+            token_budget=max(settings.llm_max_output_tokens, 1),
+            status="json_invalid",
+            output_chars=0,
+            error_type=type(exc).__name__,
+            error_message=_clean_error_message(exc),
+            issues=["json_decode_error"],
+        )
+    except ValidationError as exc:
+        fallback_reason = "schema_validation_error"
+        attempt = InterpretationAttemptDiagnostic(
+            attempt_index=1,
+            mode="generate",
+            token_budget=max(settings.llm_max_output_tokens, 1),
+            status="validation_error",
+            output_chars=0,
+            error_type=type(exc).__name__,
+            error_message=_clean_error_message(exc),
+            issues=_summarize_validation_error(exc),
+        )
+    except CodexProviderError as exc:
+        fallback_reason = exc.reason
+        attempt = InterpretationAttemptDiagnostic(
+            attempt_index=1,
+            mode="generate",
+            token_budget=max(settings.llm_max_output_tokens, 1),
+            status="provider_error",
+            output_chars=0,
+            output_excerpt=exc.stdout_excerpt or None,
+            error_type=type(exc).__name__,
+            error_message=_clean_error_message(exc),
+            issues=[exc.reason],
+        )
+    except Exception as exc:
+        fallback_reason = "provider_request_failed"
+        attempt = InterpretationAttemptDiagnostic(
+            attempt_index=1,
+            mode="generate",
+            token_budget=max(settings.llm_max_output_tokens, 1),
+            status="provider_error",
+            output_chars=0,
+            error_type=type(exc).__name__,
+            error_message=_clean_error_message(exc),
+            issues=["codex_request_failed"],
+        )
+
+    return None, _make_diagnostics(
+        final_provider="fallback",
+        payload_json=payload_json,
+        duration_ms=int((time.perf_counter() - started) * 1000),
+        attempts=[attempt],
+        fallback_reason=fallback_reason,
+    )
+
+
 def _normalize_llm_output(data: Dict[str, Any]) -> Dict[str, Any]:
     section_keys = ["summary", "core_analysis", "love", "career", "wealth", "luck_flow"]
     for key in section_keys:
@@ -1507,7 +1612,7 @@ def generate_interpretation_report(
     payload_json = json.dumps(_model_dump_json(payload), ensure_ascii=False)
     fallback_report = build_fallback_interpretation_report(payload)
 
-    if settings.llm_provider != "openai":
+    if settings.llm_provider not in {"openai", "codex"}:
         diagnostics = _make_diagnostics(
             final_provider="fallback",
             payload_json=payload_json,
@@ -1530,7 +1635,9 @@ def generate_interpretation_report(
         )
         return fallback_report
 
-    if settings.openai_api_key in {"", PLACEHOLDER_OPENAI_API_KEY}:
+    if settings.llm_provider == "codex":
+        report, diagnostics = _call_codex_structured_interpretation(payload)
+    elif settings.openai_api_key in {"", PLACEHOLDER_OPENAI_API_KEY}:
         diagnostics = _make_diagnostics(
             final_provider="fallback",
             payload_json=payload_json,
@@ -1552,8 +1659,8 @@ def generate_interpretation_report(
             meta={"reason": "missing_api_key"},
         )
         return fallback_report
-
-    report, diagnostics = _call_openai_structured_interpretation(payload)
+    else:
+        report, diagnostics = _call_openai_structured_interpretation(payload)
     if report is None:
         warnings = [diagnostics.fallback_reason or "openai_response_invalid"]
         fallback_report = _attach_diagnostics(
@@ -1608,7 +1715,8 @@ def generate_interpretation_report(
             )
             return fallback_report
 
-        report = _attach_diagnostics(report, diagnostics, provider="openai")
+        final_provider = diagnostics.final_provider
+        report = _attach_diagnostics(report, diagnostics, provider=final_provider)
         log_stage(
             service=service_name,
             trace_id=trace_id,
@@ -1616,7 +1724,7 @@ def generate_interpretation_report(
             event="formatted",
             duration_ms=int((time.perf_counter() - started) * 1000),
             meta={
-                "provider": "openai",
+                "provider": final_provider,
                 "response_id": diagnostics.final_response_id,
                 "prompt_version": PROMPT_SPEC.version,
                 "attempts": [_model_dump_json(attempt) for attempt in diagnostics.attempts],

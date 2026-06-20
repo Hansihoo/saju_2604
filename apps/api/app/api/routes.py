@@ -1,7 +1,7 @@
 """이 파일은 HTTP endpoint를 정의하고 service 계층으로 요청을 전달한다."""
 
 from datetime import datetime, timezone
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, HTTPException, Query, Request
 
@@ -30,6 +30,14 @@ from app.domain.saju.services.preview_orchestrator import create_saju_preview_re
 from app.domain.saju.services.region_catalog import search_regions
 
 router = APIRouter()
+
+
+def _model_for_provider(provider: str) -> Optional[str]:
+    if provider == "openai":
+        return settings.openai_model
+    if provider == "codex":
+        return settings.codex_model or "codex-cli"
+    return None
 
 
 def _request_method(request: Request) -> str:
@@ -247,7 +255,7 @@ def render_saju_detail(
         input_hash=input_hash,
         detail_type=payload.detail_type,
         provider=provider,
-        model=settings.openai_model if provider == "openai" else None,
+        model=_model_for_provider(provider),
         prompt_version=DETAIL_PROMPT_VERSION,
         cached=cached,
         report=report,

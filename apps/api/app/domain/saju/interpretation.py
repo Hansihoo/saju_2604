@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 InterpretationLocale = Literal["ko", "en"]
 InterpretationConfidence = Literal["low", "medium", "high"]
+LLMProvider = Literal["openai", "codex", "fallback"]
 InterpretationAttemptMode = Literal["generate", "repair"]
 InterpretationAttemptStatus = Literal[
     "success",
@@ -79,7 +80,7 @@ class InterpretationAttemptDiagnostic(BaseModel):
 
 class InterpretationDiagnostics(BaseModel):
     configured_provider: str
-    final_provider: Literal["openai", "fallback"]
+    final_provider: LLMProvider
     model: Optional[str] = None
     prompt_version: str
     payload_chars: int = 0
@@ -92,7 +93,7 @@ class InterpretationDiagnostics(BaseModel):
 
 class InterpretationReport(InterpretationLLMOutput):
     schema_version: Literal["m2-llm-v5"] = "m2-llm-v5"
-    provider: Literal["openai", "fallback"]
+    provider: LLMProvider
     model: Optional[str] = None
     prompt_version: str = "saju-report-v14"
     warnings: List[str] = Field(default_factory=list)
@@ -125,7 +126,7 @@ class FreePreviewLLMOutput(BaseModel):
 
 class FreePreviewReport(FreePreviewLLMOutput):
     schema_version: Literal["free-preview-v1"] = "free-preview-v1"
-    provider: Literal["openai", "fallback"]
+    provider: LLMProvider
     model: Optional[str] = None
     prompt_version: str = "saju-free-preview-v1"
     warnings: List[str] = Field(default_factory=list)

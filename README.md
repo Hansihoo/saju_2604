@@ -144,7 +144,19 @@ SAJU_LLM_PROVIDER=openai
 SAJU_CORS_ORIGINS=https://your-production-domain.example
 ```
 
-`OPENAI_API_KEY` is only needed for the LLM phrasing layer. Without it, the API keeps returning the deterministic fallback interpretation.
+`OPENAI_API_KEY` is only needed for the OpenAI API phrasing layer. Without it, the API keeps returning the deterministic fallback interpretation.
+
+Local Codex CLI phrasing option:
+
+```powershell
+SAJU_LLM_PROVIDER=codex
+SAJU_CODEX_COMMAND=codex.cmd
+SAJU_CODEX_MODEL=gpt-5.4
+SAJU_CODEX_TIMEOUT_SECONDS=180
+SAJU_CODEX_SANDBOX=read-only
+```
+
+Codex mode is intended for personal local use. It calls `codex exec` from the backend process, uses the local Codex login/config, and falls back to the deterministic formatter if the CLI is unavailable, times out, or returns invalid JSON.
 
 ## Environment
 
@@ -160,6 +172,7 @@ Backend:
 SAJU_APP_NAME=suju-insight
 SAJU_API_VERSION=0.1.0
 SAJU_CORS_ORIGINS=http://localhost:5173
+SAJU_LLM_PROVIDER=openai|codex|fallback
 ```
 
 ## Current status
@@ -172,11 +185,11 @@ Implemented backend pipeline:
 - `lunar-python` engine adapter
 - estimated birth-time policy
 - deterministic baseline analysis
+- OpenAI API, local Codex CLI, and deterministic fallback phrasing providers
 - debug trace and stage logging
 
 Not finished yet:
 
-- LLM phrasing layer
 - final result UI polish
 - persistent storage
 - production domain wiring

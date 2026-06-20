@@ -359,9 +359,11 @@ export type InterpretationAttemptDiagnostic = {
   issues: string[];
 };
 
+export type LlmProvider = "openai" | "codex" | "fallback";
+
 export type InterpretationDiagnostics = {
   configured_provider: string;
-  final_provider: "openai" | "fallback";
+  final_provider: LlmProvider;
   model?: string | null;
   prompt_version: string;
   payload_chars: number;
@@ -374,7 +376,7 @@ export type InterpretationDiagnostics = {
 
 export type InterpretationReport = {
   schema_version: "m2-llm-v5";
-  provider: "openai" | "fallback";
+  provider: LlmProvider;
   model?: string | null;
   prompt_version: string;
   summary: InterpretationSummaryBlock;
@@ -410,7 +412,7 @@ export type FreePreviewCard = {
 
 export type FreePreviewReport = {
   schema_version: "free-preview-v1";
-  provider: "openai" | "fallback";
+  provider: LlmProvider;
   model?: string | null;
   prompt_version: string;
   headline: string;
@@ -549,7 +551,7 @@ export type SajuDetailRenderResponse = {
   report_id: string;
   input_hash: string;
   detail_type: SajuDetailType;
-  provider: "openai" | "fallback";
+  provider: LlmProvider;
   model?: string | null;
   prompt_version: string;
   cached: boolean;

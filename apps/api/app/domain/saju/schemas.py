@@ -9,6 +9,7 @@ from app.domain.saju.analysis import InternalGrade
 from app.domain.saju.interpretation import (
     FreePreviewReport,
     InterpretationReport,
+    LLMProvider,
     SajuDetailPreparedReport,
     SajuDetailRenderedReport,
     SajuDetailType,
@@ -458,7 +459,7 @@ class SajuDetailRenderResponse(BaseModel):
     report_id: str
     input_hash: str
     detail_type: SajuDetailType
-    provider: Literal["openai", "fallback"]
+    provider: LLMProvider
     model: Optional[str] = None
     prompt_version: str
     cached: bool

@@ -253,6 +253,45 @@ class GenerateFreePreviewTests(unittest.TestCase):
         self.assertIsNotNone(report.diagnostics)
         self.assertEqual(report.diagnostics.fallback_reason, "provider_not_openai")
 
+    def test_codex_provider_uses_codex_path_without_openai_key(self) -> None:
+        payload = make_payload()
+        codex_report = build_fallback_free_preview_report(payload)
+        codex_report.provider = "codex"
+        codex_report.model = "codex-cli"
+        diagnostics = InterpretationDiagnostics(
+            configured_provider="codex",
+            final_provider="codex",
+            model="codex-cli",
+            prompt_version="saju-free-preview-v3",
+            payload_chars=123,
+            duration_ms=999,
+            final_response_id="codex-test",
+            attempts=[],
+        )
+
+        with patch(
+            "app.domain.saju.services.generate_free_preview.settings.llm_provider",
+            "codex",
+        ), patch(
+            "app.domain.saju.services.generate_free_preview.settings.openai_api_key",
+            "",
+        ), patch(
+            "app.domain.saju.services.generate_free_preview._call_openai_free_preview",
+            side_effect=AssertionError("OpenAI path must not be called in Codex mode"),
+        ), patch(
+            "app.domain.saju.services.generate_free_preview._call_codex_free_preview",
+            return_value=(codex_report, diagnostics),
+        ):
+            report = generate_free_preview_report(
+                payload=payload,
+                trace_id="test-free-preview-codex",
+                service_name="suju-insight",
+            )
+
+        self.assertEqual(report.provider, "codex")
+        self.assertIsNotNone(report.diagnostics)
+        self.assertEqual(report.diagnostics.final_provider, "codex")
+
     def test_generate_free_preview_falls_back_when_validation_fails(self) -> None:
         payload = make_payload()
         invalid_report = build_fallback_free_preview_report(payload)

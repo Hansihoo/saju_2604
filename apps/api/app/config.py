@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import os
+import shutil
 from pathlib import Path
 from typing import List, Optional
 
@@ -9,6 +10,46 @@ PLACEHOLDER_OPENAI_API_KEY = "DEFINE_OPENAI_API_KEY"
 APP_DIR = Path(__file__).resolve().parent
 API_DIR = APP_DIR.parent
 REPO_ROOT = API_DIR.parent.parent
+
+def _default_codex_command() -> str:
+    command_name = "codex.cmd" if os.name == "nt" else "codex"
+    resolved = shutil.which(command_name) or shutil.which("codex")
+    if resolved:
+        return resolved
+    if os.name == "nt":
+        appdata = os.getenv("APPDATA")
+        if appdata:
+            candidate = Path(appdata) / "npm" / "codex.cmd"
+            if candidate.exists():
+                return str(candidate)
+    return command_name
+
+
+def _default_node_command() -> Optional[str]:
+    resolved = shutil.which("node")
+    if resolved:
+        return resolved
+    for env_name in ("ProgramFiles", "ProgramFiles(x86)"):
+        root = os.getenv(env_name)
+        if not root:
+            continue
+        candidate = Path(root) / "nodejs" / "node.exe"
+        if candidate.exists():
+            return str(candidate)
+    return None
+
+
+def _default_codex_js_path() -> Optional[str]:
+    appdata = os.getenv("APPDATA")
+    if not appdata:
+        return None
+    candidate = Path(appdata) / "npm" / "node_modules" / "@openai" / "codex" / "bin" / "codex.js"
+    return str(candidate) if candidate.exists() else None
+
+
+DEFAULT_CODEX_COMMAND = _default_codex_command()
+DEFAULT_CODEX_NODE_COMMAND = _default_node_command()
+DEFAULT_CODEX_JS_PATH = _default_codex_js_path()
 
 
 def _load_env_file(path: Path) -> None:
@@ -81,6 +122,14 @@ class Settings:
     llm_reasoning_effort: str = os.getenv("SAJU_LLM_REASONING_EFFORT", "low")
     llm_store: bool = os.getenv("SAJU_LLM_STORE", "0") in {"1", "true", "TRUE", "yes", "YES"}
     llm_max_output_tokens: int = int(os.getenv("SAJU_LLM_MAX_OUTPUT_TOKENS", "7000"))
+    codex_command: str = os.getenv("SAJU_CODEX_COMMAND", DEFAULT_CODEX_COMMAND)
+    codex_node_command: Optional[str] = os.getenv("SAJU_CODEX_NODE_COMMAND") or DEFAULT_CODEX_NODE_COMMAND
+    codex_js_path: Optional[str] = os.getenv("SAJU_CODEX_JS_PATH") or DEFAULT_CODEX_JS_PATH
+    codex_model: Optional[str] = os.getenv("SAJU_CODEX_MODEL") or None
+    codex_profile: Optional[str] = os.getenv("SAJU_CODEX_PROFILE") or None
+    codex_sandbox: str = os.getenv("SAJU_CODEX_SANDBOX", "read-only")
+    codex_timeout_seconds: int = _parse_int_env("SAJU_CODEX_TIMEOUT_SECONDS", 180, minimum=1)
+    codex_workdir: str = os.getenv("SAJU_CODEX_WORKDIR", str(REPO_ROOT))
     request_log_enabled: bool = os.getenv("SAJU_REQUEST_LOG_ENABLED", "1") in {"1", "true", "TRUE", "yes", "YES"}
     request_log_path: str = os.getenv(
         "SAJU_REQUEST_LOG_PATH",

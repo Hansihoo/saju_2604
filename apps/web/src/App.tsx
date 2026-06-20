@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { DesignLabPage } from "./features/design-lab/DesignLabPage";
 import { DeveloperPage } from "./features/dev/DeveloperPage";
 import { ServicePage } from "./features/service/ServicePage";
 import { ApiHealth, SajuPreviewResponse } from "./shared/api/contracts";
@@ -29,7 +30,7 @@ export default function App() {
   }
 
   return (
-    <div className={`page-shell${mode === "dev" ? " dev-page" : ""}`}>
+    <div className={`page-shell${mode === "dev" ? " dev-page" : ""}${mode === "design" ? " design-page-shell" : ""}`}>
       {mode === "dev" ? (
         <DeveloperPage
           locale={locale}
@@ -37,6 +38,10 @@ export default function App() {
           apiHealth={apiHealth}
           result={result}
           onResultChange={setResult}
+          onNavigateToService={() => navigate("service")}
+        />
+      ) : mode === "design" ? (
+        <DesignLabPage
           onNavigateToService={() => navigate("service")}
         />
       ) : (

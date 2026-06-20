@@ -154,14 +154,14 @@ const sectionViewCopy: Record<
       wealth: "금전운",
       luck_flow: "대운 흐름",
     },
-    heroLabel: "정밀 사주 리포트",
+    heroLabel: "오늘의 풀이",
     solarTermBadge: "절기 기준",
     timeCorrectionBadge: "시간대 보정",
     birthTimeWarningBadge: "출생시간 확인 필요",
     boundaryWarningBadge: "경계값 확인 필요",
     generalWarningBadge: "확인 필요 항목 있음",
-    coreDiagnosisLabel: "핵심 진단",
-    insightLabel: "핵심 카드",
+    coreDiagnosisLabel: "먼저 볼 점",
+    insightLabel: "먼저 읽어볼 부분",
     previewFallback: "상세 해석을 준비 중입니다.",
     cards: {
       core: {
@@ -208,14 +208,14 @@ const sectionViewCopy: Record<
       wealth: "Wealth",
       luck_flow: "Luck flow",
     },
-    heroLabel: "Precision saju report",
+    heroLabel: "Your reading",
     solarTermBadge: "Solar-term basis",
     timeCorrectionBadge: "Time-zone corrected",
     birthTimeWarningBadge: "Birth time needs review",
     boundaryWarningBadge: "Boundary needs review",
     generalWarningBadge: "Items need review",
-    coreDiagnosisLabel: "Core diagnosis",
-    insightLabel: "Quick insight cards",
+    coreDiagnosisLabel: "Start here",
+    insightLabel: "What to read first",
     previewFallback: "The detailed reading is being prepared.",
     cards: {
       core: {
@@ -317,26 +317,26 @@ const detailLazyCopy: Record<
   }
 > = {
   ko: {
-    label: "상세 리포트",
-    title: "상세 리포트를 이어서 읽을 수 있습니다",
+    label: "이어서 읽기",
+    title: "더 자세한 풀이를 이어서 읽을 수 있습니다",
     body: "첫 화면 요약을 먼저 읽은 뒤, 내 사주 특징과 일과 돈, 관계, 대운 흐름을 더 자세히 펼쳐 봅니다.",
-    button: "상세 리포트 불러오기",
-    loadingTitle: "상세 리포트를 불러오는 중입니다",
+    button: "자세한 풀이 불러오기",
+    loadingTitle: "자세한 풀이를 불러오는 중입니다",
     loadingBody:
       "앞에서 계산한 사주 정보를 바탕으로 상세 해석을 준비하고 있습니다. 내용이 길어 시간이 조금 오래 걸릴 수 있습니다.",
-    fallbackNotice: "상세 리포트 호출이 지연되어 기본 상세 결과를 표시합니다.",
-    errorTitle: "상세 리포트를 불러오지 못했습니다",
+    fallbackNotice: "자세한 풀이 호출이 지연되어 기본 결과를 표시합니다.",
+    errorTitle: "자세한 풀이를 불러오지 못했습니다",
   },
   en: {
-    label: "Detailed report",
-    title: "Continue with the detailed report",
+    label: "Read more",
+    title: "Continue with a deeper reading",
     body: "After the first-screen preview, load the detailed reading for core traits, work and money, relationships, and luck flow.",
-    button: "Load detailed report",
-    loadingTitle: "Loading the detailed report",
+    button: "Load deeper reading",
+    loadingTitle: "Loading the deeper reading",
     loadingBody:
       "The detailed reading is being prepared from the chart information already calculated. Longer reports can take a little more time.",
-    fallbackNotice: "The detail request was delayed, so the embedded detail report is shown instead.",
-    errorTitle: "Could not load the detailed report",
+    fallbackNotice: "The deeper reading was delayed, so the embedded result is shown instead.",
+    errorTitle: "Could not load the deeper reading",
   },
 };
 
@@ -2550,7 +2550,7 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
   );
 
   return (
-    <section className="result-screen">
+    <section className="result-screen essay-result">
       <div className="result-header">
         <div className="result-header-copy">
           <h2>{texts.resultTitle}</h2>

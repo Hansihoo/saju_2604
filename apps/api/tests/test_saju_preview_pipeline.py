@@ -16,6 +16,7 @@ from app.domain.saju.schemas import (
     SajuDetailRenderRequest,
     SajuPreviewRequest,
 )
+from app.domain.saju.services.generate_detail_insights import build_fallback_detail_render
 
 
 class SajuPreviewPipelineTests(unittest.TestCase):
@@ -451,6 +452,54 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         for forbidden in ("무료", "유료", "프리미엄", "결제", "score", "internal_grade", "evidence_id"):
             self.assertNotIn(forbidden, combined)
         self.assertIsNone(re.search(r"[\u3400-\u9fff]", combined))
+
+    def test_detail_render_codex_provider_uses_codex_path(self) -> None:
+        request = SimpleNamespace(
+            state=SimpleNamespace(
+                trace_id="test-trace-detail-codex",
+                debug_requested=False,
+            )
+        )
+        payload = SajuPreviewRequest(
+            locale="ko",
+            calendar_type="solar",
+            birth_date="1996-06-19",
+            birth_time="15:03",
+            is_birth_time_estimated=False,
+            is_lunar_leap_month=False,
+            gender="female",
+            region_id="kr-seoul-special",
+            debug=False,
+        )
+        codex_report = build_fallback_detail_render(
+            "love_timing",
+            {"available": True, "best_periods": []},
+            locale="ko",
+        )
+
+        with patch(
+            "app.domain.saju.services.generate_detail_insights.settings.llm_provider",
+            "codex",
+        ), patch(
+            "app.domain.saju.services.generate_detail_insights._call_openai_detail_render",
+            side_effect=AssertionError("OpenAI detail path must not be called in Codex mode"),
+        ), patch(
+            "app.domain.saju.services.generate_detail_insights._call_codex_detail_render",
+            return_value=codex_report,
+        ):
+            rendered = render_saju_detail(
+                report_id="test-report-codex-detail",
+                payload=SajuDetailRenderRequest(
+                    detail_type="love_timing",
+                    input=payload,
+                    locale="ko",
+                ),
+                request=request,
+            )
+
+        self.assertEqual(rendered.provider, "codex")
+        self.assertEqual(rendered.model, "codex-cli")
+        self.assertEqual(rendered.report.detail_type, "love_timing")
 
     def test_compatibility_detail_requires_partner_flow(self) -> None:
         request = SimpleNamespace(

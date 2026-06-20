@@ -24,6 +24,7 @@ from app.domain.saju.interpretation import (
 from app.domain.saju.llm_payload import InterpretationPayload
 from app.domain.saju.pydantic_compat import model_to_dict, model_validate_compat
 from app.domain.saju.schemas import SajuPreviewRequest
+from app.domain.saju.services.codex_provider import CodexProviderError, call_codex_json
 from app.domain.saju.services.build_interpretation_payload import build_interpretation_payload
 from app.domain.saju.services.preview_orchestrator import create_saju_preview_response
 
@@ -617,6 +618,41 @@ def _call_openai_detail_render(
         return None
 
 
+def _call_codex_detail_render(
+    detail_type: SajuDetailType,
+    detail_payload: Dict[str, object],
+    *,
+    locale: str,
+) -> SajuDetailRenderedReport | None:
+    if settings.llm_provider != "codex":
+        return None
+
+    try:
+        result = call_codex_json(
+            developer_prompt=DETAIL_RENDER_DEVELOPER_PROMPT,
+            user_payload={
+                "detail_type": detail_type,
+                "locale": locale,
+                "detail_payload": detail_payload,
+            },
+            output_schema=_model_json_schema(SajuDetailRenderedReport),
+            schema_name="saju_detail_render",
+            extra_instructions=(
+                "Use only the supplied detail_payload facts.",
+                "Return one SajuDetailRenderedReport JSON object for the requested detail_type.",
+            ),
+        )
+        parsed_json = json.loads(result.output_text)
+        report = model_validate_compat(SajuDetailRenderedReport, parsed_json)
+        if report.detail_type != detail_type:
+            return None
+        if _validate_rendered_report(report):
+            return None
+        return report
+    except (CodexProviderError, JSONDecodeError, ValidationError, Exception):
+        return None
+
+
 def render_detail_insight(
     *,
     report_id: str,
@@ -639,8 +675,12 @@ def render_detail_insight(
         }
 
     started = time.perf_counter()
-    report = _call_openai_detail_render(detail_type, detail_payload, locale=locale)
-    provider = "openai" if report is not None else "fallback"
+    if settings.llm_provider == "codex":
+        report = _call_codex_detail_render(detail_type, detail_payload, locale=locale)
+        provider = "codex" if report is not None else "fallback"
+    else:
+        report = _call_openai_detail_render(detail_type, detail_payload, locale=locale)
+        provider = "openai" if report is not None else "fallback"
     if report is None:
         report = build_fallback_detail_render(detail_type, detail_payload, locale=locale)
 
