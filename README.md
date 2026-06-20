@@ -2,6 +2,45 @@
 
 Saju web service workspace with a React frontend and a FastAPI backend.
 
+## Project overview
+
+`suju-insight` is an AI-assisted saju reading service.
+
+The product receives a user's birth date, birth time, gender, and birth region, then:
+
+1. corrects the time and region data,
+2. calculates the saju/manse result,
+3. builds deterministic analysis signals in code,
+4. uses an LLM only as a phrasing layer,
+5. renders the result as a document-style personal reading.
+
+Core product rule:
+
+```text
+Facts and judgment live in code. The LLM only rewrites verified facts into readable language.
+```
+
+For the full product profile, see [docs/PROJECT_PROFILE.md](docs/PROJECT_PROFILE.md).
+
+## Documentation map
+
+- [README.md](README.md): setup, local development, deployment, and provider settings.
+- [docs/PROJECT_PROFILE.md](docs/PROJECT_PROFILE.md): product identity, principles, scope, risks, and defaults.
+- [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md): current feature-level progress ledger.
+- [docs/ai/WORK_LOG.md](docs/ai/WORK_LOG.md): recent AI-assisted implementation log.
+- [docs/CODEX_RUNBOOK.md](docs/CODEX_RUNBOOK.md): Codex-safe local development workflow.
+- [docs/planning/](docs/planning/): planning history and domain decisions.
+- [docs/delivery/](docs/delivery/): implementation handoff and delivery logs.
+
+## Recent changes
+
+- Added a local Codex CLI phrasing provider for personal local testing.
+- Kept `openai` as the default and production-oriented LLM provider.
+- Added `/design-lab` to compare document-style result layouts without calling any LLM.
+- Applied the essay/document-style result layout to the live service result page.
+- Reworded internal UI labels such as "핵심 카드" into user-facing reading labels.
+- Softened result CTA/button styling so the reading feels more like a document than an app simulator.
+
 ## Structure
 
 ```text
@@ -111,6 +150,41 @@ This runs:
 - `python -m compileall app`
 - `python -m unittest discover -s tests -p "test_*.py"`
 
+## Testing without OpenAI API usage
+
+You can test most of the project without spending OpenAI API credits.
+
+Use one of these local modes:
+
+```powershell
+SAJU_LLM_PROVIDER=fallback
+```
+
+This uses the deterministic formatter only. It is the fastest and has no LLM/API cost.
+
+```powershell
+SAJU_LLM_PROVIDER=codex
+SAJU_CODEX_COMMAND=codex.cmd
+SAJU_CODEX_MODEL=gpt-5.4
+SAJU_CODEX_TIMEOUT_SECONDS=180
+SAJU_CODEX_SANDBOX=read-only
+```
+
+This uses the local Codex CLI from the backend process. It is intended for Theo's personal local testing and does not require `OPENAI_API_KEY` in this project. It depends on a working local Codex login/config and can be slower than direct API calls.
+
+The `/design-lab` route also uses a fixed saved result fixture, so it does not call OpenAI API or Codex at all:
+
+```text
+http://127.0.0.1:5173/design-lab
+```
+
+Production should keep:
+
+```powershell
+SAJU_LLM_PROVIDER=openai
+OPENAI_API_KEY=...
+```
+
 ## Vercel deployment
 
 This repository is configured as a Vercel Services project:
@@ -158,6 +232,12 @@ SAJU_CODEX_SANDBOX=read-only
 
 Codex mode is intended for personal local use. It calls `codex exec` from the backend process, uses the local Codex login/config, and falls back to the deterministic formatter if the CLI is unavailable, times out, or returns invalid JSON.
 
+Do not use Codex mode as the production default. The application default is still `openai`:
+
+```python
+SAJU_LLM_PROVIDER=openai
+```
+
 ## Environment
 
 Frontend:
@@ -187,9 +267,10 @@ Implemented backend pipeline:
 - deterministic baseline analysis
 - OpenAI API, local Codex CLI, and deterministic fallback phrasing providers
 - debug trace and stage logging
+- document-style result design lab
+- essay/document-style live result layout
 
 Not finished yet:
 
-- final result UI polish
 - persistent storage
-- production domain wiring
+- production domain and environment hardening
