@@ -45,6 +45,9 @@ export function DeveloperPage({
           <p>{text.lead}</p>
         </div>
         <div className="dev-header-actions">
+          <a className="dev-link-button" href="https://my-web-desktop.vercel.app">
+            {text.mainHome}
+          </a>
           <button className="dev-link-button" type="button" onClick={onNavigateToService}>
             {text.serviceLink}
           </button>

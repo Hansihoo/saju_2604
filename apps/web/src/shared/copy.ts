@@ -62,6 +62,7 @@ type CopyDefinition = {
   relativeLevelLabel: string;
   favorableTimingLabel: string;
   suitableEnvironmentLabel: string;
+  mainHome: string;
 };
 
 export const copy: Record<Locale, CopyDefinition> = {
@@ -127,6 +128,7 @@ export const copy: Record<Locale, CopyDefinition> = {
     relativeLevelLabel: "상대적인 금전 흐름",
     favorableTimingLabel: "좋아질 가능성이 큰 시기",
     suitableEnvironmentLabel: "잘 맞는 환경",
+    mainHome: "메인 홈",
   },
   en: {
     title: "Saju / fortune reading",
@@ -190,6 +192,7 @@ export const copy: Record<Locale, CopyDefinition> = {
     relativeLevelLabel: "Relative wealth trend",
     favorableTimingLabel: "Better timing",
     suitableEnvironmentLabel: "Suitable environment",
+    mainHome: "Main home",
   },
 };
 

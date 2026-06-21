@@ -37,6 +37,10 @@ button {
   cursor: pointer;
 }
 
+a {
+  color: inherit;
+}
+
 .page-shell {
   min-height: 100vh;
   background: #ffffff;
@@ -73,6 +77,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   margin-bottom: 20px;
 }
 
@@ -101,6 +106,12 @@ button {
   gap: 8px;
   color: #666666;
   font-size: 0.875rem;
+}
+
+.service-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .locale-select select {
@@ -260,7 +271,8 @@ button {
 
 .submit-button,
 .secondary-button,
-.dev-link-button {
+.dev-link-button,
+.main-home-link {
   height: 46px;
   padding: 0 16px;
   border-radius: 8px;
@@ -423,10 +435,15 @@ button {
 }
 
 .secondary-button,
-.dev-link-button {
+.dev-link-button,
+.main-home-link {
   height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: #ffffff;
   color: #111111;
+  text-decoration: none;
 }
 
 .result-screen {
@@ -2777,6 +2794,7 @@ button {
   }
 
   .service-header-top,
+  .service-header-actions,
   .result-header,
   .dev-header,
   .dev-review-heading,
