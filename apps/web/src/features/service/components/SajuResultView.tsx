@@ -2550,7 +2550,10 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
   );
 
   return (
-    <section className="result-screen ritual-result readable-result">
+    <section
+      className="result-screen ritual-result readable-result overflow-safe"
+      data-overflow-audit-root
+    >
       <div className="result-header">
         <div className="result-header-copy">
           <h2>{texts.resultTitle}</h2>

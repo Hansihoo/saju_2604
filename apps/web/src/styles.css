@@ -4728,6 +4728,73 @@ a {
   }
 }
 
+/* Overflow-safe typography: wrap content before shrinking readable text. */
+.overflow-safe {
+  min-width: 0;
+  max-inline-size: 100%;
+}
+
+.overflow-safe :where(
+  .result-layout,
+  .result-header,
+  .result-header-copy,
+  .result-main-column,
+  .result-side-column,
+  .result-side-panel,
+  .resultHero,
+  .resultHeroOverview,
+  .resultHeroBadges,
+  .coreDiagnosisBlock,
+  .coreDiagnosisGrid,
+  .insightBlock,
+  .insightGrid,
+  .reading-section-panel,
+  .reading-section-shell,
+  .reading-section-meta,
+  .reading-section-prelude,
+  .reading-section-extra,
+  .reading-article,
+  .reading-data-card,
+  .detailGroup,
+  .detailLazyPanel,
+  .sectionInsightBlock,
+  .sectionInsightGrid
+) {
+  min-width: 0;
+  max-inline-size: 100%;
+}
+
+.overflow-safe :where(p, li, dt, dd, th, td, strong, span, a, button, h2, h3, h4) {
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+  text-wrap: pretty;
+}
+
+.overflow-safe :where(h2, h3, h4) {
+  text-wrap: balance;
+}
+
+.overflow-safe :where(.result-panel-label, .resultHeroBadges span, .insightCardChips span, .detailRevealChips span) {
+  white-space: normal;
+}
+
+.overflow-safe .secondary-button {
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  min-height: 38px;
+  line-height: 1.35;
+  white-space: normal;
+}
+
+.overflow-safe .reading-table-wrap {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+
 .readable-result .element-balance-average-marker {
   background: rgba(155, 110, 47, 0.48);
 }
