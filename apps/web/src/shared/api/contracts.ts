@@ -333,6 +333,46 @@ export type SajuResultSignals = {
   internal_grade?: "S" | "A" | "B" | "C" | null;
 };
 
+export type PeriodFlowEvidence = {
+  label: string;
+  value: string;
+  detail: string;
+  source: string;
+};
+
+export type PeriodFlowCycle = {
+  index: number;
+  gan_zhi: string;
+  start_datetime?: string | null;
+  change_datetime?: string | null;
+};
+
+export type PeriodFlow = {
+  kind: "today" | "month";
+  period_start: string;
+  period_end: string;
+  period_label: string;
+  target_gan_zhi: string;
+  target_element: string;
+  primary_signal: string;
+  headline: string;
+  summary: string;
+  focus: string[];
+  actions: string[];
+  evidence: PeriodFlowEvidence[];
+  basis: string;
+  notes: string[];
+  current_luck_cycle?: PeriodFlowCycle | null;
+};
+
+export type PeriodFlows = {
+  schema_version: "period-flow-v1";
+  as_of: string;
+  timezone_id: string;
+  today: PeriodFlow;
+  month: PeriodFlow;
+};
+
 export type InternalAnalysisDebug = {
   balance_score: number;
   charm_score: number;
@@ -440,6 +480,7 @@ export type SajuPreviewResponse = {
   time_correction: TimeCorrectionSummary;
   regional_solar_correction: RegionalSolarCorrectionSummary;
   manse: ManseData;
+  period_flows: PeriodFlows;
   calendar_normalization: {
     calendar_type: "solar" | "lunar";
     is_lunar_leap_month: boolean;
@@ -532,7 +573,7 @@ export type SajuDetailPeriod = {
 };
 
 export type SajuDetailRenderedReport = {
-  schema_version: "saju-detail-render-v1";
+  schema_version: "saju-detail-render-v2";
   detail_type: SajuDetailType;
   title: string;
   summary: string;

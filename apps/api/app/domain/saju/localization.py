@@ -38,10 +38,14 @@ BRANCH_LABELS = {
 TEN_GOD_CANONICAL = {
     "比肩": "비견",
     "劫財": "겁재",
+    "劫财": "겁재",
     "食神": "식신",
     "傷官": "상관",
+    "伤官": "상관",
     "偏財": "편재",
+    "偏财": "편재",
     "正財": "정재",
+    "正财": "정재",
     "偏官": "편관",
     "正官": "정관",
     "偏印": "편인",
@@ -56,6 +60,7 @@ TEN_GOD_CANONICAL = {
     "정관": "정관",
     "편인": "편인",
     "정인": "정인",
+    "日主": "일간",
 }
 
 TEN_GOD_ENGLISH = {
@@ -69,6 +74,7 @@ TEN_GOD_ENGLISH = {
     "정관": "Direct Officer",
     "편인": "Indirect Resource",
     "정인": "Direct Resource",
+    "일간": "Day master",
 }
 
 PILLAR_LABELS = {

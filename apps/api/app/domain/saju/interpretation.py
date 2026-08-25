@@ -157,7 +157,7 @@ class SajuDetailBody(BaseModel):
 
 
 class SajuDetailRenderedReport(BaseModel):
-    schema_version: Literal["saju-detail-render-v1"] = "saju-detail-render-v1"
+    schema_version: Literal["saju-detail-render-v2"] = "saju-detail-render-v2"
     detail_type: SajuDetailType
     title: str = Field(max_length=80)
     summary: str = Field(max_length=260)

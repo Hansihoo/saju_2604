@@ -772,18 +772,25 @@ def _build_luck_flow_facts(
     favorable_periods = _build_favorable_periods(analyses, current_year=current_flow.current_year)
 
     if locale == "ko":
-        transition_summary = (
-            f"현재는 {current_analysis.phase_label} 흐름이고, 다음은 {next_analysis.phase_label} 흐름으로 이동합니다."
-            if current_analysis and next_analysis
-            else "현재와 다음 대운 정보가 제한적이어서 큰 방향만 참고합니다."
-        )
+        if current_analysis and next_analysis:
+            transition_summary = (
+                f"현재와 다음 대운이 모두 {current_analysis.phase_label} 흐름으로 분류되어, "
+                "큰 성격 전환보다 현재의 기준을 이어서 적용하는 흐름입니다."
+                if current_analysis.phase_label == next_analysis.phase_label
+                else f"현재는 {current_analysis.phase_label} 흐름이고, 다음은 {next_analysis.phase_label} 흐름으로 이동합니다."
+            )
+        else:
+            transition_summary = "현재와 다음 대운 정보가 제한적이어서 큰 방향만 참고합니다."
         default_actions = ["관계 정리", "지출 습관 점검", "생활 루틴 구축", "일의 경계 설정"]
     else:
-        transition_summary = (
-            f"The current cycle is {current_analysis.phase_label}, moving toward {next_analysis.phase_label} next."
-            if current_analysis and next_analysis
-            else "Current and next luck-cycle details are limited, so only the broad direction is used."
-        )
+        if current_analysis and next_analysis:
+            transition_summary = (
+                "The current and next cycles share the same phase, so the reading focuses on carrying the current standards forward."
+                if current_analysis.phase_label == next_analysis.phase_label
+                else f"The current cycle is {current_analysis.phase_label}, moving toward {next_analysis.phase_label} next."
+            )
+        else:
+            transition_summary = "Current and next luck-cycle details are limited, so only the broad direction is used."
         default_actions = [
             "sort relationships",
             "review spending habits",

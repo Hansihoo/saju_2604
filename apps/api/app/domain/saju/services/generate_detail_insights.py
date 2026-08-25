@@ -36,17 +36,11 @@ except Exception:  # pragma: no cover
     OpenAI = None  # type: ignore
 
 
-DETAIL_PROMPT_VERSION = "saju-detail-render-v1"
+DETAIL_PROMPT_VERSION = "saju-detail-render-v2"
 DETAIL_TYPES: Tuple[SajuDetailType, ...] = (
     "love_timing",
-    "ideal_partner",
     "wealth_timing",
     "career_timing",
-    "yearly_caution",
-    "monthly_flow",
-    "relationship_support",
-    "health_condition",
-    "compatibility_compare",
 )
 FORBIDDEN_USER_TEXT = (
     "무료",
@@ -99,8 +93,6 @@ Rules:
 - For Korean locale, write user-facing fields in Hangul/Korean prose only. Do not include Hanja characters.
 - Do not guarantee marriage, breakup, reunion, disease, accident, bankruptcy, or investment profit.
 - "좋아지는 시기" means relatively easier timing, not a guaranteed event.
-- health_condition must discuss lifestyle rhythm, fatigue, recovery, sleep, and conditioning only; no disease names or medical judgment.
-- compatibility_compare must not compare compatibility when partner facts are unavailable.
 - Keep the result short enough for an inline expanded panel.
 - Return valid JSON only.
 """.strip()
@@ -243,30 +235,6 @@ def _analysis_periods(payload: InterpretationPayload, domain: str) -> List[Dict[
     ]
 
 
-def _month_flows(payload: InterpretationPayload) -> List[Dict[str, object]]:
-    year = payload.current_flow.current_year
-    action_tags = payload.luck_flow_facts.now_action_tags[:3] or ["생활 리듬 점검"]
-    flows: List[Dict[str, object]] = []
-    for month in range(1, 13):
-        impact = "neutral"
-        if month in {3, 6, 9, 12}:
-            impact = "caution"
-        if month in {2, 5, 8, 11}:
-            impact = "positive"
-        flows.append(
-            {
-                "year_month": f"{year}-{month:02d}",
-                "love_impact": impact if month in {2, 6, 10} else "neutral",
-                "career_impact": impact if month in {3, 7, 11} else "neutral",
-                "wealth_impact": impact if month in {4, 8, 12} else "neutral",
-                "best_for": action_tags,
-                "caution": "일정과 감정 소모를 함께 살피는 달입니다." if impact == "caution" else "",
-                "summary": "실행 속도보다 지속 가능한 리듬을 우선해서 보면 좋습니다.",
-            }
-        )
-    return flows
-
-
 def _base_context(payload: InterpretationPayload) -> Dict[str, object]:
     return {
         "day_master": payload.day_master,
@@ -284,119 +252,60 @@ def _base_context(payload: InterpretationPayload) -> Dict[str, object]:
 
 
 def _detail_bundle(payload: InterpretationPayload) -> Dict[str, Dict[str, object]]:
-    current_year = payload.current_flow.current_year
-    special_stars = [
-        {
-            "key": star.key,
-            "label": star.display_label,
-            "category": star.category,
-            "usage_summary": star.usage_summary,
-        }
-        for star in payload.special_stars[:8]
-    ]
-    relationship_tags = [star.display_label for star in payload.special_stars[:4]]
-    now_tags = payload.luck_flow_facts.now_action_tags[:5]
-
     return {
         "love_timing": {
             "available": True,
             "basis": {
-                "annual_flows": _analysis_periods(payload, "love"),
-                "monthly_flows": _month_flows(payload),
+                "luck_cycle_analysis": _analysis_periods(payload, "love"),
                 "partner_star_activated_years": payload.love_facts.active_star_labels,
                 "spouse_house_relations": [payload.love_facts.spouse_house_label],
             },
             "best_periods": _analysis_periods(payload, "love")[:2],
-            "caution_periods": [period for period in _analysis_periods(payload, "relationship") if period["impact"] == "caution"][:2],
-            "summary_tags": ["관계 기회", "마음 열기", "거리 조절"],
-        },
-        "ideal_partner": {
-            "available": True,
-            "basis": {
-                "day_master": payload.day_master,
-                "spouse_house": {
-                    "label": payload.love_facts.spouse_house_label,
-                    "branch": payload.love_facts.spouse_house_branch,
-                    "ten_god": payload.love_facts.spouse_house_ten_god,
-                },
-                "partner_star": {
-                    "label": payload.love_facts.partner_star_label,
-                    "count": payload.love_facts.partner_star_count,
-                },
-                "element_balance": dict(payload.element_counts),
-                "missing_elements": payload.signals.missing_elements,
-                "ten_gods": dict(payload.ten_god_stems),
-            },
-            "good_match_traits": ["약속을 꾸준히 지키는 사람", "감정 표현보다 생활 태도가 안정적인 사람", "서로의 시간을 존중하는 사람"],
-            "difficult_match_traits": ["역할을 흐리게 넘기는 사람", "말은 빠르지만 반복 태도가 바뀌는 사람"],
-            "relationship_advice_tags": ["생활 리듬", "책임 분담", "천천히 신뢰 쌓기"],
+            "caution_periods": [
+                period
+                for period in _analysis_periods(payload, "love")
+                if period["impact"] == "caution"
+            ][:2],
         },
         "wealth_timing": {
             "available": True,
             "basis": {
-                "annual_flows": _analysis_periods(payload, "wealth"),
-                "monthly_flows": _month_flows(payload),
-                "wealth_star_activated_years": [item.label for item in payload.wealth_facts.key_ten_gods],
-                "output_to_wealth_flow_periods": _analysis_periods(payload, "wealth")[:2],
-                "peer_leakage_risk_periods": _analysis_periods(payload, "relationship")[:2],
+                "luck_cycle_analysis": _analysis_periods(payload, "wealth"),
+                "wealth_facts": model_to_dict(payload.wealth_facts, mode="json"),
             },
             "best_periods": _analysis_periods(payload, "wealth")[:2],
             "caution_periods": [period for period in _analysis_periods(payload, "wealth") if period["impact"] == "caution"][:2],
-            "management_tags": ["지출 누수 점검", "성과와 보상 연결", "관계 지출 경계"],
         },
         "career_timing": {
             "available": True,
             "basis": {
                 "career_facts": model_to_dict(payload.career_facts, mode="json"),
                 "current_flow": model_to_dict(payload.current_flow, mode="json"),
-                "annual_flows": _analysis_periods(payload, "career"),
-                "monthly_flows": _month_flows(payload),
+                "luck_cycle_analysis": _analysis_periods(payload, "career"),
             },
             "move_review_periods": _analysis_periods(payload, "career")[:2],
             "stabilize_periods": _analysis_periods(payload, "career")[2:4],
             "caution_periods": [period for period in _analysis_periods(payload, "career") if period["impact"] == "caution"][:2],
-            "strategy_tags": ["역할 조정", "일정 과부하 점검", "성과 기록"],
         },
         "yearly_caution": {
-            "available": True,
-            "year": current_year,
-            "basis": {
-                "current_year_flow": model_to_dict(payload.current_flow, mode="json"),
-                "relations_to_base_chart": now_tags,
-            },
-            "love_caution": ["기대와 거리감의 속도를 맞추기"],
-            "career_caution": ["맡는 범위가 애매한 일을 오래 끌지 않기"],
-            "wealth_caution": ["관계나 급한 결정으로 새는 지출 살피기"],
-            "relationship_caution": ["괜찮다고 넘긴 피로를 뒤늦게 폭발시키지 않기"],
-            "overall_advice_tags": now_tags or ["생활 리듬", "지출 점검", "관계 거리"],
+            "available": False,
+            "reason_code": "annual_rules_not_ready",
         },
         "monthly_flow": {
-            "available": True,
-            "months": _month_flows(payload),
+            "available": False,
+            "reason_code": "monthly_rules_not_ready",
         },
         "relationship_support": {
-            "available": True,
-            "basis": {
-                "peer": {"visible_distribution": dict(payload.ten_god_stems)},
-                "resource": {"support_need": payload.signals.missing_elements},
-                "officer": {"career_signal": payload.career_facts.month_stem_ten_god},
-                "special_stars": special_stars,
-            },
-            "helpful_people_traits": ["약속을 지키는 사람", "감정 소모보다 실질적 도움을 주는 사람", "경계를 존중하는 사람"],
-            "tiring_people_traits": ["책임을 떠넘기는 사람", "말을 자주 바꾸는 사람", "관계를 급하게 몰아가는 사람"],
-            "relationship_strategy_tags": relationship_tags or ["관계 거리 조절", "도움 요청"],
+            "available": False,
+            "reason_code": "relationship_rules_not_ready",
         },
         "health_condition": {
-            "available": True,
-            "basis": {
-                "element_balance": dict(payload.element_counts),
-                "dominant_elements": payload.signals.dominant_elements,
-                "missing_elements": payload.signals.missing_elements,
-                "current_flow_pressure_tags": now_tags,
-            },
-            "condition_rhythm_tags": ["수면 리듬", "과로 신호", "회복 루틴"],
-            "caution_tags": ["무리한 일정", "감정 소모", "쉬어도 쉰 것 같지 않은 패턴"],
-            "care_advice_tags": ["일정 줄이기", "수면 시간 고정", "가벼운 반복 루틴"],
+            "available": False,
+            "reason_code": "health_rules_not_ready",
+        },
+        "ideal_partner": {
+            "available": False,
+            "reason_code": "partner_profile_rules_not_ready",
         },
         "compatibility_compare": {
             "available": False,
@@ -478,6 +387,37 @@ def _period_description(detail_type: SajuDetailType, item: Dict[str, object]) ->
     return str(item.get("summary") or "현재 선택을 조금 더 구체적으로 나누어 보기 좋은 시기입니다.")
 
 
+def _unavailable_detail_copy(detail_type: SajuDetailType, locale: str) -> Tuple[str, str, str, str]:
+    if locale == "ko":
+        reasons = {
+            "ideal_partner": "상대 유형을 개인 맞춤 결론으로 제시할 검증된 규칙이 아직 충분하지 않습니다.",
+            "yearly_caution": "연간 주의 문구를 개인화할 검증된 규칙이 아직 충분하지 않습니다.",
+            "monthly_flow": "월별 시기를 개인화할 검증된 규칙이 아직 충분하지 않습니다.",
+            "relationship_support": "관계 유형을 개인 맞춤으로 분류할 검증된 규칙이 아직 충분하지 않습니다.",
+            "health_condition": "건강 상태로 읽힐 수 있는 판단은 이 결과에 포함하지 않습니다.",
+        }
+        return (
+            "계산 근거가 충분하지 않아 이 항목은 현재 제공하지 않습니다.",
+            reasons.get(detail_type, "선택한 항목의 계산 근거가 아직 충분하지 않습니다."),
+            "검증되지 않은 규칙으로 개인화된 결론을 만들지 않습니다.",
+            "현재 제공되는 사주 기둥과 큰 시기 흐름을 먼저 참고하세요.",
+        )
+
+    reasons = {
+        "ideal_partner": "The validated rules needed to describe a personally fitting partner type are not ready yet.",
+        "yearly_caution": "The validated rules needed to personalize annual cautions are not ready yet.",
+        "monthly_flow": "The validated rules needed to personalize month-by-month timing are not ready yet.",
+        "relationship_support": "The validated rules needed to classify relationship patterns are not ready yet.",
+        "health_condition": "This result does not include judgments that could be read as health conditions.",
+    }
+    return (
+        "This item is not shown because its calculation basis is not sufficient yet.",
+        reasons.get(detail_type, "The calculation basis for this selected item is not sufficient yet."),
+        "The result does not create personalized conclusions from unvalidated rules.",
+        "Use the displayed pillars and broader timing context first.",
+    )
+
+
 def build_fallback_detail_render(
     detail_type: SajuDetailType,
     detail_payload: Dict[str, object],
@@ -499,27 +439,18 @@ def build_fallback_detail_render(
             ),
         )
 
-    if detail_type == "monthly_flow":
-        months = list(detail_payload.get("months", []))[:6]
-        periods = [
-            SajuDetailPeriod(
-                label="월별 실행 포인트",
-                period=str(month.get("year_month", "")),
-                description=str(month.get("summary", "")) or "월별로 실행하기 좋은 방향과 조심할 부분을 함께 봅니다.",
-            )
-            for month in months
-            if isinstance(month, dict)
-        ]
+    if not detail_payload.get("available", False):
+        summary, conclusion, caution, advice = _unavailable_detail_copy(detail_type, locale)
         return SajuDetailRenderedReport(
             detail_type=detail_type,
             title=title,
-            summary="모든 달을 길게 늘어놓기보다 체감하기 쉬운 실행 타이밍을 먼저 봅니다.",
+            summary=summary,
             body=SajuDetailBody(
-                conclusion="월별 흐름은 좋고 나쁨을 확정하는 표가 아니라, 어떤 달에 무엇을 가볍게 조정하면 좋은지 보는 기준입니다. 일정, 관계, 지출을 한꺼번에 밀어붙이지 않는 것이 핵심입니다.",
-                periods=periods,
-                cautions=["흐름이 강한 달에는 결정을 서두르기보다 일정과 감정 소모를 같이 보세요."],
-                advice=["중요한 선택은 한 번에 몰아서 처리하지 말고, 준비와 실행을 나누어 보세요."],
-                basis_chips=["월운", "실행 타이밍", "생활 리듬"],
+                conclusion=conclusion,
+                periods=[],
+                cautions=[caution],
+                advice=[advice],
+                basis_chips=["계산 근거 검토 중"] if locale == "ko" else ["Calculation basis under review"],
             ),
         )
 
@@ -549,30 +480,18 @@ def build_fallback_detail_render(
 
     summary_by_type = {
         "love_timing": "관계 기회가 늘기 쉬운 시기와 조심할 시기를 함께 봅니다.",
-        "ideal_partner": "함께 있을 때 덜 소모되고 생활 리듬이 맞기 쉬운 사람의 특징을 봅니다.",
         "wealth_timing": "돈 흐름을 만들기 좋은 때와 지출 관리가 필요한 때를 함께 봅니다.",
         "career_timing": "움직임을 검토하기 좋은 때와 보수적으로 봐야 할 때를 나눠 봅니다.",
-        "yearly_caution": "올해 관계, 일, 돈에서 과부하가 생기기 쉬운 지점을 봅니다.",
-        "relationship_support": "도움이 되는 사람과 피로해지기 쉬운 관계 패턴을 봅니다.",
-        "health_condition": "생활 리듬과 회복 관점에서 컨디션 관리 포인트를 봅니다.",
     }
     conclusion_by_type = {
         "love_timing": "관계운은 확정된 사건보다 마음을 열기 쉬운 조건과 거리 조절이 중요합니다. 좋은 시기일수록 빠른 결론보다 대화의 반복성과 생활 태도를 같이 보는 편이 좋습니다.",
-        "ideal_partner": "잘 맞는 사람은 강한 설렘만 주는 사람보다 함께 있을 때 생활이 덜 흔들리는 사람에 가깝습니다. 약속을 지키고 서로의 회복 시간을 존중하는 태도가 오래 남습니다.",
         "wealth_timing": "돈 흐름은 많이 들어오는지만 보지 말고 어디서 새는지도 함께 봐야 합니다. 성과를 보상과 연결하고 관계성 지출을 줄이는 감각이 중요합니다.",
         "career_timing": "커리어 전환은 바로 움직이라는 뜻보다 역할과 보상의 균형을 점검하라는 신호에 가깝습니다. 지금 자리에서 조정할 것과 밖에서 찾아야 할 것을 나눠 보는 것이 좋습니다.",
-        "yearly_caution": "올해 조심할 지점은 극단적인 사건보다 피로가 쌓이는 방식입니다. 관계, 일정, 지출을 동시에 키우면 체감 부담이 커질 수 있습니다.",
-        "relationship_support": "도움이 되는 사람은 나를 급하게 몰아붙이기보다 현실적인 도움과 안정된 태도를 주는 사람입니다. 반대로 책임을 흐리게 넘기는 관계는 빨리 피로해질 수 있습니다.",
-        "health_condition": "컨디션은 특정 문제를 단정하기보다 생활 리듬과 회복 속도로 보는 편이 좋습니다. 쉬어도 회복감이 적다면 일정과 수면 루틴을 먼저 가볍게 만드는 것이 도움이 됩니다.",
     }
     basis_by_type = {
-        "love_timing": ["세운", "월운", "관계 신호"],
-        "ideal_partner": ["관계 성향", "오행 균형", "생활 리듬"],
-        "wealth_timing": ["재물 신호", "성과 연결", "지출 관리"],
-        "career_timing": ["직장운", "역할 변화", "현재 흐름"],
-        "yearly_caution": ["올해 흐름", "관계", "일", "돈"],
-        "relationship_support": ["귀인", "관계 패턴", "보조 신호"],
-        "health_condition": ["오행 균형", "회복 루틴", "생활 리듬"],
+        "love_timing": ["큰 시기 분석", "관계 신호", "배우자궁"],
+        "wealth_timing": ["큰 시기 분석", "금전 관련 십성", "관리 포인트"],
+        "career_timing": ["큰 시기 분석", "직업 관련 십성", "역할 변화"],
     }
     return SajuDetailRenderedReport(
         detail_type=detail_type,
@@ -726,14 +645,18 @@ def render_detail_insight(
         }
 
     started = time.perf_counter()
-    if settings.llm_provider == "codex":
-        report = _call_codex_detail_render(detail_type, detail_payload, locale=locale)
-        provider = "codex" if report is not None else "fallback"
-    else:
-        report = _call_openai_detail_render(detail_type, detail_payload, locale=locale)
-        provider = "openai" if report is not None else "fallback"
-    if report is None:
+    if not detail_payload.get("available", False):
         report = build_fallback_detail_render(detail_type, detail_payload, locale=locale)
+        provider = "fallback"
+    else:
+        if settings.llm_provider == "codex":
+            report = _call_codex_detail_render(detail_type, detail_payload, locale=locale)
+            provider = "codex" if report is not None else "fallback"
+        else:
+            report = _call_openai_detail_render(detail_type, detail_payload, locale=locale)
+            provider = "openai" if report is not None else "fallback"
+        if report is None:
+            report = build_fallback_detail_render(detail_type, detail_payload, locale=locale)
 
     issues = _validate_rendered_report(report)
     if issues:

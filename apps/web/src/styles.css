@@ -4728,6 +4728,1474 @@ a {
   }
 }
 
+/* Final cascade guard: keep the result screen light after legacy theme rules. */
+.ritual-page-shell {
+  --ritual-ink: #101828;
+  --ritual-paper: #101828;
+  --ritual-paper-soft: #344054;
+  --ritual-muted: #667085;
+  color-scheme: light;
+  background: #f7f8fa;
+  color: #344054;
+}
+
+.ritual-page-shell .service-page.result-mode {
+  width: min(1200px, calc(100% - 48px));
+  padding: 32px 0 88px;
+  color: #344054;
+  font-family: "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+
+.ritual-page-shell .service-mark,
+.ritual-page-shell .locale-select select {
+  border-color: #d0d5dd;
+  background: #ffffff;
+  color: #344054;
+}
+
+.ritual-page-shell .service-header h1,
+.readable-result .result-header-copy h2 {
+  color: #101828;
+  font-family: inherit;
+  letter-spacing: -0.025em;
+}
+
+.ritual-page-shell .service-header p,
+.readable-result .result-header-copy p {
+  color: #667085;
+}
+
+.ritual-page-shell .secondary-button {
+  border-color: #cfd6e2;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #344054;
+  box-shadow: 0 3px 10px rgba(16, 24, 40, 0.05);
+}
+
+.readable-result .result-layout {
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 34px;
+  padding: 32px;
+  border: 1px solid #e4e7ec;
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 18px 48px rgba(16, 24, 40, 0.08);
+}
+
+.readable-result .result-main-column {
+  grid-column: 2;
+}
+
+.readable-result .result-side-column {
+  grid-column: 1;
+  grid-row: 1;
+  position: sticky;
+  top: 28px;
+  display: grid;
+  gap: 14px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.readable-result .result-side-panel {
+  padding: 20px 18px;
+  border: 1px solid #e4e7ec;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(16, 24, 40, 0.06);
+}
+
+.readable-result .result-panel-label {
+  min-height: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #667085;
+}
+
+.readable-result .result-section-link {
+  border-bottom-color: #eaecf0;
+}
+
+.readable-result .result-section-link:hover,
+.readable-result .result-section-link:focus-visible {
+  border-bottom-color: #9aadd5;
+}
+
+.readable-result .result-section-link span {
+  color: #6c86c5;
+}
+
+.readable-result .result-section-link strong {
+  color: #344054;
+}
+
+.readable-result .resultHero {
+  padding: 32px 34px 34px;
+  border: 1px solid #dfe5ee;
+  border-left: 4px solid #6c86c5;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgba(16, 24, 40, 0.07);
+}
+
+.readable-result .resultHero::before {
+  display: none;
+}
+
+.readable-result .resultHeroHeadline {
+  color: #101828;
+  font-family: inherit;
+  font-size: clamp(2rem, 3.5vw, 2.8rem);
+  line-height: 1.35;
+}
+
+.readable-result .resultHeroOverview .reading-paragraph,
+.readable-result .reading-paragraph,
+.readable-result .reading-bullets li,
+.readable-result .periodFlowSummary,
+.readable-result .insightCardPreview {
+  color: #344054;
+  font-size: 1.04rem;
+  line-height: 1.9;
+}
+
+.readable-result .resultHeroBadges span.is-warning {
+  border-color: #f3c89b;
+  background: #fff8eb;
+  color: #9c2f0b;
+}
+
+.readable-result .coreDiagnosisCard,
+.readable-result .insightCard,
+.readable-result .periodFlowCard,
+.readable-result .reading-section-panel,
+.readable-result .result-pillar-overview,
+.readable-result .reading-data-card,
+.readable-result .element-balance-card,
+.readable-result .luck-focus-card {
+  border-color: #e4e7ec;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 10px 26px rgba(16, 24, 40, 0.06);
+}
+
+.readable-result .coreDiagnosisCard h3,
+.readable-result .insightCardTitle,
+.readable-result .periodFlowCardTitle h4,
+.readable-result .reading-section h3,
+.readable-result .reading-section-head h3,
+.readable-result .detailGroupHead h3,
+.readable-result .reading-inline-heading,
+.readable-result .reading-numbered-heading,
+.readable-result .reading-subheading {
+  color: #101828;
+}
+
+.readable-result .insightCard,
+.readable-result .periodFlowCard {
+  padding: 24px;
+}
+
+.readable-result .insightCardChips span,
+.readable-result .periodFlowChips span,
+.readable-result .element-balance-chips span {
+  border-color: #dce5f3;
+  background: #f5f8fd;
+  color: #4b638f;
+}
+
+.readable-result .insightCardTakeaway {
+  border-left-color: #7f9bca;
+  background: #f5f8fd;
+  color: #263f72;
+}
+
+.readable-result .insightCardQuestion {
+  border-color: #e4e7ec;
+  background: #fbfcfe;
+  color: #475467;
+}
+
+.readable-result .periodFlowCard-today {
+  border-top-color: #6c86c5;
+}
+
+.readable-result .periodFlowCard-month {
+  border-top-color: #71a89d;
+}
+
+.readable-result .periodFlowBlock > h3 {
+  color: #101828;
+  font-size: 1.45rem;
+}
+
+.readable-result .periodFlowKind,
+.readable-result .periodFlowSubLabel {
+  color: #5b6b83;
+}
+
+.readable-result .periodFlowCardTitle p,
+.readable-result .detailGroupHead p,
+.readable-result .result-pillar-overview-note,
+.readable-result .reading-data-card-note,
+.readable-result .luck-focus-card p,
+.readable-result .luck-focus-card dt,
+.readable-result .sectionInsightCard p,
+.readable-result .detailRevealHead p,
+.readable-result .detailRevealPeriods p,
+.readable-result .detailRevealList li {
+  color: #667085;
+}
+
+.readable-result .reading-section-panel {
+  margin-top: 34px;
+  padding-top: 0;
+}
+
+.readable-result .reading-section-shell {
+  padding: 28px 32px 34px;
+}
+
+.readable-result .reading-section-index {
+  display: none;
+}
+
+.readable-result .reading-section-index::before {
+  content: none;
+}
+
+.readable-result .reading-section-meta {
+  display: block;
+}
+
+.readable-result .reading-section-label {
+  color: #667085;
+}
+
+.readable-result .reading-inline-heading {
+  font-size: 1.14rem;
+}
+
+.readable-result .reading-support-block,
+.readable-result .detailRevealPanel,
+.readable-result .sectionInsightBlock {
+  border-color: #e4e7ec;
+  border-radius: 14px;
+  background: #f7f9fc;
+}
+
+.readable-result .sectionInsightCard {
+  border-color: #dfe5ee;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #101828;
+}
+
+.readable-result .sectionInsightCard:hover,
+.readable-result .sectionInsightCard.is-active {
+  border-color: #9aadd5;
+  background: #f5f8fd;
+}
+
+.readable-result .detailRevealHead h4,
+.readable-result .detailRevealConclusion,
+.readable-result .detailRevealPanel > p,
+.readable-result .detailRevealList strong {
+  color: #101828;
+}
+
+.readable-result .result-pillar-table thead th,
+.readable-result .result-luck-table thead th {
+  background: #f2f4f7;
+  color: #344054;
+  border-bottom-color: #dfe3e9;
+}
+
+.readable-result .result-pillar-table tbody th {
+  background: #f8fafc;
+  color: #475467;
+}
+
+.readable-result .result-pillar-table td,
+.readable-result .result-luck-table td {
+  background: #ffffff;
+  color: #344054;
+}
+
+@media (max-width: 1080px) {
+  .ritual-page-shell .service-page.result-mode {
+    width: min(900px, calc(100% - 40px));
+  }
+
+  .readable-result .result-layout {
+    grid-template-columns: 1fr;
+    gap: 26px;
+    padding: 26px;
+  }
+
+  .readable-result .result-main-column,
+  .readable-result .result-side-column {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .readable-result .result-side-column {
+    position: static;
+    order: 2;
+    display: block;
+  }
+}
+
+@media (max-width: 640px) {
+  .ritual-page-shell .service-page.result-mode {
+    width: calc(100% - 24px);
+    padding-top: 22px;
+    padding-bottom: 64px;
+  }
+
+  .readable-result .result-layout {
+    gap: 22px;
+    padding: 16px 14px 30px;
+    border-radius: 18px;
+  }
+
+  .readable-result .resultHero {
+    padding: 26px 20px 28px;
+    border-radius: 14px;
+  }
+
+  .readable-result .resultHeroHeadline {
+    font-size: clamp(1.9rem, 9.6vw, 2.45rem);
+    line-height: 1.38;
+  }
+
+  .readable-result .coreDiagnosisGrid,
+  .readable-result .insightGrid,
+  .readable-result .periodFlowGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .readable-result .reading-section-shell {
+    padding: 24px 20px 28px;
+  }
+
+  .readable-result .reading-paragraph,
+  .readable-result .reading-bullets li {
+    font-size: 1rem;
+    line-height: 1.92;
+  }
+}
+
+/* Final light result pass: white surfaces, restrained depth, and readable copy. */
+.ritual-page-shell {
+  --ritual-ink: #101828;
+  --ritual-surface: #ffffff;
+  --ritual-surface-raised: #ffffff;
+  --ritual-surface-soft: #f7f9fc;
+  --ritual-line: #e4e7ec;
+  --ritual-line-soft: #eaecf0;
+  --ritual-paper: #101828;
+  --ritual-paper-soft: #344054;
+  --ritual-muted: #667085;
+  --ritual-bronze: #5b73ac;
+  --ritual-bronze-bright: #3557a7;
+  --ritual-warning: #b54708;
+  color-scheme: light;
+  background: #f7f8fa;
+  color: #344054;
+}
+
+.ritual-page-shell .service-page.result-mode {
+  width: min(1200px, calc(100% - 48px));
+  padding: 32px 0 88px;
+  color: #344054;
+  font-family: "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+
+.ritual-page-shell .service-header h1,
+.ritual-page-shell .service-header p,
+.readable-result .result-header-copy h2,
+.readable-result .result-header-copy p {
+  font-family: inherit;
+}
+
+.ritual-page-shell .service-header h1,
+.readable-result .result-header-copy h2 {
+  color: #101828;
+  letter-spacing: -0.025em;
+}
+
+.ritual-page-shell .service-header p,
+.readable-result .result-header-copy p {
+  color: #667085;
+  letter-spacing: 0;
+}
+
+.ritual-page-shell .service-mark {
+  border-color: #d0d5dd;
+  color: #475467;
+  background: #ffffff;
+}
+
+.ritual-page-shell .locale-select {
+  color: #667085;
+}
+
+.ritual-page-shell .locale-select select {
+  border-color: #d0d5dd;
+  background: #ffffff;
+  color: #344054;
+}
+
+.ritual-page-shell .secondary-button {
+  border-color: #cfd6e2;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #344054;
+  box-shadow: 0 3px 10px rgba(16, 24, 40, 0.05);
+}
+
+.ritual-page-shell .secondary-button:hover,
+.ritual-page-shell .secondary-button:focus-visible {
+  border-color: #6c86c5;
+  background: #f7f9fc;
+  color: #1d3e85;
+}
+
+.readable-result .result-header {
+  padding-bottom: 18px;
+  border-bottom-color: #e4e7ec;
+}
+
+.readable-result .result-header-copy h2 {
+  font-size: clamp(1.7rem, 3vw, 2.35rem);
+  line-height: 1.3;
+  font-weight: 800;
+}
+
+.readable-result .result-layout {
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 34px;
+  padding: 32px;
+  border: 1px solid #e4e7ec;
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 18px 48px rgba(16, 24, 40, 0.08);
+}
+
+.readable-result .result-main-column {
+  grid-column: 2;
+  gap: 0;
+}
+
+.readable-result .result-side-column {
+  grid-column: 1;
+  grid-row: 1;
+  position: sticky;
+  top: 28px;
+  gap: 14px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.readable-result .result-side-panel {
+  padding: 20px 18px;
+  border: 1px solid #e4e7ec;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(16, 24, 40, 0.06);
+}
+
+.readable-result .result-panel-label {
+  min-height: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #667085;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.readable-result .result-section-nav {
+  gap: 0;
+  margin-top: 12px;
+}
+
+.readable-result .result-section-link {
+  padding: 13px 0;
+  border-bottom-color: #eaecf0;
+}
+
+.readable-result .result-section-link:hover,
+.readable-result .result-section-link:focus-visible {
+  border-bottom-color: #9aadd5;
+  transform: translateX(2px);
+}
+
+.readable-result .result-section-link span {
+  color: #6c86c5;
+  font-size: 0.74rem;
+}
+
+.readable-result .result-section-link strong {
+  color: #344054;
+  font-size: 0.94rem;
+  line-height: 1.5;
+}
+
+.readable-result .resultHero {
+  position: relative;
+  gap: 20px;
+  overflow: hidden;
+  padding: 32px 34px 34px;
+  border: 1px solid #dfe5ee;
+  border-left: 4px solid #6c86c5;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgba(16, 24, 40, 0.07);
+}
+
+.readable-result .resultHero::before {
+  display: none;
+}
+
+.readable-result .resultHeroHeadline {
+  max-width: 760px;
+  color: #101828;
+  font-family: inherit;
+  font-size: clamp(2rem, 3.5vw, 2.8rem);
+  line-height: 1.35;
+  letter-spacing: -0.035em;
+}
+
+.readable-result .resultHeroOverview {
+  max-width: 68ch;
+  gap: 12px;
+}
+
+.readable-result .resultHeroOverview .reading-paragraph {
+  color: #344054;
+  font-size: 1.04rem;
+  line-height: 1.9;
+}
+
+.readable-result .resultHeroBadges {
+  gap: 8px;
+  padding-top: 2px;
+}
+
+.readable-result .resultHeroBadges span.is-warning {
+  border-color: #f3c89b;
+  background: #fff8eb;
+  color: #9c2f0b;
+}
+
+.readable-result .coreDiagnosisBlock,
+.readable-result .insightBlock {
+  gap: 16px;
+  padding: 30px 0;
+  border-bottom: 1px solid #eaecf0;
+}
+
+.readable-result .coreDiagnosisGrid,
+.readable-result .insightGrid {
+  gap: 18px;
+}
+
+.readable-result .coreDiagnosisCard,
+.readable-result .insightCard {
+  border: 1px solid #e4e7ec;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 10px 26px rgba(16, 24, 40, 0.06);
+}
+
+.readable-result .coreDiagnosisCard {
+  gap: 12px;
+  padding: 22px;
+  border-top: 3px solid #6c86c5;
+}
+
+.readable-result .coreDiagnosisCard:nth-child(2) {
+  border-top-color: #7f9bca;
+}
+
+.readable-result .coreDiagnosisCard:nth-child(3) {
+  border-top-color: #71a89d;
+}
+
+.readable-result .coreDiagnosisCard h3,
+.readable-result .insightCardTitle {
+  color: #101828;
+  font-family: inherit;
+}
+
+.readable-result .coreDiagnosisCard h3 {
+  font-size: 1.08rem;
+  line-height: 1.45;
+}
+
+.readable-result .coreDiagnosisCard p,
+.readable-result .insightCardPreview {
+  color: #344054;
+  font-size: 1rem;
+  line-height: 1.86;
+}
+
+.readable-result .insightCard {
+  gap: 16px;
+  padding: 24px;
+}
+
+.readable-result .insightCardTitle {
+  font-size: 1.2rem;
+  line-height: 1.45;
+}
+
+.readable-result .insightCardSubtitle {
+  color: #667085;
+  font-size: 0.92rem;
+  line-height: 1.65;
+}
+
+.readable-result .insightCardChips span,
+.readable-result .periodFlowChips span {
+  border-color: #dce5f3;
+  background: #f5f8fd;
+  color: #4b638f;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.readable-result .insightCardTakeaway,
+.readable-result .insightCardQuestion {
+  border-radius: 10px;
+  font-size: 0.94rem;
+  line-height: 1.75;
+}
+
+.readable-result .insightCardTakeaway {
+  border-left: 3px solid #7f9bca;
+  background: #f5f8fd;
+  color: #263f72;
+}
+
+.readable-result .insightCardQuestion {
+  border-color: #e4e7ec;
+  background: #fbfcfe;
+  color: #475467;
+}
+
+.readable-result .insightCardCta,
+.readable-result .detailLazyButton {
+  min-height: 40px;
+  border-color: #6c86c5;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #3557a7;
+  font-size: 0.92rem;
+}
+
+.readable-result .insightCardCta:hover,
+.readable-result .insightCardCta:focus-visible,
+.readable-result .detailLazyButton:hover,
+.readable-result .detailLazyButton:focus-visible {
+  border-color: #3557a7;
+  background: #f2f5fb;
+  color: #1d3e85;
+  transform: translateY(-1px);
+}
+
+.readable-result .periodFlowBlock {
+  gap: 16px;
+  padding: 30px 0 8px;
+  border-top: 0;
+}
+
+.readable-result .periodFlowBlock > h3 {
+  margin: 0;
+  color: #101828;
+  font-size: 1.45rem;
+  line-height: 1.45;
+  letter-spacing: -0.02em;
+}
+
+.readable-result .periodFlowGrid {
+  gap: 18px;
+}
+
+.readable-result .periodFlowCard {
+  gap: 17px;
+  padding: 24px;
+  border: 1px solid #e4e7ec;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 10px 26px rgba(16, 24, 40, 0.06);
+}
+
+.readable-result .periodFlowCard-today {
+  border-top: 3px solid #6c86c5;
+}
+
+.readable-result .periodFlowCard-month {
+  border-top: 3px solid #71a89d;
+}
+
+.readable-result .periodFlowCardTitle {
+  gap: 7px;
+}
+
+.readable-result .periodFlowKind,
+.readable-result .periodFlowSubLabel {
+  color: #5b6b83;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.readable-result .periodFlowCardTitle h4 {
+  color: #101828;
+  font-size: 1.22rem;
+  line-height: 1.45;
+}
+
+.readable-result .periodFlowCardTitle p {
+  color: #667085;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.readable-result .periodFlowSummary {
+  color: #344054;
+  font-size: 1rem;
+  line-height: 1.85;
+}
+
+.readable-result .periodFlowFocus,
+.readable-result .periodFlowActions {
+  gap: 9px;
+}
+
+.readable-result .periodFlowActions ul {
+  gap: 7px;
+}
+
+.readable-result .periodFlowActions li {
+  color: #475467;
+  font-size: 0.94rem;
+  line-height: 1.72;
+}
+
+.readable-result .result-uncertainty-notice,
+.readable-result .detailLazyPanel,
+.readable-result .result-disabled-banner {
+  margin-top: 28px;
+  border: 1px solid #e4e7ec;
+  border-radius: 16px;
+  background: #fbfcfe;
+  box-shadow: 0 8px 22px rgba(16, 24, 40, 0.05);
+}
+
+.readable-result .result-uncertainty-notice {
+  border-color: #f3c89b;
+  background: #fff8eb;
+}
+
+.readable-result .result-uncertainty-head p,
+.readable-result .result-uncertainty-notice li {
+  color: #7a3b12;
+}
+
+.readable-result .result-pillar-overview,
+.readable-result .reading-data-card,
+.readable-result .element-balance-card,
+.readable-result .luck-focus-card {
+  border-color: #e4e7ec;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 8px 22px rgba(16, 24, 40, 0.05);
+}
+
+.readable-result .element-balance-meta,
+.readable-result .luck-focus-card {
+  border-color: #e4e7ec;
+  background: #f7f9fc;
+}
+
+.readable-result .result-pillar-overview-note,
+.readable-result .reading-data-card-note,
+.readable-result .element-radar-wrap span,
+.readable-result .element-balance-row small,
+.readable-result .result-pillar-overview-meta,
+.readable-result .result-pillar-overview-meta small,
+.readable-result .luck-focus-card p,
+.readable-result .luck-focus-card dt,
+.readable-result .detailGroupHead p {
+  color: #667085;
+}
+
+.readable-result .result-pillar-overview-meta strong,
+.readable-result .element-balance-meta strong,
+.readable-result .luck-focus-card strong,
+.readable-result .result-pillar-table strong,
+.readable-result .result-luck-table strong {
+  color: #101828;
+}
+
+.readable-result .element-balance-row-head span,
+.readable-result .element-balance-row-head strong,
+.readable-result .element-balance-chips strong {
+  color: #344054;
+}
+
+.readable-result .element-balance-track {
+  background: #e6eaf0;
+}
+
+.readable-result .element-balance-chips span {
+  border-color: #dce5f3;
+  background: #f5f8fd;
+  color: #5b6b83;
+}
+
+.readable-result .reading-table {
+  border-top-color: #dfe3e9;
+}
+
+.readable-result .reading-table th,
+.readable-result .reading-table td {
+  border-bottom-color: #e4e7ec;
+}
+
+.readable-result .result-pillar-table thead th,
+.readable-result .result-luck-table thead th {
+  background: #f2f4f7;
+  color: #344054;
+  border-bottom-color: #dfe3e9;
+}
+
+.readable-result .result-pillar-table tbody th {
+  background: #f8fafc;
+  color: #475467;
+}
+
+.readable-result .result-pillar-table td,
+.readable-result .result-luck-table td {
+  background: #ffffff;
+  color: #344054;
+}
+
+.readable-result .result-luck-table tr.is-current td {
+  background: #f5f8fd;
+}
+
+.readable-result .result-luck-table tr.is-next td {
+  background: #f4faf8;
+}
+
+.readable-result .result-pillar-table th.is-disabled,
+.readable-result .result-pillar-table td.is-disabled,
+.readable-result .result-luck-table td.is-disabled {
+  background: #f8fafc;
+  color: #98a2b3;
+}
+
+.readable-result .reading-section-panel,
+.readable-result .detailGroup {
+  margin-top: 34px;
+  padding-top: 28px;
+  border-top-color: #e4e7ec;
+}
+
+.readable-result .reading-section-panel {
+  border: 1px solid #e4e7ec;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 10px 28px rgba(16, 24, 40, 0.05);
+}
+
+.readable-result .reading-section-shell {
+  gap: 22px;
+  padding: 28px 32px 34px;
+}
+
+.readable-result .reading-section-index {
+  display: none;
+}
+
+.readable-result .reading-section-index::before {
+  content: none;
+}
+
+.readable-result .reading-section-meta {
+  display: block;
+}
+
+.readable-result .reading-section-label,
+.readable-result .reading-section h3,
+.readable-result .reading-section-head h3,
+.readable-result .detailGroupHead h3 {
+  color: #101828;
+}
+
+.readable-result .reading-section-label {
+  margin-bottom: 6px;
+  color: #667085;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.readable-result .reading-section h3,
+.readable-result .reading-section-head h3,
+.readable-result .detailGroupHead h3 {
+  font-size: 1.45rem;
+  line-height: 1.45;
+  letter-spacing: -0.02em;
+}
+
+.readable-result .reading-article {
+  max-width: 68ch;
+  gap: 14px;
+}
+
+.readable-result .reading-paragraph,
+.readable-result .reading-bullets li {
+  color: #344054;
+  font-size: 1.04rem;
+  line-height: 1.95;
+  letter-spacing: 0;
+}
+
+.readable-result .reading-inline-heading,
+.readable-result .reading-numbered-heading,
+.readable-result .reading-subheading {
+  color: #101828;
+}
+
+.readable-result .reading-inline-heading {
+  font-size: 1.14rem;
+  line-height: 1.55;
+}
+
+.readable-result .reading-subheading {
+  border-left-color: #6c86c5;
+}
+
+.readable-result .reading-support-block,
+.readable-result .detailRevealPanel,
+.readable-result .sectionInsightBlock {
+  border-color: #e4e7ec;
+  border-radius: 14px;
+  background: #f7f9fc;
+}
+
+.readable-result .sectionInsightCard {
+  border-color: #dfe5ee;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #101828;
+}
+
+.readable-result .sectionInsightCard:hover,
+.readable-result .sectionInsightCard.is-active {
+  border-color: #9aadd5;
+  background: #f5f8fd;
+}
+
+.readable-result .sectionInsightCard p,
+.readable-result .detailRevealHead p,
+.readable-result .detailRevealPeriods p,
+.readable-result .detailRevealList li {
+  color: #667085;
+}
+
+.readable-result .detailRevealHead h4,
+.readable-result .detailRevealConclusion,
+.readable-result .detailRevealPanel > p,
+.readable-result .detailRevealList strong {
+  color: #101828;
+}
+
+.readable-result .detailRevealPeriods article {
+  border-color: #e4e7ec;
+  background: #ffffff;
+}
+
+.readable-result .detailRevealPeriods span,
+.readable-result .detailRevealChips span {
+  color: #5b73ac;
+}
+
+.readable-result .detailRevealPeriods strong {
+  color: #101828;
+}
+
+@media (max-width: 1080px) {
+  .ritual-page-shell .service-page.result-mode {
+    width: min(900px, calc(100% - 40px));
+  }
+
+  .readable-result .result-layout {
+    grid-template-columns: 1fr;
+    gap: 26px;
+    padding: 26px;
+  }
+
+  .readable-result .result-main-column,
+  .readable-result .result-side-column {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .readable-result .result-side-column {
+    position: static;
+    order: 2;
+    display: block;
+  }
+
+  .readable-result .result-side-panel {
+    margin-top: 14px;
+  }
+}
+
+@media (max-width: 640px) {
+  .ritual-page-shell .service-page.result-mode {
+    width: calc(100% - 24px);
+    padding-top: 22px;
+    padding-bottom: 64px;
+  }
+
+  .readable-result .result-header {
+    align-items: flex-start;
+  }
+
+  .readable-result .result-layout {
+    gap: 22px;
+    padding: 16px 14px 30px;
+    border-radius: 18px;
+  }
+
+  .readable-result .resultHero {
+    padding: 26px 20px 28px;
+    border-radius: 14px;
+  }
+
+  .readable-result .resultHeroHeadline {
+    font-size: clamp(1.9rem, 9.6vw, 2.45rem);
+    line-height: 1.38;
+  }
+
+  .readable-result .resultHeroOverview .reading-paragraph {
+    font-size: 1rem;
+    line-height: 1.9;
+  }
+
+  .readable-result .coreDiagnosisGrid,
+  .readable-result .insightGrid,
+  .readable-result .periodFlowGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .readable-result .coreDiagnosisBlock,
+  .readable-result .insightBlock,
+  .readable-result .periodFlowBlock {
+    padding: 26px 0;
+  }
+
+  .readable-result .coreDiagnosisCard,
+  .readable-result .insightCard,
+  .readable-result .periodFlowCard {
+    padding: 20px;
+  }
+
+  .readable-result .reading-section-shell {
+    padding: 24px 20px 28px;
+  }
+
+  .readable-result .reading-section h3,
+  .readable-result .reading-section-head h3,
+  .readable-result .detailGroupHead h3 {
+    font-size: 1.28rem;
+  }
+
+  .readable-result .reading-paragraph,
+  .readable-result .reading-bullets li {
+    font-size: 1rem;
+    line-height: 1.92;
+  }
+}
+
+.readable-result .periodFlowBlock {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+  padding: 28px 0 8px;
+  border-top: 1px solid #e5ded2;
+}
+
+.readable-result .periodFlowBlockHead {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  min-width: 0;
+}
+
+.readable-result .periodFlowBlockHead > div {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.readable-result .periodFlowBlockHead h3 {
+  margin: 0;
+  color: #26364e;
+  font-size: 1.28rem;
+  line-height: 1.45;
+}
+
+.readable-result .periodFlowBlockHead p {
+  margin: 0;
+  color: #69717b;
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+.readable-result .periodFlowTimezone {
+  flex: 0 0 auto;
+  color: #8b6834;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.readable-result .periodFlowGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  min-width: 0;
+}
+
+.readable-result .periodFlowCard {
+  display: grid;
+  gap: 15px;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid #e1d7c7;
+  border-radius: 14px;
+  background: #fffdf9;
+  box-shadow: 0 8px 20px rgba(79, 64, 42, 0.045);
+}
+
+.readable-result .periodFlowCard-today {
+  border-top: 3px solid #9b6e2f;
+}
+
+.readable-result .periodFlowCard-month {
+  border-top: 3px solid #567a70;
+}
+
+.readable-result .periodFlowCardHead {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 14px;
+  min-width: 0;
+}
+
+.readable-result .periodFlowCardTitle {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.readable-result .periodFlowKind,
+.readable-result .periodFlowSubLabel,
+.readable-result .periodFlowBasis > span,
+.readable-result .periodFlowNotes > span {
+  color: #8b6834;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.readable-result .periodFlowKind {
+  line-height: 1.35;
+}
+
+.readable-result .periodFlowCardTitle h4 {
+  margin: 0;
+  color: #26364e;
+  font-size: 1.1rem;
+  line-height: 1.45;
+}
+
+.readable-result .periodFlowCardTitle p {
+  margin: 0;
+  color: #69717b;
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.readable-result .periodFlowPillar {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 2px;
+  min-width: 78px;
+  padding: 8px 10px;
+  border: 1px solid #e5ded2;
+  border-radius: 10px;
+  background: #fbf8f2;
+  text-align: right;
+}
+
+.readable-result .periodFlowPillar span,
+.readable-result .periodFlowPillar small {
+  color: #8b9097;
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
+.readable-result .periodFlowPillar strong {
+  color: #26364e;
+  font-size: 1.08rem;
+  line-height: 1.35;
+}
+
+.readable-result .periodFlowSummary {
+  margin: 0;
+  color: #4f5965;
+  font-size: 0.92rem;
+  line-height: 1.75;
+}
+
+.readable-result .periodFlowFocus,
+.readable-result .periodFlowActions,
+.readable-result .periodFlowEvidence,
+.readable-result .periodFlowBasis,
+.readable-result .periodFlowNotes {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.readable-result .periodFlowChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.readable-result .periodFlowChips span {
+  max-width: 100%;
+  padding: 5px 8px;
+  border: 1px solid #dfd3c0;
+  border-radius: 999px;
+  background: #fffaf1;
+  color: #745a34;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.readable-result .periodFlowActions ul,
+.readable-result .periodFlowNotes ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.readable-result .periodFlowActions li,
+.readable-result .periodFlowNotes li {
+  color: #4f5965;
+  font-size: 0.86rem;
+  line-height: 1.65;
+}
+
+.readable-result .periodFlowCycle {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 11px;
+  border-left: 3px solid #567a70;
+  background: #f2f7f4;
+  color: #52635e;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.readable-result .periodFlowCycle strong {
+  color: #365f55;
+  font-weight: 700;
+  text-align: right;
+}
+
+.readable-result .periodFlowEvidence {
+  padding-top: 13px;
+  border-top: 1px solid #eee7dc;
+}
+
+.readable-result .periodFlowEvidence > ul {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.readable-result .periodFlowEvidence li {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid #eee7dc;
+  border-radius: 9px;
+  background: #fbf8f2;
+}
+
+.readable-result .periodFlowEvidence li > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.readable-result .periodFlowEvidence strong {
+  color: #34445a;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.readable-result .periodFlowEvidence li > div span {
+  color: #26364e;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+.readable-result .periodFlowEvidence p,
+.readable-result .periodFlowEvidence small,
+.readable-result .periodFlowBasis p,
+.readable-result .periodFlowNotes li {
+  margin: 0;
+  color: #69717b;
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+
+.readable-result .periodFlowEvidence small {
+  color: #9a7441;
+}
+
+.readable-result .periodFlowBasis,
+.readable-result .periodFlowNotes {
+  padding-top: 12px;
+  border-top: 1px solid #eee7dc;
+}
+
+.readable-result .periodFlowNotes > span {
+  color: #7c858e;
+}
+
+@media (max-width: 760px) {
+  .readable-result .periodFlowBlockHead {
+    align-items: start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .readable-result .periodFlowGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .readable-result .periodFlowCard {
+    padding: 17px 15px;
+  }
+
+  .readable-result .periodFlowCardHead {
+    gap: 8px;
+  }
+
+  .readable-result .periodFlowPillar {
+    min-width: 68px;
+    padding: 7px 8px;
+  }
+
+  .readable-result .periodFlowPillar small {
+    max-width: 76px;
+    overflow-wrap: anywhere;
+  }
+
+  .readable-result .periodFlowEvidence li > div {
+    align-items: start;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .readable-result .periodFlowEvidence li > div span {
+    text-align: left;
+  }
+}
+
+.readable-result .reading-evidence-block {
+  display: grid;
+  gap: 10px;
+  max-width: 720px;
+  padding-top: 16px;
+  border-top: 1px solid #e5ded2;
+}
+
+.readable-result .reading-evidence-block > span {
+  color: #8b6834;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.readable-result .reading-evidence-block ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.readable-result .reading-evidence-block li {
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+  border: 1px solid #e7dfd4;
+  border-radius: 10px;
+  background: #fbf8f2;
+}
+
+.readable-result .reading-evidence-block strong {
+  color: #34445a;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.readable-result .reading-evidence-block p {
+  margin: 0;
+  color: #626b75;
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
 /* Overflow-safe typography: wrap content before shrinking readable text. */
 .overflow-safe {
   min-width: 0;
@@ -5633,5 +7101,367 @@ a {
 @media (max-width: 1080px) {
   .readable-result .result-side-column {
     border: 1px solid #e1d7c7;
+  }
+}
+
+/* Final cascade guard: keep the result screen light after legacy theme rules. */
+.ritual-page-shell {
+  --ritual-ink: #101828;
+  --ritual-paper: #101828;
+  --ritual-paper-soft: #344054;
+  --ritual-muted: #667085;
+  color-scheme: light;
+  background: #f7f8fa;
+  color: #344054;
+}
+
+.ritual-page-shell .service-page.result-mode {
+  width: min(1200px, calc(100% - 48px));
+  padding: 32px 0 88px;
+  color: #344054;
+  font-family: "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+
+.ritual-page-shell .service-mark,
+.ritual-page-shell .locale-select select {
+  border-color: #d0d5dd;
+  background: #ffffff;
+  color: #344054;
+}
+
+.ritual-page-shell .service-header h1,
+.readable-result .result-header-copy h2 {
+  color: #101828;
+  font-family: inherit;
+  letter-spacing: -0.025em;
+}
+
+.ritual-page-shell .service-header p,
+.readable-result .result-header-copy p {
+  color: #667085;
+}
+
+.ritual-page-shell .secondary-button {
+  border-color: #cfd6e2;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #344054;
+  box-shadow: 0 3px 10px rgba(16, 24, 40, 0.05);
+}
+
+.readable-result .result-layout {
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 34px;
+  padding: 32px;
+  border: 1px solid #e4e7ec;
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 18px 48px rgba(16, 24, 40, 0.08);
+}
+
+.readable-result .result-main-column {
+  grid-column: 2;
+}
+
+.readable-result .result-side-column {
+  grid-column: 1;
+  grid-row: 1;
+  position: sticky;
+  top: 28px;
+  display: grid;
+  gap: 14px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.readable-result .result-side-panel {
+  padding: 20px 18px;
+  border: 1px solid #e4e7ec;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(16, 24, 40, 0.06);
+}
+
+.readable-result .result-panel-label {
+  min-height: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #667085;
+}
+
+.readable-result .result-section-link {
+  border-bottom-color: #eaecf0;
+}
+
+.readable-result .result-section-link:hover,
+.readable-result .result-section-link:focus-visible {
+  border-bottom-color: #9aadd5;
+}
+
+.readable-result .result-section-link span {
+  color: #6c86c5;
+}
+
+.readable-result .result-section-link strong {
+  color: #344054;
+}
+
+.readable-result .resultHero {
+  padding: 32px 34px 34px;
+  border: 1px solid #dfe5ee;
+  border-left: 4px solid #6c86c5;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgba(16, 24, 40, 0.07);
+}
+
+.readable-result .resultHero::before {
+  display: none;
+}
+
+.readable-result .resultHeroHeadline {
+  color: #101828;
+  font-family: inherit;
+  font-size: clamp(2rem, 3.5vw, 2.8rem);
+  line-height: 1.35;
+}
+
+.readable-result .resultHeroOverview .reading-paragraph,
+.readable-result .reading-paragraph,
+.readable-result .reading-bullets li,
+.readable-result .periodFlowSummary,
+.readable-result .insightCardPreview {
+  color: #344054;
+  font-size: 1.04rem;
+  line-height: 1.9;
+}
+
+.readable-result .resultHeroBadges span.is-warning {
+  border-color: #f3c89b;
+  background: #fff8eb;
+  color: #9c2f0b;
+}
+
+.readable-result .coreDiagnosisCard,
+.readable-result .insightCard,
+.readable-result .periodFlowCard,
+.readable-result .reading-section-panel,
+.readable-result .result-pillar-overview,
+.readable-result .reading-data-card,
+.readable-result .element-balance-card,
+.readable-result .luck-focus-card {
+  border-color: #e4e7ec;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 10px 26px rgba(16, 24, 40, 0.06);
+}
+
+.readable-result .coreDiagnosisCard h3,
+.readable-result .insightCardTitle,
+.readable-result .periodFlowCardTitle h4,
+.readable-result .reading-section h3,
+.readable-result .reading-section-head h3,
+.readable-result .detailGroupHead h3,
+.readable-result .reading-inline-heading,
+.readable-result .reading-numbered-heading,
+.readable-result .reading-subheading {
+  color: #101828;
+}
+
+.readable-result .insightCard,
+.readable-result .periodFlowCard {
+  padding: 24px;
+}
+
+.readable-result .insightCardChips span,
+.readable-result .periodFlowChips span,
+.readable-result .element-balance-chips span {
+  border-color: #dce5f3;
+  background: #f5f8fd;
+  color: #4b638f;
+}
+
+.readable-result .insightCardTakeaway {
+  border-left-color: #7f9bca;
+  background: #f5f8fd;
+  color: #263f72;
+}
+
+.readable-result .insightCardQuestion {
+  border-color: #e4e7ec;
+  background: #fbfcfe;
+  color: #475467;
+}
+
+.readable-result .periodFlowCard-today {
+  border-top-color: #6c86c5;
+}
+
+.readable-result .periodFlowCard-month {
+  border-top-color: #71a89d;
+}
+
+.readable-result .periodFlowBlock > h3 {
+  color: #101828;
+  font-size: 1.45rem;
+}
+
+.readable-result .periodFlowKind,
+.readable-result .periodFlowSubLabel {
+  color: #5b6b83;
+}
+
+.readable-result .periodFlowCardTitle p,
+.readable-result .detailGroupHead p,
+.readable-result .result-pillar-overview-note,
+.readable-result .reading-data-card-note,
+.readable-result .luck-focus-card p,
+.readable-result .luck-focus-card dt,
+.readable-result .sectionInsightCard p,
+.readable-result .detailRevealHead p,
+.readable-result .detailRevealPeriods p,
+.readable-result .detailRevealList li {
+  color: #667085;
+}
+
+.readable-result .reading-section-panel {
+  margin-top: 34px;
+  padding-top: 0;
+}
+
+.readable-result .reading-section-shell {
+  padding: 28px 32px 34px;
+}
+
+.readable-result .reading-section-index {
+  display: none;
+}
+
+.readable-result .reading-section-index::before {
+  content: none;
+}
+
+.readable-result .reading-section-meta {
+  display: block;
+}
+
+.readable-result .reading-section-label {
+  color: #667085;
+}
+
+.readable-result .reading-inline-heading {
+  font-size: 1.14rem;
+}
+
+.readable-result .reading-support-block,
+.readable-result .detailRevealPanel,
+.readable-result .sectionInsightBlock {
+  border-color: #e4e7ec;
+  border-radius: 14px;
+  background: #f7f9fc;
+}
+
+.readable-result .sectionInsightCard {
+  border-color: #dfe5ee;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #101828;
+}
+
+.readable-result .sectionInsightCard:hover,
+.readable-result .sectionInsightCard.is-active {
+  border-color: #9aadd5;
+  background: #f5f8fd;
+}
+
+.readable-result .detailRevealHead h4,
+.readable-result .detailRevealConclusion,
+.readable-result .detailRevealPanel > p,
+.readable-result .detailRevealList strong {
+  color: #101828;
+}
+
+.readable-result .result-pillar-table thead th,
+.readable-result .result-luck-table thead th {
+  background: #f2f4f7;
+  color: #344054;
+  border-bottom-color: #dfe3e9;
+}
+
+.readable-result .result-pillar-table tbody th {
+  background: #f8fafc;
+  color: #475467;
+}
+
+.readable-result .result-pillar-table td,
+.readable-result .result-luck-table td {
+  background: #ffffff;
+  color: #344054;
+}
+
+@media (max-width: 1080px) {
+  .ritual-page-shell .service-page.result-mode {
+    width: min(900px, calc(100% - 40px));
+  }
+
+  .readable-result .result-layout {
+    grid-template-columns: 1fr;
+    gap: 26px;
+    padding: 26px;
+  }
+
+  .readable-result .result-main-column,
+  .readable-result .result-side-column {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .readable-result .result-side-column {
+    position: static;
+    order: 2;
+    display: block;
+  }
+}
+
+@media (max-width: 640px) {
+  .ritual-page-shell .service-page.result-mode {
+    width: calc(100% - 24px);
+    padding-top: 22px;
+    padding-bottom: 64px;
+  }
+
+  .readable-result .result-layout {
+    gap: 22px;
+    padding: 16px 14px 30px;
+    border-radius: 18px;
+  }
+
+  .readable-result .resultHero {
+    padding: 26px 20px 28px;
+    border-radius: 14px;
+  }
+
+  .readable-result .resultHeroHeadline {
+    font-size: clamp(1.9rem, 9.6vw, 2.45rem);
+    line-height: 1.38;
+  }
+
+  .readable-result .coreDiagnosisGrid,
+  .readable-result .insightGrid,
+.readable-result .periodFlowGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .readable-result .reading-section-shell {
+    padding: 24px 20px 28px;
+  }
+
+  .readable-result .reading-paragraph,
+  .readable-result .reading-bullets li {
+    font-size: 1rem;
+    line-height: 1.92;
   }
 }

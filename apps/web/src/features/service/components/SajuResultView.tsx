@@ -3,7 +3,6 @@ import {
   type ReactNode,
   useCallback,
   useEffect,
-  useRef,
   useState,
 } from "react";
 import {
@@ -25,6 +24,7 @@ import {
 } from "../../../shared/api/saju";
 import { Locale, getCopy } from "../../../shared/copy";
 import { formatManseText } from "../../shared/manseDisplay";
+import { PeriodFlowCards } from "./PeriodFlowCards";
 
 type SajuResultViewProps = {
   locale: Locale;
@@ -75,49 +75,44 @@ const elementBalanceCopy: Record<
   }
 > = {
   ko: {
-    title: "오행 밸런스",
-    subtitle: "원국에 보이는 목, 화, 토, 금, 수 비율을 계산값 그대로 시각화했습니다.",
+    title: "오행 출현 분포",
+    subtitle: "보이는 사주 기둥에서 각 오행이 얼마나 나타나는지 정리한 참고 분포입니다.",
     dayMaster: "내 일간",
-    balance: "균형",
-    dominant: "강한 오행",
-    missing: "부족한 오행",
+    balance: "분포",
+    dominant: "두드러진 오행",
+    missing: "덜 드러난 오행",
     none: "없음",
     countUnit: "개",
-    averageLine: "균형 기준 20%",
-    strong: "강함",
-    empty: "비어 있음",
-    normal: "보통",
+    averageLine: "참고선 20%",
+    strong: "두드러짐",
+    empty: "표시 없음",
+    normal: "보임",
   },
   en: {
-    title: "Element balance",
-    subtitle: "A direct visualization of the Wood, Fire, Earth, Metal, and Water ratios.",
+    title: "Element distribution",
+    subtitle: "A reference view of how often each element appears in the visible pillars.",
     dayMaster: "Day master",
-    balance: "Balance",
-    dominant: "Dominant",
-    missing: "Missing",
+    balance: "Distribution",
+    dominant: "More visible",
+    missing: "Less visible",
     none: "None",
     countUnit: "",
-    averageLine: "20% balance line",
-    strong: "Strong",
-    empty: "Missing",
-    normal: "Normal",
+    averageLine: "20% reference line",
+    strong: "More visible",
+    empty: "Not shown",
+    normal: "Shown",
   },
 };
 
 const sectionViewCopy: Record<
   Locale,
   {
-    summaryLabel: string;
     outlineLabel: string;
-    basisLabel: string;
-    basisItems: string[];
     uncertaintyTitle: string;
     uncertaintyIntro: string;
     severityLabels: Record<"warning" | "critical", string>;
     sectionLabels: Record<SectionKey, string>;
     heroLabel: string;
-    solarTermBadge: string;
-    timeCorrectionBadge: string;
     birthTimeWarningBadge: string;
     boundaryWarningBadge: string;
     generalWarningBadge: string;
@@ -133,20 +128,13 @@ const sectionViewCopy: Record<
   }
 > = {
   ko: {
-    summaryLabel: "핵심 요약",
     outlineLabel: "빠르게 보기",
-    basisLabel: "이 풀이가 보는 것",
     uncertaintyTitle: "확인 필요 항목",
-    uncertaintyIntro: "입력값이나 시간 기준 때문에 확정하기 어려운 항목만 표시합니다.",
+    uncertaintyIntro: "입력 정보로 확인이 필요한 내용만 알려드려요.",
     severityLabels: {
       warning: "주의",
       critical: "중요",
     },
-    basisItems: [
-      "만세력 계산을 먼저 확인한 뒤 해석합니다.",
-      "강점과 약점을 함께 보여주도록 구성했습니다.",
-      "내 사주 특징, 연애운, 직장운, 금전운, 흐름 순서로 읽을 수 있습니다.",
-    ],
     sectionLabels: {
       core_analysis: "내 사주 특징",
       love: "연애운",
@@ -154,14 +142,12 @@ const sectionViewCopy: Record<
       wealth: "금전운",
       luck_flow: "대운 흐름",
     },
-    heroLabel: "오늘의 풀이",
-    solarTermBadge: "절기 기준",
-    timeCorrectionBadge: "시간대 보정",
+    heroLabel: "핵심 해석",
     birthTimeWarningBadge: "출생시간 확인 필요",
     boundaryWarningBadge: "경계값 확인 필요",
     generalWarningBadge: "확인 필요 항목 있음",
     coreDiagnosisLabel: "먼저 볼 점",
-    insightLabel: "먼저 읽어볼 부분",
+    insightLabel: "핵심 내용",
     previewFallback: "상세 해석을 준비 중입니다.",
     cards: {
       core: {
@@ -180,27 +166,20 @@ const sectionViewCopy: Record<
         cta: "관계 패턴 보기",
       },
       luck: {
-        title: "현재 운과 대운 흐름",
+        title: "현재 흐름과 다음 변화",
         subtitle: "지금 시기와 다음 변화",
-        cta: "지금 시기 보기",
+        cta: "현재 흐름 보기",
       },
     },
   },
   en: {
-    summaryLabel: "Quick summary",
     outlineLabel: "Jump to section",
-    basisLabel: "What this reading uses",
     uncertaintyTitle: "Items to confirm",
     uncertaintyIntro: "Only user-relevant uncertainty from the provided inputs is shown here.",
     severityLabels: {
       warning: "Warning",
       critical: "Important",
     },
-    basisItems: [
-      "The manse calculation is checked before the interpretation is written.",
-      "The reading is designed to show both strengths and weak points.",
-      "You can read it in order: core traits, love, career, wealth, and luck flow.",
-    ],
     sectionLabels: {
       core_analysis: "Core traits",
       love: "Love",
@@ -208,9 +187,7 @@ const sectionViewCopy: Record<
       wealth: "Wealth",
       luck_flow: "Luck flow",
     },
-    heroLabel: "Your reading",
-    solarTermBadge: "Solar-term basis",
-    timeCorrectionBadge: "Time-zone corrected",
+    heroLabel: "Reading overview",
     birthTimeWarningBadge: "Birth time needs review",
     boundaryWarningBadge: "Boundary needs review",
     generalWarningBadge: "Items need review",
@@ -248,44 +225,35 @@ const insightCardMeta: Record<
     "core" | "workMoney" | "love" | "luck",
     {
       chips: string[];
-      basis: string;
     }
   >
 > = {
   ko: {
     core: {
       chips: ["기준", "강점", "반복 패턴"],
-      basis: "일간·오행·십성 구조를 함께 반영했습니다.",
     },
     workMoney: {
       chips: ["일하는 방식", "수입 구조", "관리 포인트"],
-      basis: "직장운과 금전운을 연결해서 해석했습니다.",
     },
     love: {
       chips: ["관계 스타일", "잘 맞는 상대", "장기 관계"],
-      basis: "배우자궁·관계 신호·현재 흐름을 함께 봅니다.",
     },
     luck: {
       chips: ["현재 시기", "다음 변화", "준비할 것"],
-      basis: "현재 대운과 다음 대운의 변화를 중심으로 봅니다.",
     },
   },
   en: {
     core: {
       chips: ["Standards", "Strengths", "Patterns"],
-      basis: "Reflects the day master, five elements, and ten-god structure together.",
     },
     workMoney: {
       chips: ["Work style", "Income structure", "Management point"],
-      basis: "Connects the career and wealth readings instead of treating them separately.",
     },
     love: {
       chips: ["Relationship style", "Good fit", "Long-term bond"],
-      basis: "Reviews spouse-house, relationship signals, and the current flow together.",
     },
     luck: {
       chips: ["Current timing", "Next shift", "Preparation"],
-      basis: "Centers on the current luck cycle and the next luck-cycle transition.",
     },
   },
 };
@@ -317,15 +285,14 @@ const detailLazyCopy: Record<
   }
 > = {
   ko: {
-    label: "이어서 읽기",
-    title: "더 자세한 풀이를 이어서 읽을 수 있습니다",
-    body: "첫 화면 요약을 먼저 읽은 뒤, 내 사주 특징과 일과 돈, 관계, 대운 흐름을 더 자세히 펼쳐 봅니다.",
-    button: "자세한 풀이 불러오기",
-    loadingTitle: "자세한 풀이를 불러오는 중입니다",
-    loadingBody:
-      "앞에서 계산한 사주 정보를 바탕으로 상세 해석을 준비하고 있습니다. 내용이 길어 시간이 조금 오래 걸릴 수 있습니다.",
-    fallbackNotice: "자세한 풀이 호출이 지연되어 기본 결과를 표시합니다.",
-    errorTitle: "자세한 풀이를 불러오지 못했습니다",
+    label: "상세 풀이",
+    title: "더 자세한 풀이 보기",
+    body: "성향, 일과 돈, 관계, 현재 흐름을 더 자세히 확인합니다.",
+    button: "상세 풀이 보기",
+    loadingTitle: "상세 풀이를 준비하는 중입니다",
+    loadingBody: "상세 풀이를 준비하고 있어요. 잠시만 기다려 주세요.",
+    fallbackNotice: "상세 풀이가 늦어 기본 결과를 먼저 보여드리고 있어요.",
+    errorTitle: "상세 풀이를 불러오지 못했어요",
   },
   en: {
     label: "Read more",
@@ -341,55 +308,42 @@ const detailLazyCopy: Record<
 };
 
 type SectionInsightCopy = {
-  detailType: SajuDetailType;
+  detailType: AvailableSectionInsightType;
   title: string;
   description: string;
 };
+
+type AvailableSectionInsightType =
+  | "love_timing"
+  | "wealth_timing"
+  | "career_timing";
 
 const sectionInsightCopy: Record<
   Locale,
   {
     headings: {
-      core: string;
       career: string;
       wealth: string;
       love: string;
-      luck: string;
     };
     status: {
       loading: string;
       error: string;
-      compatibilityTitle: string;
-      compatibilityBody: string;
     };
-    items: Record<SajuDetailType, SectionInsightCopy>;
+    items: Record<AvailableSectionInsightType, SectionInsightCopy>;
   }
 > = {
   ko: {
     headings: {
-      core: "생활에서 더 살펴볼 부분",
-      career: "더 살펴볼 일의 흐름",
-      wealth: "더 살펴볼 돈의 흐름",
-      love: "더 살펴볼 관계 흐름",
-      luck: "올해와 월별 흐름",
+      career: "일의 흐름 더 보기",
+      wealth: "돈의 흐름 더 보기",
+      love: "관계 흐름 더 보기",
     },
     status: {
       loading: "확장 해석을 준비하고 있습니다. 내용에 따라 시간이 조금 걸릴 수 있습니다.",
       error: "지금은 확장 해석을 불러오지 못했습니다. 잠시 후 다시 열어 주세요.",
-      compatibilityTitle: "상대 정보가 필요합니다",
-      compatibilityBody: "상대의 생년월일, 출생시간, 성별, 출생지역을 입력하면 두 사람의 관계 흐름을 따로 비교할 수 있습니다.",
     },
     items: {
-      relationship_support: {
-        detailType: "relationship_support",
-        title: "인간관계와 귀인 보기",
-        description: "도움 되는 사람과 피로해지기 쉬운 관계 패턴을 봅니다.",
-      },
-      health_condition: {
-        detailType: "health_condition",
-        title: "건강과 컨디션 보기",
-        description: "오행 균형과 현재 흐름을 바탕으로 생활 리듬 관리 포인트를 봅니다.",
-      },
       career_timing: {
         detailType: "career_timing",
         title: "이직과 커리어 전환 시기 보기",
@@ -403,55 +357,21 @@ const sectionInsightCopy: Record<
       love_timing: {
         detailType: "love_timing",
         title: "연애운이 좋아지는 시기 보기",
-        description: "관계 기회가 늘기 쉬운 시기를 세운과 월운 기준으로 봅니다.",
-      },
-      ideal_partner: {
-        detailType: "ideal_partner",
-        title: "나와 잘 맞는 사람 유형 보기",
-        description: "내 사주 구조를 편하게 해주는 상대 유형을 봅니다.",
-      },
-      compatibility_compare: {
-        detailType: "compatibility_compare",
-        title: "상대와 궁합 비교하기",
-        description: "상대 정보를 입력하면 두 사람의 관계 흐름을 비교합니다.",
-      },
-      yearly_caution: {
-        detailType: "yearly_caution",
-        title: "올해 조심할 흐름 보기",
-        description: "올해 관계, 일, 돈에서 조심할 흐름을 정리합니다.",
-      },
-      monthly_flow: {
-        detailType: "monthly_flow",
-        title: "월별 흐름 보기",
-        description: "체감하기 쉬운 월별 실행 타이밍을 봅니다.",
+        description: "관계 신호와 큰 시기 분석을 바탕으로 살펴볼 시기를 봅니다.",
       },
     },
   },
   en: {
     headings: {
-      core: "More to review in daily life",
       career: "More about work timing",
       wealth: "More about money flow",
       love: "More relationship timing",
-      luck: "This year and monthly flow",
     },
     status: {
       loading: "Preparing the expanded insight. Longer details can take a little more time.",
       error: "The expanded insight could not be loaded. Try opening it again in a moment.",
-      compatibilityTitle: "Partner information is needed",
-      compatibilityBody: "Enter the other person's birth date, time, gender, and region to compare the relationship flow separately.",
     },
     items: {
-      relationship_support: {
-        detailType: "relationship_support",
-        title: "View helpful relationships",
-        description: "See people who can help and patterns that may become tiring.",
-      },
-      health_condition: {
-        detailType: "health_condition",
-        title: "View condition and rhythm",
-        description: "Review lifestyle rhythm points from element balance and current timing.",
-      },
       career_timing: {
         detailType: "career_timing",
         title: "View career transition timing",
@@ -465,27 +385,7 @@ const sectionInsightCopy: Record<
       love_timing: {
         detailType: "love_timing",
         title: "View relationship timing",
-        description: "Review periods when relationship openings can become easier.",
-      },
-      ideal_partner: {
-        detailType: "ideal_partner",
-        title: "View a fitting person type",
-        description: "See traits that may feel less draining for your structure.",
-      },
-      compatibility_compare: {
-        detailType: "compatibility_compare",
-        title: "Compare with another person",
-        description: "Enter partner information to compare the relationship flow.",
-      },
-      yearly_caution: {
-        detailType: "yearly_caution",
-        title: "View what to watch this year",
-        description: "Review caution points in relationships, work, and money.",
-      },
-      monthly_flow: {
-        detailType: "monthly_flow",
-        title: "View monthly flow",
-        description: "See practical month-by-month timing points.",
+        description: "Review timing using relationship signals and broader cycle analysis.",
       },
     },
   },
@@ -496,7 +396,6 @@ const resultDataCopy: Record<
   {
     pillarTitle: string;
     pillarSubtitle: string;
-    correctedTimeLabel: string;
     ganZhiRow: string;
     stemRow: string;
     branchRow: string;
@@ -517,20 +416,19 @@ const resultDataCopy: Record<
 > = {
   ko: {
     pillarTitle: "사주팔자",
-    pillarSubtitle: "만세력 기준 핵심 기둥",
-    correctedTimeLabel: "보정 기준",
+    pillarSubtitle: "내 사주 기둥",
     ganZhiRow: "간지",
     stemRow: "천간",
     branchRow: "지지",
-    luckTimelineTitle: "대운 전환 시점",
-    luckTimelineSubtitle: "대운의 시작과 다음 전환 시점을 년/월 기준으로 정리했습니다.",
+    luckTimelineTitle: "대운 흐름",
+    luckTimelineSubtitle: "지금과 다음 시기를 한눈에 봅니다.",
     luckPillarColumn: "대운",
     luckStartColumn: "시작 시점",
     luckChangeColumn: "변경 시점",
     luckCurrentLabel: "현재 대운",
     luckNextLabel: "다음 대운",
     luckAgeRangeLabel: "나이",
-    luckPeriodLabel: "기간",
+    luckPeriodLabel: "시기",
     luckCurrentHelp: "지금 해석의 중심이 되는 흐름입니다.",
     luckNextHelp: "다음 전환에서 달라지는 흐름입니다.",
     unavailable: "-",
@@ -543,20 +441,19 @@ const resultDataCopy: Record<
   },
   en: {
     pillarTitle: "Four pillars",
-    pillarSubtitle: "Core pillars from the manse data",
-    correctedTimeLabel: "Corrected base",
+    pillarSubtitle: "My four pillars",
     ganZhiRow: "Ganji",
     stemRow: "Stem",
     branchRow: "Branch",
-    luckTimelineTitle: "Luck-cycle transition points",
-    luckTimelineSubtitle: "Luck-cycle starts and transitions are shown by year and month.",
+    luckTimelineTitle: "Luck flow",
+    luckTimelineSubtitle: "See the current and next periods at a glance.",
     luckPillarColumn: "Cycle",
     luckStartColumn: "Starts",
     luckChangeColumn: "Changes",
     luckCurrentLabel: "Current cycle",
     luckNextLabel: "Next cycle",
     luckAgeRangeLabel: "Age",
-    luckPeriodLabel: "Period",
+    luckPeriodLabel: "Timing",
     luckCurrentHelp: "This is the main timing context for the current reading.",
     luckNextHelp: "This is the next visible timing shift.",
     unavailable: "-",
@@ -576,9 +473,6 @@ const disabledStateCopy: Record<
     disabledValue: string;
     unknownTimeNoticeTitle: string;
     unknownTimeNoticeBody: string;
-    unknownTimeMetaLabel: string;
-    unknownTimeMetaValue: string;
-    timePillarDisabledNote: string;
     luckTimelineDisabledNote: string;
   }
 > = {
@@ -587,23 +481,16 @@ const disabledStateCopy: Record<
     disabledValue: "비활성화",
     unknownTimeNoticeTitle: "출생시간을 몰라 시주 기반 항목을 비활성화했어요.",
     unknownTimeNoticeBody:
-      "시주, 시주 기반 대운, 시간 의존 해석은 숨기지 않고 비활성 상태로 표시합니다. 정확한 시간이 확인되면 다시 계산해 전체 결과를 열 수 있어요.",
-    unknownTimeMetaLabel: "출생시간 상태",
-    unknownTimeMetaValue: "시간 모름",
-    timePillarDisabledNote: "시주는 정확한 출생시간이 확인되면 다시 열립니다.",
-    luckTimelineDisabledNote: "대운 시작 시점과 흐름은 출생시간이 확인되면 다시 계산됩니다.",
+      "출생시간이 없어서 일부 항목은 잠시 보류했어요. 시간을 확인하면 더 정확하게 다시 볼 수 있어요.",
+    luckTimelineDisabledNote: "출생시간을 확인하면 대운 시기를 다시 계산해요.",
   },
   en: {
     disabledBadge: "Disabled",
     disabledValue: "Disabled",
     unknownTimeNoticeTitle: "Birth time is unknown, so hour-based items are disabled.",
     unknownTimeNoticeBody:
-      "The time pillar, hour-based luck-cycle details, and time-dependent interpretation stay visible in a disabled state until the real birth time is known.",
-    unknownTimeMetaLabel: "Birth-time status",
-    unknownTimeMetaValue: "Unknown time",
-    timePillarDisabledNote: "The time pillar will unlock after the birth time is confirmed.",
-    luckTimelineDisabledNote:
-      "Luck-cycle start points and transitions will be recalculated after the birth time is confirmed.",
+      "Some parts are on hold because the birth time is missing. Confirm it for a more complete reading.",
+    luckTimelineDisabledNote: "Confirm the birth time to recalculate the luck timing.",
   },
 };
 
@@ -928,9 +815,7 @@ function CompactPillarTable({
   result: SajuPreviewResponse;
 }) {
   const ui = resultDataCopy[locale];
-  const statusTexts = disabledStateCopy[locale];
   const pillars = getPillarEntries(result, locale);
-  const isBirthTimeUnknown = !result.result.hour_pillar_enabled;
 
   return (
     <section className="result-pillar-overview">
@@ -938,15 +823,6 @@ function CompactPillarTable({
         <div>
           <p className="result-panel-label">{ui.pillarTitle}</p>
           <p className="result-pillar-overview-note">{ui.pillarSubtitle}</p>
-        </div>
-        <div className={`result-pillar-overview-meta${isBirthTimeUnknown ? " is-disabled" : ""}`}>
-          <span>{isBirthTimeUnknown ? statusTexts.unknownTimeMetaLabel : ui.correctedTimeLabel}</span>
-          <strong>
-            {isBirthTimeUnknown
-              ? statusTexts.unknownTimeMetaValue
-              : result.regional_solar_correction.corrected_solar_datetime}
-          </strong>
-          {isBirthTimeUnknown ? <small>{statusTexts.timePillarDisabledNote}</small> : null}
         </div>
       </div>
 
@@ -1194,16 +1070,16 @@ function UncertaintySummaryNotice({
 
     const messagesByCode: Record<string, string> = {
       day_pillar_uncertain_due_to_unknown_time:
-        "출생시간을 모르면 자정 전후 경계 때문에 하루 기준을 확정하기 어렵습니다.",
+        "출생시간이 없으면 날짜 경계에서 하루 기준이 달라질 수 있습니다.",
       year_or_month_pillar_may_change:
-        "출생시간 후보 범위 안에 절기 경계가 있어 해석 기준이 달라질 수 있습니다.",
-      midnight_rule_changes_day_pillar: "자정 기준 적용 방식에 따라 일주가 달라질 수 있습니다.",
-      midnight_rule_changes_hour_pillar: "자정 기준 적용 방식에 따라 시주가 달라질 수 있습니다.",
+        "입력한 시간이 경계에 가까워 일부 해석이 달라질 수 있습니다.",
+      midnight_rule_changes_day_pillar: "자정 전후에서는 하루 기준이 달라질 수 있습니다.",
+      midnight_rule_changes_hour_pillar: "자정 전후에서는 시간 기준이 달라질 수 있습니다.",
       standard_vs_mean_solar_changes_hour_pillar:
-        "표준시와 지역시차 보정 기준에 따라 시주가 달라질 수 있습니다.",
-      luck_cycle_start_age_changed: "보정 기준 후보에 따라 대운 시작 나이가 달라질 수 있습니다.",
-      primary_differs_from_candidate: "보정 기준 후보 중 일부가 현재 기준 사주와 다르게 계산됩니다.",
-      near_solar_term: "입력 시간이 절기 경계에 가까워 일부 해석 기준이 달라질 수 있습니다.",
+        "지역에 따른 시간 차이로 일부 해석이 달라질 수 있습니다.",
+      luck_cycle_start_age_changed: "계산 기준에 따라 대운 시작 나이가 달라질 수 있습니다.",
+      primary_differs_from_candidate: "일부 계산 결과가 달라질 수 있어 확인이 필요합니다.",
+      near_solar_term: "입력한 시간이 경계에 가까워 일부 해석이 달라질 수 있습니다.",
     };
 
     const translated = messagesByCode[flag.code];
@@ -1212,19 +1088,19 @@ function UncertaintySummaryNotice({
     }
 
     if (message.includes("midnight rule")) {
-      return "자정 기준 적용 방식에 따라 일주가 달라질 수 있습니다.";
+      return "자정 전후에서는 하루 기준이 달라질 수 있습니다.";
     }
 
     if (message.includes("unknown birth-time interval includes the late-zi boundary")) {
-      return "출생시간을 모르면 자정 전후 경계 때문에 하루 기준을 확정하기 어렵습니다.";
+      return "출생시간이 없으면 날짜 경계에서 하루 기준이 달라질 수 있습니다.";
     }
 
     if (message.includes("hour pillar changes")) {
-      return "표준시와 지역시차 보정 기준에 따라 시주가 달라질 수 있습니다.";
+      return "지역에 따른 시간 차이로 일부 해석이 달라질 수 있습니다.";
     }
 
     if (message.includes("candidate chart differs")) {
-      return "보정 기준 후보 중 일부가 현재 기준 사주와 다르게 계산됩니다.";
+      return "일부 계산 결과가 달라질 수 있어 확인이 필요합니다.";
     }
 
     return message;
@@ -1718,7 +1594,6 @@ type InsightCardData = {
   previewParagraphs?: string[];
   userTakeaway?: string;
   nextQuestion?: string;
-  basis: string;
   cta: string;
   href: string;
 };
@@ -1872,7 +1747,6 @@ function InsightCard({
       </div>
       {card.userTakeaway ? <p className="insightCardTakeaway">{card.userTakeaway}</p> : null}
       {card.nextQuestion ? <p className="insightCardQuestion">{card.nextQuestion}</p> : null}
-      <p className="insightCardBasis">{card.basis}</p>
       <a
         className="insightCardCta"
         href={card.href}
@@ -1897,25 +1771,14 @@ type SectionInsightState = {
 };
 
 function DetailRevealPanel({
-  detailType,
   state,
   locale,
 }: {
-  detailType: SajuDetailType;
   state: SectionInsightState | undefined;
   locale: Locale;
 }) {
   const copy = sectionInsightCopy[locale];
   const status = state?.status ?? "idle";
-
-  if (detailType === "compatibility_compare" && status !== "loading" && !state?.report) {
-    return (
-      <div className="detailRevealPanel">
-        <h4>{copy.status.compatibilityTitle}</h4>
-        <p>{copy.status.compatibilityBody}</p>
-      </div>
-    );
-  }
 
   if (status === "loading") {
     return (
@@ -1976,13 +1839,6 @@ function DetailRevealPanel({
           </ul>
         </div>
       ) : null}
-      {report.body.basis_chips.length ? (
-        <div className="detailRevealChips">
-          {report.body.basis_chips.map((chip) => (
-            <span key={chip}>{chip}</span>
-          ))}
-        </div>
-      ) : null}
     </div>
   );
 }
@@ -2030,7 +1886,6 @@ function SectionInsightChips({
       </div>
       {activeItem ? (
         <DetailRevealPanel
-          detailType={activeItem.detailType}
           locale={locale}
           state={states[activeItem.detailType]}
         />
@@ -2052,7 +1907,6 @@ function getFreePreviewCardDisplay(
         subtitle: viewTexts.cards.core.subtitle,
         cta: viewTexts.cards.core.cta,
         href: "#core-analysis",
-        basis: insightCardMeta[locale].core.basis,
         chips: insightCardMeta[locale].core.chips,
       };
     case "work_money":
@@ -2061,7 +1915,6 @@ function getFreePreviewCardDisplay(
         subtitle: viewTexts.cards.workMoney.subtitle,
         cta: viewTexts.cards.workMoney.cta,
         href: "#work-money-reading",
-        basis: insightCardMeta[locale].workMoney.basis,
         chips: insightCardMeta[locale].workMoney.chips,
       };
     case "love":
@@ -2070,7 +1923,6 @@ function getFreePreviewCardDisplay(
         subtitle: viewTexts.cards.love.subtitle,
         cta: viewTexts.cards.love.cta,
         href: "#love-reading",
-        basis: insightCardMeta[locale].love.basis,
         chips: insightCardMeta[locale].love.chips,
       };
     case "luck_flow":
@@ -2079,7 +1931,6 @@ function getFreePreviewCardDisplay(
         subtitle: viewTexts.cards.luck.subtitle,
         cta: viewTexts.cards.luck.cta,
         href: "#luck-flow-reading",
-        basis: insightCardMeta[locale].luck.basis,
         chips: insightCardMeta[locale].luck.chips,
       };
   }
@@ -2112,7 +1963,6 @@ function buildFreePreviewInsightCards(
       previewParagraphs: safePreviewParagraphs(card.preview_paragraphs, fallbackText),
       userTakeaway: safePreviewText(card.user_takeaway, ""),
       nextQuestion: safePreviewText(card.next_question, ""),
-      basis: safePreviewText(card.basis_line, display.basis),
       cta: display.cta,
       href: display.href,
     });
@@ -2194,7 +2044,6 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
   const [sectionInsightStates, setSectionInsightStates] = useState<
     Partial<Record<SajuDetailType, SectionInsightState>>
   >({});
-  const detailLoaderRef = useRef<HTMLElement | null>(null);
   const interpretation = detailReport ?? (!freePreview ? embeddedInterpretation : null);
 
   useEffect(() => {
@@ -2285,24 +2134,6 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
     setPendingScrollTarget(null);
   }, [detailReport, pendingScrollTarget]);
 
-  useEffect(() => {
-    if (!freePreview || detailReport || detailStatus !== "idle" || !detailLoaderRef.current) {
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          void loadFreeDetail();
-        }
-      },
-      { rootMargin: "260px 0px" },
-    );
-    observer.observe(detailLoaderRef.current);
-
-    return () => observer.disconnect();
-  }, [detailReport, detailStatus, freePreview, loadFreeDetail]);
-
   const handleInsightCtaClick = useCallback(
     (href: string) => {
       if (freePreview && !detailReport) {
@@ -2334,14 +2165,6 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
 
       const existingState = sectionInsightStates[detailType];
       if (existingState?.status === "ready" || existingState?.status === "loading") {
-        return;
-      }
-
-      if (detailType === "compatibility_compare") {
-        setSectionInsightStates((current) => ({
-          ...current,
-          [detailType]: { status: "ready" },
-        }));
         return;
       }
 
@@ -2465,7 +2288,6 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
       subtitle: viewTexts.cards.core.subtitle,
       chips: cardMeta.core.chips,
       preview: extractPreviewFromMarkdown(coreSection.body, 460, viewTexts.previewFallback),
-      basis: cardMeta.core.basis,
       cta: viewTexts.cards.core.cta,
       href: "#core-analysis",
     },
@@ -2474,7 +2296,6 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
       subtitle: viewTexts.cards.workMoney.subtitle,
       chips: cardMeta.workMoney.chips,
       preview: workPreview,
-      basis: cardMeta.workMoney.basis,
       cta: viewTexts.cards.workMoney.cta,
       href: "#work-money-reading",
     },
@@ -2483,7 +2304,6 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
       subtitle: viewTexts.cards.love.subtitle,
       chips: cardMeta.love.chips,
       preview: extractPreviewFromMarkdown(loveSection.body, 460, viewTexts.previewFallback),
-      basis: cardMeta.love.basis,
       cta: viewTexts.cards.love.cta,
       href: "#love-reading",
     },
@@ -2492,7 +2312,6 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
       subtitle: viewTexts.cards.luck.subtitle,
       chips: cardMeta.luck.chips,
       preview: extractPreviewFromMarkdown(luckFlowSection.body, 460, viewTexts.previewFallback),
-      basis: cardMeta.luck.basis,
       cta: viewTexts.cards.luck.cta,
       href: "#luck-flow-reading",
     },
@@ -2537,7 +2356,7 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
   const renderSectionInsights = (
     sectionKey: string,
     heading: string,
-    detailTypes: SajuDetailType[],
+    detailTypes: AvailableSectionInsightType[],
   ) => (
     <SectionInsightChips
       activeDetailType={activeSectionInsights[sectionKey] ?? null}
@@ -2584,16 +2403,18 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
             <div className="reading-article resultHeroOverview">
               {renderRichBody(summaryOverview)}
             </div>
-            <div className="resultHeroBadges" aria-label={viewTexts.heroLabel}>
-              <span>{viewTexts.solarTermBadge}</span>
-              <span>{viewTexts.timeCorrectionBadge}</span>
-              {heroWarningBadges.map((badge) => (
-                <span className="is-warning" key={badge}>
-                  {badge}
-                </span>
-              ))}
-            </div>
+            {heroWarningBadges.length ? (
+              <div className="resultHeroBadges" aria-label={viewTexts.heroLabel}>
+                {heroWarningBadges.map((badge) => (
+                  <span className="is-warning" key={badge}>
+                    {badge}
+                  </span>
+                ))}
+              </div>
+            ) : null}
           </section>
+
+          <PeriodFlowCards locale={locale} flows={result.period_flows} />
 
           {freePreview ? (
             <CoreDiagnosisBlock
@@ -2633,10 +2454,6 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
                     <DetailedPillarTable locale={locale} result={result} />
                   </>
                 }
-                afterContent={renderSectionInsights("core", insightCopy.headings.core, [
-                  "relationship_support",
-                  "health_condition",
-                ])}
               />
 
               <section className="detailGroup" id="work-money-reading">
@@ -2671,8 +2488,6 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
                 index={4}
                 afterContent={renderSectionInsights("love", insightCopy.headings.love, [
                   "love_timing",
-                  "ideal_partner",
-                  "compatibility_compare",
                 ])}
               />
 
@@ -2682,14 +2497,10 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
                 badge={viewTexts.cards.luck.title}
                 index={5}
                 prelude={<LuckTimelineTable locale={locale} result={result} />}
-                afterContent={renderSectionInsights("luck", insightCopy.headings.luck, [
-                  "yearly_caution",
-                  "monthly_flow",
-                ])}
               />
             </>
           ) : (
-            <section className="detailLazyPanel" id="free-detail" ref={detailLoaderRef}>
+            <section className="detailLazyPanel" id="free-detail">
               <span className="result-panel-label">{detailTexts.label}</span>
               <h3>{detailStatus === "loading" ? detailTexts.loadingTitle : detailTexts.title}</h3>
               <p>{detailStatus === "loading" ? detailTexts.loadingBody : detailTexts.body}</p>
@@ -2724,14 +2535,6 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
             </nav>
           </section>
 
-          <section className="result-side-panel">
-            <span className="result-panel-label">{viewTexts.basisLabel}</span>
-            <ul className="result-basis-list">
-              {viewTexts.basisItems.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </section>
         </aside>
       </div>
     </section>

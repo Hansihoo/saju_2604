@@ -12,6 +12,7 @@ from app.domain.saju.time_correction import (
     calculate_daylight_saving_offset_minutes,
     normalize_birth_datetime,
 )
+from app.domain.saju.services.solar_term_boundaries import nearest_skyfield_solar_term_boundary
 
 
 FIXTURE_DIR = Path(__file__).parent / "fixtures" / "reference_cases"
@@ -90,13 +91,13 @@ class ReferenceFixtureSchemaTests(unittest.TestCase):
                     self.assertTrue(case["expected"])
                     self.assertIn("type", case["source"])
 
-    def test_reference_cases_are_split_between_hard_and_pending(self) -> None:
+    def test_reference_cases_have_no_unresolved_pending_rows(self) -> None:
         cases = list(_iter_reference_cases())
         hard_cases = [case for _filename, case in cases if not _is_pending_reference(case)]
         pending_cases = [case for _filename, case in cases if _is_pending_reference(case)]
 
         self.assertGreaterEqual(len(hard_cases), 1)
-        self.assertGreaterEqual(len(pending_cases), 1)
+        self.assertEqual(pending_cases, [])
 
 
 class HardReferenceTests(unittest.TestCase):
@@ -206,7 +207,12 @@ class HardReferenceTests(unittest.TestCase):
 
     def test_hard_reference_tests_compare_solar_term_cases(self) -> None:
         fixture = _load_fixture("solar_term_reference_cases.json")
-        hard_cases = [case for case in fixture["cases"] if not _is_pending_reference(case)]
+        hard_cases = [
+            case
+            for case in fixture["cases"]
+            if not _is_pending_reference(case)
+            and case["source"]["type"] != "skyfield_de440s_ephemeris"
+        ]
         self.assertGreaterEqual(len(hard_cases), 10)
         rows = _load_solar_term_rows()
 
@@ -223,7 +229,7 @@ class HardReferenceTests(unittest.TestCase):
 
 
 class PendingReferenceReportTests(unittest.TestCase):
-    def test_pending_reference_report_lists_collection_backlog(self) -> None:
+    def test_pending_reference_report_has_no_collection_backlog(self) -> None:
         pending_cases: List[Dict[str, str]] = []
         for filename, case in _iter_reference_cases():
             if _is_pending_reference(case):
@@ -236,8 +242,39 @@ class PendingReferenceReportTests(unittest.TestCase):
                     }
                 )
 
-        self.assertGreaterEqual(len(pending_cases), 1)
+        self.assertEqual(pending_cases, [])
         print("PENDING_REFERENCE_REPORT " + json.dumps(pending_cases, ensure_ascii=False, sort_keys=True))
+
+
+class IndependentSolarTermReferenceTests(unittest.TestCase):
+    def test_skyfield_reference_cases_match_the_checked_in_values(self) -> None:
+        fixture = _load_fixture("solar_term_reference_cases.json")
+        cases = [
+            case
+            for case in fixture["cases"]
+            if case["source"]["type"] == "skyfield_de440s_ephemeris"
+        ]
+        self.assertEqual(len(cases), 2)
+
+        for case in cases:
+            with self.subTest(case_id=case["case_id"]):
+                input_data = case["input"]
+                expected = case["expected"]
+                boundary = nearest_skyfield_solar_term_boundary(
+                    input_data["input_datetime"].replace("T", " ").split("+", 1)[0],
+                    timezone_id=input_data["timezone"],
+                )
+
+                self.assertIsNotNone(boundary)
+                assert boundary is not None
+                self.assertEqual(boundary.provider, "skyfield")
+                self.assertEqual(boundary.reference["term_id"], input_data["solar_term"])
+                self.assertEqual(
+                    boundary.datetime_text,
+                    expected["nearest_solar_term_datetime"].replace("T", " ").split("+", 1)[0],
+                )
+                self.assertEqual(boundary.delta_seconds, expected["delta_seconds"])
+                self.assertEqual(boundary.relation, expected["relation"])
 
 
 if __name__ == "__main__":

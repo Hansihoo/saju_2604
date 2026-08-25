@@ -67,6 +67,18 @@ class GenerateFreePreviewTests(unittest.TestCase):
         )
         self.assertEqual(_validate_free_preview_report(report, payload), [])
 
+    def test_fallback_headline_uses_visible_element_signal(self) -> None:
+        fire_payload = make_payload()
+        water_payload = make_payload()
+        water_payload.signals.dominant_elements = ["water"]
+
+        fire_report = build_fallback_free_preview_report(fire_payload)
+        water_report = build_fallback_free_preview_report(water_payload)
+
+        self.assertNotEqual(fire_report.headline, water_report.headline)
+        self.assertNotIn("혼자 많이 계산", fire_report.headline)
+        self.assertNotIn("혼자 많이 계산", water_report.headline)
+
     def test_fallback_cards_are_substantial_and_structured(self) -> None:
         report = build_fallback_free_preview_report(make_payload())
 

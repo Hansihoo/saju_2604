@@ -299,6 +299,40 @@ class GenerateInterpretationTests(unittest.TestCase):
 
         self.assertEqual(_validate_report(report, payload), [])
 
+    def test_fallback_uses_neutral_copy_without_missing_elements_or_active_cycle(self) -> None:
+        payload = make_payload()
+        payload.signals.missing_elements = []
+        payload.wealth_facts.missing_elements = []
+        payload.current_flow.active_luck_cycle = None
+        payload.current_flow.next_luck_cycle = None
+
+        report = build_fallback_interpretation_report(payload)
+        combined = "\n".join(
+            [
+                report.summary.overview,
+                report.core_analysis.body,
+                report.love.body,
+                report.career.body,
+                report.wealth.body,
+                report.luck_flow.body,
+            ]
+        )
+
+        self.assertNotIn("없음 쪽", combined)
+        self.assertNotIn("없음 기운", combined)
+        self.assertNotIn("확인 대기 구간", combined)
+        self.assertIn("첫 대운이 시작되기 전", combined)
+        self.assertEqual(_validate_report(report, payload), [])
+
+    def test_validator_rejects_unknown_evidence_ids(self) -> None:
+        payload = make_payload()
+        report = make_report()
+        report.love.evidence_ids = ["not-real"]
+
+        issues = _validate_report(report, payload)
+
+        self.assertIn("love.evidence_ids:unknown:not-real", issues)
+
     def test_fallback_does_not_attach_particles_directly_to_luck_cycle_labels(self) -> None:
         report = build_fallback_interpretation_report(make_payload())
         combined = "\n".join(

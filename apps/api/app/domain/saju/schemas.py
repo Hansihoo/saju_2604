@@ -322,6 +322,46 @@ class SajuResultSignals(BaseModel):
     internal_grade: Optional[InternalGrade] = None
 
 
+class PeriodFlowEvidence(BaseModel):
+    label: str
+    value: str
+    detail: str
+    source: str
+
+
+class PeriodFlowCycle(BaseModel):
+    index: int
+    gan_zhi: str
+    start_datetime: Optional[str] = None
+    change_datetime: Optional[str] = None
+
+
+class PeriodFlow(BaseModel):
+    kind: Literal["today", "month"]
+    period_start: str
+    period_end: str
+    period_label: str
+    target_gan_zhi: str
+    target_element: str
+    primary_signal: str
+    headline: str
+    summary: str
+    focus: List[str]
+    actions: List[str]
+    evidence: List[PeriodFlowEvidence]
+    basis: str
+    notes: List[str]
+    current_luck_cycle: Optional[PeriodFlowCycle] = None
+
+
+class PeriodFlows(BaseModel):
+    schema_version: Literal["period-flow-v1"] = "period-flow-v1"
+    as_of: str
+    timezone_id: str
+    today: PeriodFlow
+    month: PeriodFlow
+
+
 class SajuPreviewResult(BaseModel):
     overview: str
     strengths: List[str]
@@ -427,6 +467,7 @@ class SajuPreviewResponse(BaseModel):
     regional_solar_correction: RegionalSolarCorrectionSummary
     calendar_normalization: CalendarNormalizationSummary
     manse: ManseData
+    period_flows: PeriodFlows
     result: SajuPreviewResult
     debug_trace: Optional[DebugTrace] = None
 

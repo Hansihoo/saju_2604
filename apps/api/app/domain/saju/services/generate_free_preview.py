@@ -65,6 +65,11 @@ INTERNAL_VALUE_PATTERNS = (
     r"(?:100|90|80|70|60|50)\s*점",
     r"100%",
 )
+PLACEHOLDER_USER_PHRASES = (
+    "없음 쪽",
+    "없음 기운",
+    "확인 대기 구간",
+)
 
 
 def _model_dump_json(model: Any) -> Dict[str, Any]:
@@ -276,9 +281,27 @@ def _support_need_phrase(payload: InterpretationPayload) -> str:
     return _join(values[:2], fallback="회복 루틴과 주변 환경")
 
 
+def _headline_ko(payload: InterpretationPayload) -> str:
+    headlines = {
+        "wood": "가능성을 넓히며 방향을 찾는 사람",
+        "fire": "반응과 표현에서 힘이 살아나는 사람",
+        "earth": "현실을 붙잡고 중심을 세우는 사람",
+        "metal": "기준을 세우고 핵심을 가르는 사람",
+        "water": "상황을 읽고 흐름을 조율하는 사람",
+    }
+    for element in payload.signals.dominant_elements:
+        if element in headlines:
+            return headlines[element]
+    return "나에게 맞는 방식을 찾아가는 사람"
+
+
 def _diagnoses_ko(payload: InterpretationPayload) -> List[FreePreviewDiagnosis]:
     strength = _dominant_strength_phrase(payload)
     support_need = _support_need_phrase(payload)
+    now_actions = _join(
+        payload.luck_flow_facts.now_action_tags[:3],
+        fallback="생활 리듬과 주변 환경을 정리하기",
+    )
     return [
         FreePreviewDiagnosis(
             key="strongest_point",
@@ -300,8 +323,8 @@ def _diagnoses_ko(payload: InterpretationPayload) -> List[FreePreviewDiagnosis]:
             key="current_task",
             title="지금 시기 과제",
             body=(
-                "지금은 새 일을 크게 벌리기보다 나를 계속 소모시키는 선택을 줄이는 일이 중요합니다. "
-                "생활 리듬과 돈 쓰는 습관, 사람을 대하는 거리를 조금씩 가볍게 만들면 다음 변화 앞에서 덜 흔들릴 수 있습니다."
+                f"지금은 {now_actions}처럼 현재 흐름에서 제시된 행동을 작게 반복하는 일이 중요합니다. "
+                "한 번에 크게 바꾸기보다 생활 리듬, 돈 쓰는 습관, 사람을 대하는 거리를 조금씩 정리하면 다음 선택 앞에서 덜 흔들릴 수 있습니다."
             ),
         ),
     ]
@@ -339,6 +362,8 @@ def _diagnoses_en(payload: InterpretationPayload) -> List[FreePreviewDiagnosis]:
 
 def _cards_ko(payload: InterpretationPayload) -> List[FreePreviewCard]:
     now_actions = _join(payload.luck_flow_facts.now_action_tags[:4], fallback="관계 거리 조절, 지출 점검, 생활 루틴")
+    strength = _dominant_strength_phrase(payload)
+    support_need = _support_need_phrase(payload)
     limitation = (
         "출생시간이 추정값이라 시간에 따라 달라지는 세부 판단은 조금 보수적으로 보는 편이 좋습니다. "
         if payload.profile.is_birth_time_estimated
@@ -347,26 +372,26 @@ def _cards_ko(payload: InterpretationPayload) -> List[FreePreviewCard]:
     return [
         FreePreviewCard(
             key="core",
-            title="괜찮다고 말해도 마음속 계산이 많은 타입",
-            subtitle="혼자 판단하고 혼자 지치는 패턴",
-            chips=["속마음 계산", "책임 범위", "피로 지점", "생활 리듬"],
+            title="강점이 잘 살아나는 조건은?",
+            subtitle="역할과 회복 리듬을 함께 보는 법",
+            chips=["강점의 방향", "책임 범위", "피로 신호", "생활 리듬"],
             preview_paragraphs=[
-                "겉으로는 꽤 담담해 보여도 안에서는 상황을 계속 계산하는 편입니다. 해야 할 일과 아닌 일을 스스로 나누려 하기 때문에, 다른 사람이 흘려보낸 작은 변화도 내 안에서는 이미 할 일의 목록으로 바뀌기 쉽습니다.",
-                "맞는 환경에서는 처리 속도가 빨라지고 책임감도 선명해집니다. 이때는 기대받는 만큼 더 잘하려는 마음이 커져서, 쉬는 순간에도 머리가 쉽게 꺼지지 않고 쉬어도 쉰 것 같지 않은 날이 생깁니다.",
-                f"문제는 지치는 순간에도 티를 늦게 낸다는 점입니다. {limitation}특히 부탁을 거절하지 못한 일이 쌓이면, 어느 날 갑자기 거리 두기나 침묵으로 반응할 수 있고 그 침묵은 무심함보다 과부하에 가깝습니다.",
-                "지금 살펴볼 포인트는 내가 편해지는 자리와 금방 소모되는 자리를 구분하는 것입니다. 내가 잘하는 방식과 계속 버티게 되는 방식을 구분하면, 같은 노력도 훨씬 덜 무겁고 오래 가는 힘은 부담을 나누는 방식에서 나오며, 이 감각이 잡히면 관계와 일에서 스스로를 덜 몰아붙이게 됩니다.",
+                f"이 결과에서 먼저 보는 강점은 {strength}입니다. 실제 생활에서는 해야 할 일과 미뤄도 되는 일을 가르는 방식, 책임을 정리하는 방식, 익숙한 문제를 다루는 방식에서 이 강점이 드러날 수 있습니다.",
+                "강점은 역할과 우선순위가 분명할 때 더 안정적으로 쓰입니다. 반대로 해야 할 일의 범위가 계속 바뀌거나 한 사람이 모든 결정을 떠안으면, 잘해내는 힘이 피로로 바뀌는지 함께 살피는 편이 좋습니다.",
+                f"보완 포인트는 {support_need}입니다. {limitation}무리한 요청이 쌓일 때는 참는 양을 늘리기보다, 맡을 범위와 쉬는 시간을 먼저 조정하는 편이 현실적입니다.",
+                "지금 살펴볼 포인트는 내가 편해지는 자리와 금방 소모되는 자리를 구분하는 것입니다. 잘하는 방식과 계속 버티게 되는 방식을 나누면 같은 노력도 덜 무겁게 이어지고, 관계와 일에서 스스로를 과하게 몰아붙이는 선택도 줄일 수 있습니다. 필요한 도움을 먼저 요청하는 여유도 함께 생깁니다.",
             ],
-            user_takeaway="지금 필요한 건 더 많이 버티는 힘이 아니라, 어디까지 맡을지 알아차리는 감각입니다.",
-            next_question="왜 어떤 자리에서는 잘해내는데, 어떤 자리에서는 금방 지칠까요?",
-            basis_line="성향 구조, 오행 균형, 현재 시기 신호를 함께 봤습니다.",
+            user_takeaway="지금 필요한 건 더 많이 버티는 힘이 아니라, 어떤 조건에서 강점이 안정적으로 쓰이는지 알아차리는 감각입니다.",
+            next_question="어떤 조건에서 내 강점이 가장 편하게 이어질까요?",
+            basis_line="보이는 오행 분포와 십성 신호, 현재 시기 자료를 함께 봤습니다.",
         ),
         FreePreviewCard(
             key="work_money",
-            title="일은 잘하는데 왜 피로가 먼저 쌓일까?",
-            subtitle="성과보다 먼저 봐야 할 새는 지점",
+            title="일과 돈은 어디에서 연결될까?",
+            subtitle="역할과 보상 구조를 함께 보는 이유",
             chips=["역할 피로", "돈의 체감", "새는 지점", "남는 결과"],
             preview_paragraphs=[
-                "일에서는 능력이 없는 쪽이 아니라, 애매한 역할을 오래 맡을 때 피로가 커지는 쪽에 가깝습니다. 무엇을 해내야 하는지가 분명하면 속도와 책임감이 함께 살아나지만, 누가 결정하고 어디까지 맡는지가 흐리면 에너지가 빠르게 빠집니다.",
+                "일의 흐름은 능력의 우열보다 역할을 어떻게 맡고 결과를 어떻게 남기는지에서 더 분명해집니다. 무엇을 해내야 하는지가 분명하면 속도와 책임감이 함께 살아나지만, 누가 결정하고 어디까지 맡는지가 흐리면 에너지 소모가 커질 수 있습니다.",
                 "돈도 단순히 많이 들어오는지보다 어디서 새는지가 먼저 보입니다. 감정적으로 쓰는 돈, 관계를 유지하려고 쓰는 돈, 급해서 고른 선택이 체감 수입을 늦출 수 있으니 버는 능력만큼 빠져나가는 이유를 알아차리는 감각이 중요합니다.",
                 "잘 맞는 일은 결과물이 남고 다시 신뢰로 돌아오는 일입니다. 나의 시간이 쌓일수록 평판이나 기술로 남는 일인지 보는 것이 핵심이고, 이런 일은 당장 화려하지 않아도 시간이 지나며 몸값을 만들 수 있습니다.",
                 "지금 살펴볼 것은 더 많이 하는 일이 아니라, 어떤 일이 돈과 안정감으로 이어지는가입니다. 수입 자체보다 일의 형태와 돈의 체감이 어긋나는 지점을 보면 방향이 더 분명해지고, 일의 이름보다 남는 결과를 볼 때 선택이 덜 흔들립니다.",
@@ -377,14 +402,14 @@ def _cards_ko(payload: InterpretationPayload) -> List[FreePreviewCard]:
         ),
         FreePreviewCard(
             key="love",
-            title="좋아해도 쉽게 기대지 못하는 이유",
-            subtitle="설렘보다 반복되는 태도를 보는 관계",
+            title="관계에서 편안함이 중요한 이유",
+            subtitle="설렘과 반복되는 태도를 함께 보는 관계",
             chips=["느린 신뢰", "약속의 무게", "표현 속도", "편한 거리"],
             preview_paragraphs=[
-                "관계에서는 마음이 없는 게 아니라, 쉽게 기대기 전까지 오래 관찰하는 편입니다. 말보다 반복되는 태도와 약속을 지키는 방식을 보고 마음을 여는 쪽이라, 시간이 지나도 태도가 크게 달라지지 않는 사람에게 안심하기 쉽습니다.",
+                "관계 흐름에서는 마음의 속도만큼 반복되는 태도와 약속을 지키는 방식을 함께 보는 것이 중요합니다. 시간이 지나도 태도가 크게 달라지지 않는지, 일상에서 서로의 리듬을 존중하는지가 관계의 편안함과 연결될 수 있습니다.",
                 "처음의 설렘이 커도 생활 리듬이 맞지 않으면 금방 피곤해질 수 있습니다. 관계가 안정되려면 좋아하는 감정만큼 서로의 하루를 방해하지 않는 방식도 중요하고, 작은 약속이 지켜질 때 마음이 천천히 깊어집니다.",
                 "주의할 점은 혼자 괜찮은 척하다가 서운함을 늦게 꺼내는 패턴입니다. 작게 말하지 못한 감정은 나중에 한꺼번에 무겁게 터질 수 있고, 그때는 상대가 아니라 나도 내 감정을 늦게 알아차린 것일 수 있습니다.",
-                "지금 보면 좋은 것은 누가 더 끌리는가보다 누구와 있을 때 내 생활이 무너지지 않는가입니다. 나를 불안하게 만드는 설렘과 편안하게 만드는 애정을 구분하면 관계 선택이 훨씬 선명해지고, 감정이 편안하게 머무는 자리가 오래 남습니다.",
+                "지금 보면 좋은 것은 누가 더 끌리는가보다 누구와 있을 때 내 생활이 무너지지 않는가입니다. 나를 불안하게 만드는 설렘과 편안하게 만드는 애정을 구분하면 관계 선택이 훨씬 선명해지고, 감정이 편안하게 머무는 자리가 오래 남습니다. 작은 불편을 말로 나눌 수 있는지도 함께 확인해 보세요.",
             ],
             user_takeaway="마음이 깊어지는 속도보다, 함께 있을 때 내가 덜 무너지는지가 더 오래 남습니다.",
             next_question="왜 어떤 관계에서는 편한데, 어떤 관계에서는 금방 지칠까요?",
@@ -392,14 +417,14 @@ def _cards_ko(payload: InterpretationPayload) -> List[FreePreviewCard]:
         ),
         FreePreviewCard(
             key="luck_flow",
-            title="지금은 넓히는 때보다 덜어내는 때입니다",
+            title="현재 흐름에서 먼저 정리할 것",
             subtitle="지금 시기와 다음 변화",
             chips=["덜어낼 것", "생활 패턴", "다음 변화", "감정 소모"],
             preview_paragraphs=[
-                "지금은 많은 것을 새로 벌이기보다, 나를 계속 피곤하게 만드는 선택을 줄여야 하는 때에 가깝습니다. 새로운 일을 전부 막으라는 뜻이 아니라, 이미 무거운 것 위에 또 얹지 않는 선택이 필요하고 지금의 피로를 모른 척하면 다음 선택도 비슷한 무게로 시작될 수 있습니다.",
+                "현재 흐름은 많은 일을 한꺼번에 판단하기보다, 지금 부담이 되는 선택을 구분하는 데 활용하는 편이 좋습니다. 새로운 일을 전부 막으라는 뜻이 아니라, 이미 무거운 것 위에 또 얹지 않도록 우선순위를 정하는 일이 필요합니다.",
                 f"생활에서는 작은 약속을 지키는 힘이 중요합니다. {now_actions} 같은 행동이 쌓이면 다음 변화 앞에서 덜 흔들릴 수 있고, 하루를 망가뜨리는 습관 하나만 줄여도 마음의 여유가 돌아올 수 있습니다.",
                 "주의할 점은 불안해서 더 많이 붙잡는 패턴입니다. 특히 책임감 때문에 놓지 못한 일은 실제보다 더 크게 느껴질 수 있고, 내려놓는 일이 실패처럼 보여도 실제로는 에너지를 되찾는 과정일 수 있습니다.",
-                "지금 볼 것은 운이 좋고 나쁨이 아니라 무엇을 남기고 무엇을 내려놓을지입니다. 가벼워진 자리에서 새 선택이 들어올 공간도 생기고, 작아 보이는 선택이 앞으로의 속도를 바꿉니다.",
+                "지금 볼 것은 운이 좋고 나쁨이 아니라 무엇을 남기고 무엇을 내려놓을지입니다. 가벼워진 자리에서 새 선택이 들어올 공간도 생기고, 작아 보이는 선택이 앞으로의 속도를 바꿉니다. 매주 한 번만이라도 부담이 커진 일을 돌아보면 조정할 지점이 더 잘 보입니다.",
             ],
             user_takeaway="다음 변화를 잘 쓰려면, 더 얹는 일보다 먼저 내려놓을 일을 알아차려야 합니다.",
             next_question="다음 변화 전에 먼저 덜어내야 할 생활 패턴은 무엇일까요?",
@@ -485,16 +510,22 @@ def _cards_en(payload: InterpretationPayload) -> List[FreePreviewCard]:
 
 def build_fallback_free_preview_report(payload: InterpretationPayload) -> FreePreviewReport:
     if _is_ko(payload):
-        headline = "괜찮다고 말하지만 혼자 많이 계산하는 사람"
+        headline = _headline_ko(payload)
+        strength = _dominant_strength_phrase(payload)
+        support_need = _support_need_phrase(payload)
+        now_actions = _join(
+            payload.luck_flow_facts.now_action_tags[:3],
+            fallback="생활 리듬, 지출, 관계의 경계",
+        )
         hero_overview = [
-            "겉으로는 괜찮아 보여도 속으로는 이미 여러 경우의 수를 계산하고 있을 가능성이 큽니다.",
-            "사람이나 일을 쉽게 믿기보다, 반복되는 태도와 결과를 보고 마음을 여는 편입니다.",
-            "강점은 급한 상황에서도 해야 할 일과 미뤄도 되는 일을 빨리 가르는 감각입니다.",
-            "다만 역할이 애매하거나 책임이 계속 얹히면 말없이 버티다가 갑자기 지칠 수 있습니다.",
-            "지금은 더 많이 벌이기보다 나를 계속 소모시키는 선택을 줄이는 쪽이 중요합니다.",
-            "관계에서는 설렘보다 약속을 지키는 태도와 생활 리듬이 오래 남습니다.",
-            "일과 돈에서는 열심히 하는 양보다 어떤 일이 실제 보상으로 이어지는지가 핵심입니다.",
-            "지금은 내가 편해지는 선택과 반복해서 피곤해지는 선택을 구분해서 보는 것이 좋습니다.",
+            f"이 결과에서 먼저 보는 강점은 {strength}입니다.",
+            f"반복해서 살필 부분은 {support_need}이며, 생활 속에서 어떻게 보완하는지가 중요합니다.",
+            "강점은 역할과 우선순위가 분명할 때 더 안정적으로 쓰일 수 있습니다.",
+            "환경과 책임 범위가 계속 바뀌면, 같은 강점도 피로로 이어지는지 함께 살피는 편이 좋습니다.",
+            f"현재는 {now_actions}처럼 실제로 반복할 수 있는 행동을 작게 정리하는 데 의미가 있습니다.",
+            "관계에서는 설렘의 크기만큼 대화, 약속, 생활 리듬이 이어지는지도 함께 보는 편이 좋습니다.",
+            "일과 돈에서는 노력의 양보다 어떤 결과가 보상과 안정감으로 이어지는지 확인하는 일이 중요합니다.",
+            "이 결과는 정해진 사건을 말하기보다, 편해지는 선택과 소모가 커지는 선택을 구분하는 참고 자료입니다.",
         ]
         diagnoses = _diagnoses_ko(payload)
         cards = _cards_ko(payload)
@@ -987,6 +1018,9 @@ def _validate_free_preview_report(report: FreePreviewReport, payload: Interpreta
     for text in _collect_user_texts(report):
         if _contains_internal_value(text):
             issues.append("internal_value_exposed_in_user_text")
+        for phrase in PLACEHOLDER_USER_PHRASES:
+            if phrase in text:
+                issues.append(f"placeholder_phrase:{phrase}")
         for phrase in PROMPT_SPEC.validation_banned_phrases:
             if phrase in text:
                 issues.append(f"banned_phrase:{phrase}")

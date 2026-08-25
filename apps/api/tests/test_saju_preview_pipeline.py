@@ -58,7 +58,17 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         self.assertEqual(response.pipeline_status.regional_solar_correction, "passed")
         self.assertEqual(response.result.evidence_sections["elements"].status, "ready")
         self.assertEqual(response.result.evidence_sections["ten_gods"].status, "ready")
+        self.assertEqual(response.result.evidence_sections["elements"].title, "오행 분포")
+        self.assertEqual(response.result.evidence_sections["ten_gods"].title, "십성 신호")
+        self.assertNotIn("Five Elements", response.result.evidence_sections["elements"].summary)
+        self.assertNotIn("Ten Gods", response.result.evidence_sections["ten_gods"].summary)
+        self.assertNotIn("日主", response.result.evidence_sections["ten_gods"].summary)
+        self.assertNotRegex(response.result.evidence_sections["ten_gods"].summary, r"[\u3400-\u9fff]")
         self.assertEqual(response.result.signals.visible_pillar_keys, ["year", "month", "day", "time"])
+        self.assertEqual(response.period_flows.schema_version, "period-flow-v1")
+        self.assertEqual(response.period_flows.timezone_id, "Asia/Seoul")
+        self.assertTrue(response.period_flows.today.actions)
+        self.assertTrue(response.period_flows.month.evidence)
         self.assertIsNone(response.result.signals.internal_grade)
         self.assertEqual(response.debug_trace.checkpoints[4].stage, "regional_solar_correction")
         self.assertEqual(response.debug_trace.checkpoints[4].status, "passed")
@@ -315,7 +325,8 @@ class SajuPreviewPipelineTests(unittest.TestCase):
             response.manse.luck_cycles[0].change_datetime or "",
             r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$",
         )
-        self.assertIn("\u7678\u5df3", response.result.evidence_sections["luck_cycles"].summary)
+        self.assertIn("계사", response.result.evidence_sections["luck_cycles"].summary)
+        self.assertNotIn("\u7678\u5df3", response.result.evidence_sections["luck_cycles"].summary)
 
     def test_preview_response_survives_free_preview_generation_failure(self) -> None:
         request = SimpleNamespace(
@@ -547,15 +558,20 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         self.assertFalse(prepared.cached)
         self.assertTrue(prepared_again.cached)
         self.assertEqual(prepared.input_hash, prepared_again.input_hash)
-        self.assertIn("love_timing", prepared.available_detail_types)
+        self.assertEqual(
+            prepared.available_detail_types,
+            ["love_timing", "wealth_timing", "career_timing"],
+        )
         self.assertEqual(prepared.bundle.schema_version, "saju-detail-v1")
         self.assertIn("love_timing", prepared.bundle.detail_analysis_bundle)
+        self.assertFalse(prepared.bundle.detail_analysis_bundle["monthly_flow"]["available"])
+        self.assertFalse(prepared.bundle.detail_analysis_bundle["ideal_partner"]["available"])
         self.assertEqual(rendered.response_mode, "detail_render")
         self.assertEqual(rendered.detail_type, "love_timing")
         self.assertFalse(rendered.cached)
         self.assertTrue(rendered_again.cached)
         self.assertEqual(rendered.provider, rendered_again.provider)
-        self.assertEqual(rendered.report.schema_version, "saju-detail-render-v1")
+        self.assertEqual(rendered.report.schema_version, "saju-detail-render-v2")
         combined = json.dumps(model_to_dict(rendered.report), ensure_ascii=False)
         for forbidden in ("무료", "유료", "프리미엄", "결제", "score", "internal_grade", "evidence_id"):
             self.assertNotIn(forbidden, combined)

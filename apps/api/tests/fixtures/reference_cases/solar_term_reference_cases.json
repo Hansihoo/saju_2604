@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "category": "solar_term_reference_cases",
-  "description": "Reference collection list for solar-term boundary cases. Pending cases should be filled from KASI or an independent ephemeris table before becoming hard references.",
+  "description": "Reference collection list for solar-term boundary cases. Cases are verified against KASI rows or an independent Skyfield ephemeris calculation.",
   "cases": [
     {
       "case_id": "kasi_2018_ipchun_boundary",
@@ -272,54 +272,54 @@
       "description": "Independent ephemeris sample just before the 2024 Ipchun boundary.",
       "input": {
         "date": "2024-02-04",
-        "relative_to_solar_term": "minus_30_minutes",
+        "solar_term": "ipchun",
+        "input_datetime": "2024-02-04T16:57:08+09:00",
         "timezone": "Asia/Seoul"
       },
       "expected": {
-        "status": "pending_reference",
-        "needed_fields": [
-          "input_datetime",
-          "nearest_solar_term_datetime",
-          "delta_seconds"
-        ]
+        "input_datetime": "2024-02-04T16:57:08+09:00",
+        "nearest_solar_term_datetime": "2024-02-04T17:27:08+09:00",
+        "delta_seconds": 1800,
+        "relation": "before",
+        "source_precision_seconds": 1
       },
       "source": {
-        "type": "external_pending",
-        "name": "Skyfield/Astropy/JPL independent ephemeris table",
-        "url": null,
-        "retrieved_at": null
+        "type": "skyfield_de440s_ephemeris",
+        "name": "Skyfield almanac_east_asia.solar_terms with DE440s",
+        "url": "https://rhodesmill.org/skyfield/",
+        "retrieved_at": "2026-08-25"
       },
       "tolerance": {
         "seconds": 60
       },
-      "notes": "Use this to verify the near_solar_term critical threshold independently of lunar_python."
+      "notes": "Calculated locally with the checksum-verified DE440s ephemeris; the input is exactly 30 minutes before the Skyfield Ipchun boundary."
     },
     {
       "case_id": "independent_ephemeris_2024_gyeongchip_plus_30m",
       "description": "Independent ephemeris sample just after the 2024 Gyeongchip boundary.",
       "input": {
         "date": "2024-03-05",
-        "relative_to_solar_term": "plus_30_minutes",
+        "solar_term": "gyeongchip",
+        "input_datetime": "2024-03-05T11:52:46+09:00",
         "timezone": "Asia/Seoul"
       },
       "expected": {
-        "status": "pending_reference",
-        "needed_fields": [
-          "input_datetime",
-          "nearest_solar_term_datetime",
-          "delta_seconds"
-        ]
+        "input_datetime": "2024-03-05T11:52:46+09:00",
+        "nearest_solar_term_datetime": "2024-03-05T11:22:46+09:00",
+        "delta_seconds": 1800,
+        "relation": "after",
+        "source_precision_seconds": 1
       },
       "source": {
-        "type": "external_pending",
-        "name": "Skyfield/Astropy/JPL independent ephemeris table",
-        "url": null,
-        "retrieved_at": null
+        "type": "skyfield_de440s_ephemeris",
+        "name": "Skyfield almanac_east_asia.solar_terms with DE440s",
+        "url": "https://rhodesmill.org/skyfield/",
+        "retrieved_at": "2026-08-25"
       },
       "tolerance": {
         "seconds": 60
       },
-      "notes": "Use this to verify the near_solar_term critical threshold independently of lunar_python."
+      "notes": "Calculated locally with the checksum-verified DE440s ephemeris; the input is exactly 30 minutes after the Skyfield Gyeongchip boundary."
     }
   ]
 }

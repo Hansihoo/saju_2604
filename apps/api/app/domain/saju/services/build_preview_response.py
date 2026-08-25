@@ -31,6 +31,7 @@ from app.domain.saju.services.accuracy_mode import CalculationBasis
 from app.domain.saju.services.birth_time_policy import resolve_birth_time_policy
 from app.domain.saju.services.build_interpretation_payload import build_interpretation_payload
 from app.domain.saju.services.build_manse import build_manse_data
+from app.domain.saju.services.build_period_flows import build_period_flows
 from app.domain.saju.services.detect_uncertainty import UncertaintyFlag
 from app.domain.saju.services.generate_free_preview import (
     build_fallback_free_preview_report,
@@ -38,6 +39,7 @@ from app.domain.saju.services.generate_free_preview import (
 )
 from app.domain.saju.services.generate_interpretation import generate_interpretation_report
 from app.domain.saju.services.generate_candidate_charts import CandidateChart
+from app.domain.saju.localization import localize_ganzhi, localize_ten_god
 from app.domain.saju.time_correction import (
     BirthTimeContext,
     RegionalSolarCorrectionResult,
@@ -205,55 +207,114 @@ def build_preview_response(
         preview_wealth = "Wealth reading considers wealth/output signals and practical habits together."
         preview_action_advice = "Use the strong side for results and support weaker elements through routine and environment."
 
-    evidence_sections = {
-        "elements": EvidenceSection(
-            title="Five Elements",
-            status="ready",
-            summary=(
-                "Element balance from the engine: "
-                f"wood {analysis_result.visible_element_counts['wood']}, "
-                f"fire {analysis_result.visible_element_counts['fire']}, "
-                f"earth {analysis_result.visible_element_counts['earth']}, "
-                f"metal {analysis_result.visible_element_counts['metal']}, "
-                f"water {analysis_result.visible_element_counts['water']}."
-                + (
-                    " Hour-pillar contribution is hidden because the birth time is estimated."
-                    if payload.is_birth_time_estimated
-                    else ""
-                )
-            ),
-        ),
-        "ten_gods": EvidenceSection(
-            title="Ten Gods",
-            status="ready",
-            summary=(
-                "Stem-level Ten Gods from the engine: "
-                f"year {saju_calculation.ten_god_stems['year']}, "
-                f"month {saju_calculation.ten_god_stems['month']}, "
-                f"day {saju_calculation.ten_god_stems['day']}"
-                + (
-                    ". Time-pillar Ten Gods are hidden because the birth time is estimated."
-                    if payload.is_birth_time_estimated
-                    else f", time {saju_calculation.ten_god_stems['time']}."
-                )
-            ),
-        ),
-        "luck_cycles": EvidenceSection(
-            title="Luck Cycles",
-            status="disabled" if not hour_pillar_enabled else "ready",
-            summary=(
-                "Luck-cycle details are hidden because the birth time is estimated."
-                if not hour_pillar_enabled
-                else (
-                    "First active decade cycle: "
-                    f"{first_luck_cycle.gan_zhi} "
-                    f"({first_luck_cycle.start_year}-{first_luck_cycle.end_year})."
-                    if first_luck_cycle is not None
-                    else "Luck-cycle data is available but shorter than expected."
-                )
-            ),
-        ),
+    element_labels = (
+        {"wood": "목", "fire": "화", "earth": "토", "metal": "금", "water": "수"}
+        if payload.locale == "ko"
+        else {"wood": "wood", "fire": "fire", "earth": "earth", "metal": "metal", "water": "water"}
+    )
+    element_summary = ", ".join(
+        f"{element_labels[key]} {analysis_result.visible_element_counts[key]}"
+        for key in ("wood", "fire", "earth", "metal", "water")
+    )
+    localized_ten_gods = {
+        key: localize_ten_god(value, payload.locale)
+        for key, value in saju_calculation.ten_god_stems.items()
     }
+    first_luck_cycle_label = (
+        localize_ganzhi(first_luck_cycle.gan_zhi, payload.locale)
+        if first_luck_cycle is not None
+        else ""
+    )
+
+    if payload.locale == "ko":
+        evidence_sections = {
+            "elements": EvidenceSection(
+                title="오행 분포",
+                status="ready",
+                summary=(
+                    f"보이는 사주 기둥 기준 오행 출현 수: {element_summary}."
+                    + (
+                        " 출생시간을 몰라 시주 오행은 포함하지 않았습니다."
+                        if payload.is_birth_time_estimated
+                        else ""
+                    )
+                ),
+            ),
+            "ten_gods": EvidenceSection(
+                title="십성 신호",
+                status="ready",
+                summary=(
+                    "천간에 드러난 십성 신호: "
+                    f"연주 {localized_ten_gods['year']}, "
+                    f"월주 {localized_ten_gods['month']}, "
+                    f"일주 {localized_ten_gods['day']}"
+                    + (
+                        ". 출생시간을 몰라 시주 십성은 제외했습니다."
+                        if payload.is_birth_time_estimated
+                        else f", 시주 {localized_ten_gods['time']}."
+                    )
+                ),
+            ),
+            "luck_cycles": EvidenceSection(
+                title="대운 흐름",
+                status="disabled" if not hour_pillar_enabled else "ready",
+                summary=(
+                    "출생시간을 몰라 시간에 민감한 대운 흐름은 표시하지 않습니다."
+                    if not hour_pillar_enabled
+                    else (
+                        "첫 대운 시작 구간: "
+                        f"{first_luck_cycle_label} 대운 ({first_luck_cycle.start_year}~{first_luck_cycle.end_year})."
+                        if first_luck_cycle is not None
+                        else "대운 자료가 충분하지 않아 큰 흐름만 참고합니다."
+                    )
+                ),
+            ),
+        }
+    else:
+        evidence_sections = {
+            "elements": EvidenceSection(
+                title="Five Elements",
+                status="ready",
+                summary=(
+                    "Element balance from the calculation: "
+                    f"{element_summary}."
+                    + (
+                        " Hour-pillar contribution is hidden because the birth time is estimated."
+                        if payload.is_birth_time_estimated
+                        else ""
+                    )
+                ),
+            ),
+            "ten_gods": EvidenceSection(
+                title="Ten Gods",
+                status="ready",
+                summary=(
+                    "Stem-level signals: "
+                    f"year {localized_ten_gods['year']}, "
+                    f"month {localized_ten_gods['month']}, "
+                    f"day {localized_ten_gods['day']}"
+                    + (
+                        ". Time-pillar signals are hidden because the birth time is estimated."
+                        if payload.is_birth_time_estimated
+                        else f", time {localized_ten_gods['time']}."
+                    )
+                ),
+            ),
+            "luck_cycles": EvidenceSection(
+                title="Luck Cycles",
+                status="disabled" if not hour_pillar_enabled else "ready",
+                summary=(
+                    "Luck-cycle details are hidden because the birth time is estimated."
+                    if not hour_pillar_enabled
+                    else (
+                        "First cycle: "
+                        f"{first_luck_cycle_label} ({first_luck_cycle.start_year}-{first_luck_cycle.end_year})."
+                        if first_luck_cycle is not None
+                        else "Luck-cycle data is available but shorter than expected."
+                    )
+                ),
+            ),
+        }
 
     preview_result = SajuPreviewResult(
         overview=preview_overview,
@@ -280,6 +341,11 @@ def build_preview_response(
         uncertainty_summary=uncertainty_summary,
         hour_pillar_enabled=hour_pillar_enabled,
         signals=signals,
+    )
+    period_flows = build_period_flows(
+        payload=payload,
+        region=region,
+        saju_calculation=saju_calculation,
     )
 
     base_response = SajuPreviewResponse(
@@ -333,6 +399,7 @@ def build_preview_response(
             placeholder_reason=placeholder_reason,
         ),
         manse=manse,
+        period_flows=period_flows,
         result=preview_result,
         debug_trace=None,
     )

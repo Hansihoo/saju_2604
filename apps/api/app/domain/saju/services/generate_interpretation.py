@@ -151,6 +151,11 @@ INTERNAL_VALUE_PATTERNS = (
     r"\b(?:100|90|80|70|60|50)\s*점\b",
     r"(?:100|90|80|70|60|50)\s*점",
 )
+PLACEHOLDER_USER_PHRASES = (
+    "없음 쪽",
+    "없음 기운",
+    "확인 대기 구간",
+)
 
 
 def _locale(payload: InterpretationPayload) -> str:
@@ -162,6 +167,12 @@ def _local_elements(payload: InterpretationPayload, values: Sequence[str]) -> st
         return "없음" if _locale(payload) == "ko" else "none"
     labels = ELEMENT_LABELS[_locale(payload)]
     return ", ".join(labels.get(value, value) for value in values)
+
+
+def _missing_element_label(payload: InterpretationPayload, values: Sequence[str]) -> str:
+    if values:
+        return _local_elements(payload, values)
+    return "뚜렷한 공백 없음" if _locale(payload) == "ko" else "no clear gap"
 
 
 def _metric_text(payload: InterpretationPayload, metrics: Sequence[Any]) -> str:
@@ -181,14 +192,23 @@ def _star_text(payload: InterpretationPayload, labels: Sequence[str]) -> str:
 
 def _cycle_label(payload: InterpretationPayload, cycle: InterpretationLuckCycle | None) -> str:
     if cycle is None:
-        return "확인 대기" if _locale(payload) == "ko" else "Not available"
+        return "대운 정보 없음" if _locale(payload) == "ko" else "Luck-cycle information unavailable"
+    return cycle.display_gan_zhi
+
+
+def _cycle_period_context(
+    payload: InterpretationPayload,
+    cycle: InterpretationLuckCycle | None,
+    *,
+    position: str,
+) -> str:
+    if cycle is not None:
+        if _locale(payload) == "ko":
+            return f"{cycle.display_gan_zhi} 대운 구간"
+        return f"the {cycle.display_gan_zhi} luck-cycle period"
     if _locale(payload) == "ko":
-        if cycle.start_age_years is not None and cycle.start_age_months is not None:
-            return f"{cycle.start_age_years}세 {cycle.start_age_months}개월부터 {cycle.display_gan_zhi}"
-        return f"{cycle.start_age}세부터 {cycle.end_age}세까지 {cycle.display_gan_zhi}"
-    if cycle.start_age_years is not None and cycle.start_age_months is not None:
-        return f"age {cycle.start_age_years}y {cycle.start_age_months}m with {cycle.display_gan_zhi}"
-    return f"{cycle.start_age}-{cycle.end_age} with {cycle.display_gan_zhi}"
+        return "첫 대운이 시작되기 전의 현재 구간" if position == "current" else "다음 대운이 확인되지 않은 구간"
+    return "the period before the first luck cycle" if position == "current" else "a period without a confirmed next luck cycle"
 
 
 def _summary_headline(payload: InterpretationPayload) -> str:
@@ -199,27 +219,52 @@ def _summary_headline(payload: InterpretationPayload) -> str:
 
 def _summary_overview(payload: InterpretationPayload) -> str:
     dominant = _local_elements(payload, payload.signals.dominant_elements)
-    missing = _local_elements(payload, payload.signals.missing_elements)
-    active_cycle = _cycle_label(payload, payload.current_flow.active_luck_cycle)
+    missing_values = payload.signals.missing_elements
+    missing = _missing_element_label(payload, missing_values)
+    active_period = _cycle_period_context(
+        payload,
+        payload.current_flow.active_luck_cycle,
+        position="current",
+    )
     if _locale(payload) == "ko":
+        repeating_pattern = (
+            f"반복 패턴은 잘 맞는 환경에서는 몰입이 살아나지만, {missing} 쪽 보완이 늦어지면 판단이 한쪽으로 기울 수 있다는 점입니다. "
+            if missing_values
+            else "반복 패턴은 잘 맞는 환경에서는 몰입이 살아나지만, 환경과 생활 리듬이 흐려지면 판단이 한쪽으로 기울 수 있다는 점입니다. "
+        )
+        closing = (
+            "이 사주는 강한 부분을 성과에 쓰고 약한 부분은 루틴과 환경으로 보완할 때 가장 안정적으로 쓰입니다."
+            if missing_values
+            else "이 사주는 강한 부분을 성과에 쓰고, 회복 루틴과 주변 환경을 함께 정리할 때 가장 안정적으로 쓰입니다."
+        )
         text = (
             "이 사주는 기준을 세우고 오래 밀고 갈 때 힘이 살아나는 사람으로 읽습니다. "
             f"강점은 {dominant} 쪽처럼 빠르게 반응하고 자기 방식으로 정리하는 힘입니다. "
-            f"반복 패턴은 잘 맞는 환경에서는 몰입이 살아나지만, {missing} 쪽 보완이 늦어지면 판단이 한쪽으로 기울 수 있다는 점입니다. "
-            f"현재 시기는 {active_cycle} 구간을 기준으로 보며, 크게 벌리기보다 관계와 일과 돈의 기준을 정리하는 의미가 큽니다. "
+            f"{repeating_pattern}"
+            f"현재 시기는 {active_period}을 기준으로 보며, 크게 벌리기보다 관계와 일과 돈의 기준을 정리하는 의미가 큽니다. "
             "주의할 점은 속도만 믿고 밀어붙이면 피로, 지출, 관계 부담이 함께 커질 수 있다는 것입니다. "
-            "이 사주는 강한 부분을 성과에 쓰고 약한 부분은 루틴과 환경으로 보완할 때 가장 안정적으로 쓰입니다."
+            f"{closing}"
         )
         if payload.profile.is_birth_time_estimated:
             text += " 출생시간이 미상이므로 시간에 민감한 해석은 방향성 중심으로만 참고하는 편이 안전합니다."
         return text
+    repeating_pattern = (
+        f"The repeating pattern is that the right environment brings focus, while the weaker side, {missing}, can tilt judgment when it is ignored. "
+        if missing_values
+        else "The repeating pattern is that the right environment brings focus, while unclear routines and context can tilt judgment when they are ignored. "
+    )
+    closing = (
+        "The chart works best when strengths are used for results and weaker parts are supported through routine and environment."
+        if missing_values
+        else "The chart works best when strengths are used for results and recovery routines and environment are kept clear."
+    )
     text = (
         "This chart reads as someone who works best when clear standards are built and sustained. "
         f"The core strength is the quick response and organizing power shown through {dominant}. "
-        f"The repeating pattern is that the right environment brings focus, while the weaker side, {missing}, can tilt judgment when it is ignored. "
-        f"The current timing is {_cycle_label(payload, payload.current_flow.active_luck_cycle)}, which favors sorting standards before widening the field. "
+        f"{repeating_pattern}"
+        f"The current timing is {active_period}, which favors sorting standards before widening the field. "
         "The main caution is that speed alone can increase fatigue, spending leakage, or relationship burden. "
-        "The chart works best when strengths are used for results and weaker parts are supported through routine and environment."
+        f"{closing}"
     )
     if payload.profile.is_birth_time_estimated:
         text += " Because the birth time is estimated, hour-pillar-based interpretation stays conservative."
@@ -232,20 +277,29 @@ def _fallback_depth_block(
     *,
     dominant: str,
     missing: str,
-    active_cycle: str,
-    next_cycle: str,
+    has_missing: bool,
+    active_period: str,
+    next_period: str,
     top_domain_label: str,
 ) -> str:
     locale = _locale(payload)
     if locale == "ko":
-        active_period = f"{active_cycle} 구간"
-        next_period = f"{next_cycle} 구간"
+        missing_note = (
+            f"{missing} 기운은 사주에서 보완 과제로 읽습니다. 이 부분은 타고난 결핍이라는 뜻이 아니라, 생활 습관과 사람 선택으로 의식적으로 채워야 안정감이 커지는 영역입니다."
+            if has_missing
+            else "특정 오행 하나를 결핍으로 단정하기보다, 생활 루틴과 주변 환경을 안정시키는 방식이 더 중요한 경우로 읽는 편이 안전합니다."
+        )
+        wealth_caution = (
+            f"{missing} 기운이 약하게 보이는 만큼, 돈 문제에서는 감정에 따라 결정을 미루거나 갑자기 크게 움직이는 패턴을 조심하는 편이 좋습니다."
+            if has_missing
+            else "돈 문제에서는 감정에 따라 결정을 미루거나 갑자기 크게 움직이는 패턴을 조심하는 편이 좋습니다."
+        )
         if section_key == "core_analysis":
             return f"""
 
 ### 4. 현실에서 드러나는 방식
 - {dominant} 기운이 먼저 드러나는 사람은 판단과 반응이 빠르게 보일 수 있습니다. 다만 빠른 반응이 늘 장점으로만 쓰이는 것은 아니어서, 상황을 충분히 확인하기 전에 결론을 앞당기면 피로가 쌓일 수 있습니다.
-- {missing} 기운은 사주에서 보완 과제로 읽습니다. 이 부분은 타고난 결핍이라는 뜻이 아니라, 생활 습관과 사람 선택으로 의식적으로 채워야 안정감이 커지는 영역입니다.
+- {missing_note}
 - 특히 {top_domain_label} 쪽 이슈가 먼저 체감되기 쉬우므로, 중요한 선택을 할 때는 감정의 크기보다 반복해서 유지 가능한 방식인지를 같이 보는 편이 좋습니다.
 
 ### 5. 이 사주를 좋게 쓰는 방향
@@ -284,7 +338,7 @@ def _fallback_depth_block(
 
 ### 4. 돈이 모이고 새는 지점
 - 이 금전운은 한 번에 크게 키우는 흐름보다, 들어온 돈을 어떻게 남기고 배치하느냐가 중요합니다. 수입이 생겨도 기준이 흐리면 관계 비용, 충동 소비, 급한 선택으로 체감 안정감이 줄어들 수 있습니다.
-- {missing} 기운이 약하게 보이는 만큼, 돈 문제에서는 감정에 따라 결정을 미루거나 갑자기 크게 움직이는 패턴을 조심하는 편이 좋습니다. 숫자를 복잡하게 다루기보다 고정 지출, 예비비, 반복 소비를 먼저 나누는 단순한 기준이 더 잘 맞습니다.
+- {wealth_caution} 숫자를 복잡하게 다루기보다 고정 지출, 예비비, 반복 소비를 먼저 나누는 단순한 기준이 더 잘 맞습니다.
 - 현재 흐름은 {active_period}이며, 확장보다 정리가 먼저입니다. 다음 흐름은 {next_period}으로 이어지므로 더 안정적으로 쓰려면 지금 새는 곳을 줄이는 습관이 바탕이 됩니다.
 
 ### 5. 금전 조언
@@ -300,12 +354,22 @@ def _fallback_depth_block(
 - 그래서 지금 해야 할 일은 운이 좋아질 때를 기다리는 것이 아니라, 좋아지는 흐름을 받을 수 있는 상태를 만들어 두는 것입니다. 관계에서는 오래 갈 기준을, 일에서는 반복해서 쓸 전문성을, 금전에서는 새지 않는 구조를 먼저 준비하는 편이 좋습니다.
 - 좋고 나쁨은 고정된 결과가 아니라 관리 포인트입니다. 같은 흐름도 준비가 되어 있으면 기회처럼 느껴지고, 기준이 없으면 부담처럼 느껴질 수 있습니다.
 """
+    missing_note = (
+        f"The weaker side, {missing}, is not a fixed flaw. It is the part that needs routines, environment, and repeated choices to become more stable."
+        if has_missing
+        else "No single element is treated as a fixed gap here. Stable routines, environment, and repeated choices are the more useful support points."
+    )
+    wealth_caution = (
+        f"Because {missing} needs more support, money decisions should be made with simple rules rather than mood."
+        if has_missing
+        else "Money decisions should be made with simple rules rather than mood."
+    )
     if section_key == "core_analysis":
         return f"""
 
 ### 4. How this appears in real life
 - When {dominant} shows first, the person can seem quick to respond and quick to recognize what works. That speed is useful, but it can also become tiring if conclusions are made before the situation is fully checked.
-- The weaker side, {missing}, is not a fixed flaw. It is the part that needs routines, environment, and repeated choices to become more stable.
+- {missing_note}
 - Because {top_domain_label} is likely to be felt first, major decisions should be judged not only by intensity but also by whether the pattern can be sustained.
 
 ### 5. How to use the chart well
@@ -319,12 +383,12 @@ def _fallback_depth_block(
 ### 4. Repeating relationship pattern
 - This love reading is less about whether someone appears and more about how the relationship is maintained. Attraction can be clear at first, but daily rhythm and responsibility may become more important over time.
 - A partner who is expressive but inconsistent can become tiring. A partner who is calmer but steady with promises, time, and communication may build trust more naturally.
-- In the current timing, {active_cycle}, checking durability is more useful than rushing a label.
+- In the current timing, {active_period}, checking durability is more useful than rushing a label.
 
 ### 5. Relationship advice
 - Watch repeated behavior before making a conclusion.
 - Notice how the person handles conversation, daily rhythm, money, and time promises.
-- As the chart moves toward {next_cycle}, the relationship standards built now can matter more, so attraction and stability should be read together.
+- As the chart moves toward {next_period}, the relationship standards built now can matter more, so attraction and stability should be read together.
 """
     if section_key == "career":
         return f"""
@@ -332,7 +396,7 @@ def _fallback_depth_block(
 ### 4. How results are built
 - This career pattern works better where roles, ownership, and standards are clear. When responsibilities are defined, skill can accumulate and trust can become easier to see.
 - In a place where priorities constantly move, effort may turn into fatigue before results become visible. In that case, clarifying scope and order can help more than simply working harder.
-- In the current timing, {active_cycle}, sharpening the core specialty is more useful than spreading effort. In {next_cycle}, the standards built now can shape later role changes.
+- In the current timing, {active_period}, sharpening the core specialty is more useful than spreading effort. In {next_period}, the standards built now can shape later role changes.
 
 ### 5. Work-fit criteria
 - The actual work pattern matters more than the job title.
@@ -344,8 +408,8 @@ def _fallback_depth_block(
 
 ### 4. Where money gathers and leaks
 - This wealth reading emphasizes keeping and directing money more than dramatic expansion. Even when income appears, unclear standards can reduce the felt stability through relationship costs, impulse spending, or rushed choices.
-- Because {missing} is weaker, money decisions should be made with simple rules rather than mood. Fixed expenses, reserve funds, and repeated spending are better starting points than complicated plans.
-- In the current timing, {active_cycle}, organization comes before expansion. Habits built now can make {next_cycle} feel more stable.
+- {wealth_caution} Fixed expenses, reserve funds, and repeated spending are better starting points than complicated plans.
+- In the current timing, {active_period}, organization comes before expansion. Habits built now can make {next_period} feel more stable.
 
 ### 5. Money advice
 - Review recurring expenses before making larger plans.
@@ -355,7 +419,7 @@ def _fallback_depth_block(
     return f"""
 
 ### How to use the flow
-- Luck cycles are better used as timing context than as fixed event prediction. The current {active_cycle} favors setting standards, while the next {next_cycle} can make those standards more visible through choices and responsibility.
+- Luck cycles are better used as timing context than as fixed event prediction. The current timing, {active_period}, favors setting standards, while {next_period} can make those standards more visible through choices and responsibility.
 - The task now is not simply waiting for better timing. It is preparing the condition that can receive a better flow.
 - Better and worse are management points. The same timing can feel like opportunity when standards exist and like pressure when they do not.
 """
@@ -389,9 +453,9 @@ def _luck_flow_transition_detail(
     if facts.current_luck_cycle or facts.next_luck_cycle:
         if _locale(payload) == "ko":
             current_label = facts.current_luck_cycle or active_cycle
-            current_period = facts.current_period or "확인 대기"
+            current_period = facts.current_period or "현재 대운의 시작 시점은 확인되지 않았습니다"
             next_label = facts.next_luck_cycle or next_cycle
-            next_period = facts.next_period or "확인 대기"
+            next_period = facts.next_period or "다음 대운의 시작 시점은 확인되지 않았습니다"
             favorable_text = (
                 f"{favorable.period}의 {favorable.luck_cycle} 대운부터 "
                 f"{', '.join(favorable.favorable_for[:3])} 쪽에 상대적으로 힘이 실립니다."
@@ -402,6 +466,18 @@ def _luck_flow_transition_detail(
             current_watch = ", ".join(current_analysis.watch_out[:3]) if current_analysis else "무리한 확장"
             next_good = ", ".join(next_analysis.good_for[:3]) if next_analysis else "다음 기준 만들기"
             next_watch = ", ".join(next_analysis.watch_out[:3]) if next_analysis else "부담 증가"
+            same_cycle_profile = bool(
+                current_analysis
+                and next_analysis
+                and current_analysis.phase_label == next_analysis.phase_label
+                and current_analysis.good_for[:3] == next_analysis.good_for[:3]
+                and current_analysis.watch_out[:3] == next_analysis.watch_out[:3]
+            )
+            next_phase_label = facts.next_phase_label or "다음 단계 준비"
+            if same_cycle_profile:
+                next_good = "현재 정리한 기준을 이어서 적용"
+                next_watch = "현재의 관리 포인트를 계속 점검"
+                next_phase_label = "현재 흐름의 기준을 이어서 적용하는 단계"
             action_lines = "\n".join(f"- {item}" for item in facts.now_action_tags[:5])
             limitation = (
                 "\n출생 시간이 미상이거나 추정이면 대운 전환 해석은 확정적으로 보지 않고 방향성만 참고해야 합니다."
@@ -426,7 +502,7 @@ def _luck_flow_transition_detail(
 - 다음 대운에서 주의할 부분: {next_watch}
 
 ### 다음 대운에서 무엇이 바뀌는가
-다음 {next_label} 대운은 {next_period} 구간이며, 성격은 {facts.next_phase_label or "다음 단계 준비"} 쪽으로 이동합니다.
+다음 {next_label} 대운은 {next_period} 구간이며, 성격은 {next_phase_label} 쪽으로 읽습니다.
 {facts.transition_summary}
 현재가 정리와 조율의 성격이라면, 다음 대운은 그 기준이 생활, 일, 돈 관리 방식으로 고정되는 흐름에 더 가깝습니다.{limitation}
 
@@ -493,8 +569,16 @@ Luck cycles show broad ten-year environmental changes. This section compares onl
 """
 
     if _locale(payload) == "ko":
-        active_period = f"{active_cycle} 구간"
-        next_period = f"{next_cycle} 구간"
+        active_period = _cycle_period_context(
+            payload,
+            payload.current_flow.active_luck_cycle,
+            position="current",
+        )
+        next_period = _cycle_period_context(
+            payload,
+            payload.current_flow.next_luck_cycle,
+            position="next",
+        )
         limitation = (
             "\n출생 시간이 미상이거나 추정이면 대운 전환 해석은 확정적으로 보지 않고 방향성만 참고해야 합니다."
             if payload.profile.is_birth_time_estimated
@@ -523,9 +607,9 @@ Luck cycles show broad ten-year environmental changes. This section compares onl
     return f"""
 
 ### Difference between the current and next cycle
-- In the current cycle, {active_cycle}, the easier gains tend to come from organizing strengths and setting standards for life, work, and money.
+- In the current cycle, {active_period}, the easier gains tend to come from organizing strengths and setting standards for life, work, and money.
 - The part that needs more care is losing those standards, because fatigue, spending leakage, or relationship burden can become more noticeable than speed.
-- In the next cycle, {next_cycle}, the standards built now can show up more clearly as results, responsibility, or role changes.
+- In the next cycle, {next_period}, the standards built now can show up more clearly as results, responsibility, or role changes.
 - What may improve is clearer selection, work ownership, and management ability. What needs more care is over-expansion, relationship costs, and rushed decisions.{limitation}
 
 ### Interpretation points
@@ -543,23 +627,40 @@ def _section(title: str, body: str, evidence_ids: Sequence[str]) -> Interpretati
 def build_fallback_interpretation_report(payload: InterpretationPayload) -> InterpretationReport:
     locale = _locale(payload)
     dominant = _local_elements(payload, payload.signals.dominant_elements)
-    missing = _local_elements(payload, payload.signals.missing_elements)
+    missing_values = payload.signals.missing_elements
+    has_missing = bool(missing_values)
+    missing = _missing_element_label(payload, missing_values)
+    wealth_missing_values = payload.wealth_facts.missing_elements
+    wealth_missing = _missing_element_label(payload, wealth_missing_values)
     top_domain_label = {
         "ko": "일·관계·생활 리듬",
         "en": "work, relationships, and daily rhythm",
     }[locale]
     active_cycle = _cycle_label(payload, payload.current_flow.active_luck_cycle)
     next_cycle = _cycle_label(payload, payload.current_flow.next_luck_cycle)
+    active_period = _cycle_period_context(
+        payload,
+        payload.current_flow.active_luck_cycle,
+        position="current",
+    )
+    next_period = _cycle_period_context(
+        payload,
+        payload.current_flow.next_luck_cycle,
+        position="next",
+    )
     love_star_text = _star_text(payload, payload.love_facts.active_star_labels)
     career_star_text = _star_text(payload, payload.career_facts.active_star_labels)
     wealth_star_text = _star_text(payload, payload.wealth_facts.active_star_labels)
     titles = SECTION_TITLES[locale]
     if locale == "ko":
-        active_period = f"{active_cycle} 구간"
-        next_period = f"{next_cycle} 구간"
+        core_support_line = (
+            f"보완할 부분은 {missing} 쪽의 생활 리듬입니다."
+            if has_missing
+            else "보완할 부분은 생활 리듬과 주변 환경을 꾸준히 정리하는 일입니다."
+        )
         core_body = f"""
 ### 핵심 결론
-이 사람은 기준이 맞으면 오래 밀고 가고, 맞지 않으면 피로를 빨리 알아차리는 타입입니다. 강점은 {dominant} 쪽의 빠른 반응과 정리력이고, 보완할 부분은 {missing} 쪽의 생활 리듬입니다.
+이 사람은 기준이 맞으면 오래 밀고 가고, 맞지 않으면 피로를 빨리 알아차리는 타입입니다. 강점은 {dominant} 쪽의 빠른 반응과 정리력이고, {core_support_line}
 
 ### 쉽게 풀어보면
 평균적으로 무난하게 퍼지는 사주보다, 잘 맞는 자리와 맞지 않는 자리가 비교적 선명하게 갈릴 수 있습니다. 그래서 환경이 맞으면 집중력이 빨리 살아나고, 스스로 해야 할 일의 우선순위도 빠르게 잡힙니다.
@@ -651,7 +752,7 @@ def build_fallback_interpretation_report(payload: InterpretationPayload) -> Inte
 - 수입이 생겼을 때 바로 쓰기보다 남기는 비율과 목적을 먼저 정하세요.
 
 ### 풀이 포인트
-[{_metric_text(payload, payload.wealth_facts.key_ten_gods)}] [{_local_elements(payload, payload.wealth_facts.missing_elements)}] [{wealth_star_text}] [{active_cycle}]
+[{_metric_text(payload, payload.wealth_facts.key_ten_gods)}] [{wealth_missing}] [{wealth_star_text}] [{active_cycle}]
 
 ### 전문가 노트
 금전운은 재성, 식상, 비겁, 부족한 오행, 현재 대운을 payload 기준으로만 연결했습니다. 여기서는 수익 보장이나 특정 투자 지시를 하지 않고, 돈이 들어오고 새는 구조와 관리 방향만 문장화했습니다.
@@ -687,8 +788,9 @@ def build_fallback_interpretation_report(payload: InterpretationPayload) -> Inte
             "core_analysis",
             dominant=dominant,
             missing=missing,
-            active_cycle=active_cycle,
-            next_cycle=next_cycle,
+            has_missing=has_missing,
+            active_period=active_period,
+            next_period=next_period,
             top_domain_label=top_domain_label,
         )
         love_body += _fallback_depth_block(
@@ -696,8 +798,9 @@ def build_fallback_interpretation_report(payload: InterpretationPayload) -> Inte
             "love",
             dominant=dominant,
             missing=missing,
-            active_cycle=active_cycle,
-            next_cycle=next_cycle,
+            has_missing=has_missing,
+            active_period=active_period,
+            next_period=next_period,
             top_domain_label=top_domain_label,
         )
         career_body += _fallback_depth_block(
@@ -705,8 +808,9 @@ def build_fallback_interpretation_report(payload: InterpretationPayload) -> Inte
             "career",
             dominant=dominant,
             missing=missing,
-            active_cycle=active_cycle,
-            next_cycle=next_cycle,
+            has_missing=has_missing,
+            active_period=active_period,
+            next_period=next_period,
             top_domain_label=top_domain_label,
         )
         wealth_body += _fallback_depth_block(
@@ -714,8 +818,9 @@ def build_fallback_interpretation_report(payload: InterpretationPayload) -> Inte
             "wealth",
             dominant=dominant,
             missing=missing,
-            active_cycle=active_cycle,
-            next_cycle=next_cycle,
+            has_missing=has_missing,
+            active_period=active_period,
+            next_period=next_period,
             top_domain_label=top_domain_label,
         )
         luck_flow_body += _fallback_depth_block(
@@ -723,14 +828,25 @@ def build_fallback_interpretation_report(payload: InterpretationPayload) -> Inte
             "luck_flow",
             dominant=dominant,
             missing=missing,
-            active_cycle=active_cycle,
-            next_cycle=next_cycle,
+            has_missing=has_missing,
+            active_period=active_period,
+            next_period=next_period,
             top_domain_label=top_domain_label,
         )
     else:
+        core_support_line = (
+            f"The {missing} side needs routine and context so judgment does not become one-sided."
+            if has_missing
+            else "Recovery routines and a clear environment matter more than treating any one element as a fixed gap."
+        )
+        wealth_signal_sentence = (
+            f"The main money signals are {_metric_text(payload, payload.wealth_facts.key_ten_gods)}, with {wealth_missing} needing more support."
+            if wealth_missing_values
+            else f"The main money signals are {_metric_text(payload, payload.wealth_facts.key_ten_gods)}. No single element is treated as a clear gap in this reading."
+        )
         core_body = f"""
 ### Core conclusion
-This person works best when standards are clear and the environment supports sustained effort. The stronger side is {dominant}, while {missing} needs routine and context so judgment does not become one-sided.
+This person works best when standards are clear and the environment supports sustained effort. The stronger side is {dominant}. {core_support_line}
 
 ### Plain reading
 Rather than spreading evenly everywhere, this chart reads as someone whose fit with a place or relationship can become clear fairly quickly. When the setting is right, focus and response speed rise; when the setting is wrong, fatigue can also show up quickly.
@@ -760,7 +876,7 @@ In relationships, lasting standards matter more than a fast label. Attraction ca
 ### Plain reading
 This pattern often moves toward selective depth rather than quick emotional expansion. A person may feel interesting at first, but trust is built by repeated behavior, promises kept, and a rhythm that does not drain the user.
 
-{love_star_text} These supporting signals should be read as attraction or social attention indicators, not as fixed relationship outcomes. The current {active_cycle} timing is better for checking durability than rushing a conclusion, while {next_cycle} makes today's standards more important.
+{love_star_text} These supporting signals should be read as attraction or social attention indicators, not as fixed relationship outcomes. The current timing, {active_period}, is better for checking durability than rushing a conclusion, while {next_period} makes today's standards more important.
 
 ### Advice
 - Watch repeated behavior before making a relationship decision.
@@ -783,7 +899,7 @@ Work goes better when role, standards, and ownership are clear. Accumulated outp
 ### Plain reading
 This career pattern is less about naming one job and more about the way work is structured. When priorities, scope, and evaluation standards are clear, skill can accumulate and trust becomes easier to build.
 
-In environments where priorities constantly move, effort may become fatigue before results become visible. The current {active_cycle} timing favors sharpening a core specialty, while {next_cycle} can make today's standards more visible through role or responsibility.
+In environments where priorities constantly move, effort may become fatigue before results become visible. The current timing, {active_period}, favors sharpening a core specialty, while {next_period} can make today's standards more visible through role or responsibility.
 
 ### Advice
 - Judge the work pattern before judging the job title.
@@ -804,9 +920,9 @@ Career reading uses the provided month-pillar context, career facts, ten-god met
 Money is better read through how it enters, leaks, and remains rather than through a fixed promise of gain. Work output, responsibility, and repeated management rules are the practical anchors of this wealth pattern.
 
 ### Plain reading
-The main money signals are {_metric_text(payload, payload.wealth_facts.key_ten_gods)}, with {_local_elements(payload, payload.wealth_facts.missing_elements)} needing more support. This suggests that income stability is helped by concrete output, clear responsibilities, and habits that reduce leakage.
+{wealth_signal_sentence} This suggests that income stability is helped by concrete output, clear responsibilities, and habits that reduce leakage.
 
-Money can leak through unclear standards, rushed choices, shared costs, or spending tied to relationships. In the current {active_cycle} timing, tightening rules matters more than stretching risk, and habits built now can shape stability in {next_cycle}.
+Money can leak through unclear standards, rushed choices, shared costs, or spending tied to relationships. In the current timing, {active_period}, tightening rules matters more than stretching risk, and habits built now can shape stability in {next_period}.
 
 ### Advice
 - Review fixed expenses, repeat spending, and people-related costs first.
@@ -816,7 +932,7 @@ Money can leak through unclear standards, rushed choices, shared costs, or spend
 - Set a purpose for saved money before expanding financial commitments.
 
 ### Interpretation points
-[{_metric_text(payload, payload.wealth_facts.key_ten_gods)}] [{_local_elements(payload, payload.wealth_facts.missing_elements)}] [{wealth_star_text}] [{active_cycle}]
+[{_metric_text(payload, payload.wealth_facts.key_ten_gods)}] [{wealth_missing}] [{wealth_star_text}] [{active_cycle}]
 
 ### Expert note
 Wealth reading uses the provided wealth-star, output-star, peer-star, element-balance, missing-element, and current-flow facts. The fallback only describes structure and management direction, not investment instructions or profit guarantees.
@@ -824,7 +940,7 @@ Wealth reading uses the provided wealth-star, output-star, peer-star, element-ba
 
         luck_flow_body = f"""
 ### Core conclusion
-The current phase is better used for setting standards than waiting for a fixed event. {active_cycle} favors organization and adjustment, while {next_cycle} can make today's standards show up more clearly in choices.
+The current phase is better used for setting standards than waiting for a fixed event. {active_period} favors organization and adjustment, while {next_period} can make today's standards show up more clearly in choices.
 
 ### Plain reading
 Luck cycles are timing context, not event certainty. The current period works better when the user organizes strengths, supports weaker areas with routine, and separates relationship, work, and money standards.
@@ -852,8 +968,9 @@ Luck-flow reading is based on the provided current cycle, next cycle, luck-cycle
             "core_analysis",
             dominant=dominant,
             missing=missing,
-            active_cycle=active_cycle,
-            next_cycle=next_cycle,
+            has_missing=has_missing,
+            active_period=active_period,
+            next_period=next_period,
             top_domain_label=top_domain_label,
         )
         love_body += _fallback_depth_block(
@@ -861,8 +978,9 @@ Luck-flow reading is based on the provided current cycle, next cycle, luck-cycle
             "love",
             dominant=dominant,
             missing=missing,
-            active_cycle=active_cycle,
-            next_cycle=next_cycle,
+            has_missing=has_missing,
+            active_period=active_period,
+            next_period=next_period,
             top_domain_label=top_domain_label,
         )
         career_body += _fallback_depth_block(
@@ -870,8 +988,9 @@ Luck-flow reading is based on the provided current cycle, next cycle, luck-cycle
             "career",
             dominant=dominant,
             missing=missing,
-            active_cycle=active_cycle,
-            next_cycle=next_cycle,
+            has_missing=has_missing,
+            active_period=active_period,
+            next_period=next_period,
             top_domain_label=top_domain_label,
         )
         wealth_body += _fallback_depth_block(
@@ -879,8 +998,9 @@ Luck-flow reading is based on the provided current cycle, next cycle, luck-cycle
             "wealth",
             dominant=dominant,
             missing=missing,
-            active_cycle=active_cycle,
-            next_cycle=next_cycle,
+            has_missing=has_missing,
+            active_period=active_period,
+            next_period=next_period,
             top_domain_label=top_domain_label,
         )
         luck_flow_body += _fallback_depth_block(
@@ -888,8 +1008,9 @@ Luck-flow reading is based on the provided current cycle, next cycle, luck-cycle
             "luck_flow",
             dominant=dominant,
             missing=missing,
-            active_cycle=active_cycle,
-            next_cycle=next_cycle,
+            has_missing=has_missing,
+            active_period=active_period,
+            next_period=next_period,
             top_domain_label=top_domain_label,
         )
 
@@ -1537,6 +1658,25 @@ def _validate_section(key: str, section: InterpretationNarrativeSection, locale:
     return issues
 
 
+def _validate_evidence_ids(report: InterpretationReport, payload: InterpretationPayload) -> List[str]:
+    valid_ids = {item.key for item in payload.evidence}
+    valid_ids.update(star.evidence_id for star in payload.special_stars)
+    blocks = {
+        "summary": report.summary,
+        "core_analysis": report.core_analysis,
+        "love": report.love,
+        "career": report.career,
+        "wealth": report.wealth,
+        "luck_flow": report.luck_flow,
+    }
+    issues: List[str] = []
+    for key, block in blocks.items():
+        for evidence_id in block.evidence_ids:
+            if evidence_id not in valid_ids:
+                issues.append(f"{key}.evidence_ids:unknown:{evidence_id}")
+    return issues
+
+
 def _validate_language(report: InterpretationReport, payload: InterpretationPayload) -> List[str]:
     issues: List[str] = []
     locale = _locale(payload)
@@ -1578,9 +1718,13 @@ def _validate_report(report: InterpretationReport, payload: InterpretationPayloa
             issues.append("relative_wording_without_percentile:numeric")
         if _contains_exposed_score(text):
             issues.append("score_exposed_in_user_text")
+        for phrase in PLACEHOLDER_USER_PHRASES:
+            if phrase in text:
+                issues.append(f"placeholder_phrase:{phrase}")
         for phrase in PROMPT_SPEC.validation_banned_phrases:
             if phrase in text:
                 issues.append(f"banned_phrase:{phrase}")
+    issues.extend(_validate_evidence_ids(report, payload))
     issues.extend(_validate_language(report, payload))
     return issues
 
