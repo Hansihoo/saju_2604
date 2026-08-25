@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from app.api.routes import create_saju_preview
+from app.domain.saju.pydantic_compat import model_to_dict
 from app.domain.saju.schemas import SajuPreviewRequest
 from app.domain.saju.services.build_interpretation_payload import build_interpretation_payload
 
@@ -68,6 +69,16 @@ class InterpretationPayloadTests(unittest.TestCase):
         self.assertEqual(interpretation_payload.career_facts.month_pillar_label, "월주")
         self.assertTrue(interpretation_payload.career_facts.key_ten_gods)
         self.assertTrue(interpretation_payload.wealth_facts.key_ten_gods)
+        serialized_payload = model_to_dict(interpretation_payload)
+        for internal_field in (
+            "balance_score",
+            "charm_score",
+            "wealth_score",
+            "career_score",
+            "leadership_score",
+            "internal_grade",
+        ):
+            self.assertNotIn(internal_field, serialized_payload)
         self.assertIn(
             "Use current_flow for current-period commentary in love, career, wealth, and luck-flow sections.",
             interpretation_payload.narrative_rules,

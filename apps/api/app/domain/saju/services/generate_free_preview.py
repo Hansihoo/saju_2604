@@ -561,7 +561,11 @@ def _call_openai_free_preview(
             fallback_reason="openai_sdk_unavailable",
         )
 
-    client = OpenAI(api_key=settings.openai_api_key)
+    client = OpenAI(
+        api_key=settings.openai_api_key,
+        timeout=settings.llm_timeout_seconds,
+        max_retries=0,
+    )
     token_budgets = [
         max(4200, min(settings.llm_max_output_tokens, 6000)),
         max(5200, min(settings.llm_max_output_tokens * 2, 8000)),
@@ -571,7 +575,10 @@ def _call_openai_free_preview(
     last_response_id: str | None = None
     fallback_reason = "openai_response_invalid"
 
-    for attempt_index, token_budget in enumerate(token_budgets, start=1):
+    for attempt_index, token_budget in enumerate(
+        token_budgets[: settings.llm_max_attempts],
+        start=1,
+    ):
         output_text = ""
         response = None
         try:

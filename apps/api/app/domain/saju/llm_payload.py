@@ -4,7 +4,6 @@ from typing import Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
-from app.domain.saju.analysis import InternalGrade
 from app.domain.saju.localization import OutputLocale
 from app.domain.saju.schemas import ElementKey
 
@@ -57,12 +56,6 @@ class InterpretationVisiblePillar(BaseModel):
 
 
 class InterpretationSignalBlock(BaseModel):
-    internal_grade: InternalGrade
-    balance_score: int
-    charm_score: int
-    wealth_score: int
-    career_score: int
-    leadership_score: int
     dominant_elements: List[ElementKey]
     missing_elements: List[ElementKey]
 
@@ -163,7 +156,6 @@ class InterpretationLuckFlowFacts(BaseModel):
 
 
 class InterpretationLoveFacts(BaseModel):
-    score: int
     spouse_house_label: str
     spouse_house_branch: str
     spouse_house_ten_god: str
@@ -173,7 +165,6 @@ class InterpretationLoveFacts(BaseModel):
 
 
 class InterpretationCareerFacts(BaseModel):
-    score: int
     month_pillar_label: str
     month_pillar_gan_zhi: str
     month_stem_ten_god: str
@@ -182,7 +173,6 @@ class InterpretationCareerFacts(BaseModel):
 
 
 class InterpretationWealthFacts(BaseModel):
-    score: int
     key_ten_gods: List[InterpretationCountMetric]
     active_star_labels: List[str]
     missing_elements: List[str]

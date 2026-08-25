@@ -50,6 +50,10 @@ def _default_codex_js_path() -> Optional[str]:
 DEFAULT_CODEX_COMMAND = _default_codex_command()
 DEFAULT_CODEX_NODE_COMMAND = _default_node_command()
 DEFAULT_CODEX_JS_PATH = _default_codex_js_path()
+DEFAULT_RUNTIME_ENVIRONMENT = os.getenv("VERCEL_ENV", os.getenv("SAJU_RUNTIME_ENV", "development"))
+DEFAULT_LLM_MAX_ATTEMPTS = 1 if DEFAULT_RUNTIME_ENVIRONMENT == "production" else 2
+DEFAULT_LLM_TIMEOUT_SECONDS = 45 if DEFAULT_RUNTIME_ENVIRONMENT == "production" else 90
+DEFAULT_LLM_ALLOW_REPAIR = DEFAULT_RUNTIME_ENVIRONMENT != "production"
 
 
 def _load_env_file(path: Path) -> None:
@@ -116,12 +120,29 @@ class Settings:
     api_version: str = os.getenv("SAJU_API_VERSION", "0.1.0")
     log_level: str = os.getenv("SAJU_LOG_LEVEL", "INFO")
     debug_enabled: bool = os.getenv("SAJU_DEBUG", "0") in {"1", "true", "TRUE", "yes", "YES"}
+    runtime_environment: str = DEFAULT_RUNTIME_ENVIRONMENT
+    internal_debug_token: Optional[str] = os.getenv("SAJU_INTERNAL_DEBUG_TOKEN") or None
     llm_provider: str = os.getenv("SAJU_LLM_PROVIDER", "openai")
     openai_api_key: str = os.getenv("OPENAI_API_KEY", PLACEHOLDER_OPENAI_API_KEY)
     openai_model: str = os.getenv("OPENAI_MODEL", "gpt-5.4")
     llm_reasoning_effort: str = os.getenv("SAJU_LLM_REASONING_EFFORT", "low")
     llm_store: bool = os.getenv("SAJU_LLM_STORE", "0") in {"1", "true", "TRUE", "yes", "YES"}
-    llm_max_output_tokens: int = int(os.getenv("SAJU_LLM_MAX_OUTPUT_TOKENS", "7000"))
+    llm_max_output_tokens: int = _parse_int_env(
+        "SAJU_LLM_MAX_OUTPUT_TOKENS",
+        7000,
+        minimum=1,
+    )
+    llm_max_attempts: int = _parse_int_env(
+        "SAJU_LLM_MAX_ATTEMPTS",
+        DEFAULT_LLM_MAX_ATTEMPTS,
+        minimum=1,
+    )
+    llm_timeout_seconds: int = _parse_int_env(
+        "SAJU_LLM_TIMEOUT_SECONDS",
+        DEFAULT_LLM_TIMEOUT_SECONDS,
+        minimum=1,
+    )
+    llm_allow_repair: bool = _parse_bool_env("SAJU_LLM_ALLOW_REPAIR", DEFAULT_LLM_ALLOW_REPAIR)
     codex_command: str = os.getenv("SAJU_CODEX_COMMAND", DEFAULT_CODEX_COMMAND)
     codex_node_command: Optional[str] = os.getenv("SAJU_CODEX_NODE_COMMAND") or DEFAULT_CODEX_NODE_COMMAND
     codex_js_path: Optional[str] = os.getenv("SAJU_CODEX_JS_PATH") or DEFAULT_CODEX_JS_PATH
@@ -130,13 +151,24 @@ class Settings:
     codex_sandbox: str = os.getenv("SAJU_CODEX_SANDBOX", "read-only")
     codex_timeout_seconds: int = _parse_int_env("SAJU_CODEX_TIMEOUT_SECONDS", 180, minimum=1)
     codex_workdir: str = os.getenv("SAJU_CODEX_WORKDIR", str(REPO_ROOT))
-    request_log_enabled: bool = os.getenv("SAJU_REQUEST_LOG_ENABLED", "1") in {"1", "true", "TRUE", "yes", "YES"}
+    request_log_enabled: bool = os.getenv("SAJU_REQUEST_LOG_ENABLED", "0") in {"1", "true", "TRUE", "yes", "YES"}
+    request_log_include_input: bool = _parse_bool_env("SAJU_REQUEST_LOG_INCLUDE_INPUT", False)
     request_log_path: str = os.getenv(
         "SAJU_REQUEST_LOG_PATH",
         str(REPO_ROOT / ".dev-runtime" / "saju-request-events.jsonl"),
     )
     request_log_max_bytes: int = _parse_int_env("SAJU_REQUEST_LOG_MAX_BYTES", 10 * 1024 * 1024)
     request_log_backup_count: int = _parse_int_env("SAJU_REQUEST_LOG_BACKUP_COUNT", 3)
+    detail_cache_ttl_seconds: int = _parse_int_env(
+        "SAJU_DETAIL_CACHE_TTL_SECONDS",
+        900,
+        minimum=0,
+    )
+    detail_cache_max_entries: int = _parse_int_env(
+        "SAJU_DETAIL_CACHE_MAX_ENTRIES",
+        128,
+        minimum=1,
+    )
     use_canonical_year_month_pillars: bool = _parse_bool_env(
         "SAJU_USE_CANONICAL_YEAR_MONTH_PILLARS",
         False,
@@ -147,6 +179,10 @@ class Settings:
         """초기화 직후 파생 값을 정리한다."""
         raw_origins = os.getenv("SAJU_CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
         self.cors_origins = _parse_cors_origins(raw_origins)
+
+    @property
+    def is_production(self) -> bool:
+        return self.runtime_environment == "production"
 
 
 settings = Settings()

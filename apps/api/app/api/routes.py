@@ -90,7 +90,11 @@ def search_regions_endpoint(
     )
 
 
-@router.post("/saju/preview", response_model=SajuPreviewResponse)
+@router.post(
+    "/saju/preview",
+    response_model=SajuPreviewResponse,
+    response_model_exclude_none=True,
+)
 def create_saju_preview(
     payload: SajuPreviewRequest,
     request: Request,
@@ -103,6 +107,7 @@ def create_saju_preview(
         trace_id=request.state.trace_id,
         debug_requested=request.state.debug_requested,
         service_name=settings.app_name,
+        report_mode="free_preview",
     )
     if _is_http_request(request):
         capture_saju_request_event(
@@ -117,13 +122,18 @@ def create_saju_preview(
             status_code=200,
             payload=payload_snapshot,
             debug_requested=request.state.debug_requested,
+            include_input=settings.request_log_include_input,
             stage="completed",
             meta={"pipeline_status": response.pipeline_status},
         )
     return response
 
 
-@router.post("/saju/free-detail", response_model=SajuFreeDetailResponse)
+@router.post(
+    "/saju/free-detail",
+    response_model=SajuFreeDetailResponse,
+    response_model_exclude_none=True,
+)
 def create_saju_free_detail(
     payload: SajuPreviewRequest,
     request: Request,
@@ -136,6 +146,7 @@ def create_saju_free_detail(
         trace_id=request.state.trace_id,
         debug_requested=request.state.debug_requested,
         service_name=settings.app_name,
+        report_mode="interpretation",
     )
     interpretation = preview_response.result.interpretation
     if interpretation is None:  # pragma: no cover - defensive guard; generator returns fallback on LLM failure.
@@ -161,6 +172,7 @@ def create_saju_free_detail(
             status_code=200,
             payload=payload_snapshot,
             debug_requested=request.state.debug_requested,
+            include_input=settings.request_log_include_input,
             stage="completed",
             meta={"pipeline_status": response.pipeline_status},
         )
@@ -203,6 +215,7 @@ def prepare_saju_detail_bundle(
             status_code=200,
             payload=payload_snapshot,
             debug_requested=request.state.debug_requested,
+            include_input=settings.request_log_include_input,
             stage="completed",
             meta={
                 "report_id": report_id,
@@ -274,6 +287,7 @@ def render_saju_detail(
             status_code=200,
             payload=to_json_safe(payload),
             debug_requested=request.state.debug_requested,
+            include_input=settings.request_log_include_input,
             stage="completed",
             meta={
                 "report_id": report_id,

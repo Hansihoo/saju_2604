@@ -38,7 +38,7 @@ export function ServicePage({
 
   return (
     <main
-      className={`service-page${result ? " result-mode" : ""}${isLoadingView ? " loading-mode" : ""}`}
+      className={`service-page${result ? " result-mode ritual-mode" : ""}${isLoadingView ? " loading-mode" : ""}`}
     >
       <ServiceHeader
         title={texts.title}

@@ -281,12 +281,12 @@ class ManseAnalysisSummary(BaseModel):
     missing_elements: List[ElementKey]
     element_percentages: ManseElementPercentageSummary
     visible_ten_god_distribution: Dict[str, int]
-    balance_score: int
-    internal_grade: InternalGrade
-    charm_score: int
-    wealth_score: int
-    career_score: int
-    leadership_score: int
+    balance_score: Optional[int] = None
+    internal_grade: Optional[InternalGrade] = None
+    charm_score: Optional[int] = None
+    wealth_score: Optional[int] = None
+    career_score: Optional[int] = None
+    leadership_score: Optional[int] = None
     first_luck_cycle_direction: Optional[Literal["forward", "backward"]] = None
     first_luck_cycle_exact_start_age_years: Optional[float] = None
     first_luck_cycle_precise_start_age_years: Optional[float] = None
@@ -314,12 +314,12 @@ class SajuResultSignals(BaseModel):
     visible_pillar_values: List[str]
     dominant_elements: List[ElementKey]
     missing_elements: List[ElementKey]
-    balance_score: int
-    charm_score: int
-    wealth_score: int
-    career_score: int
-    leadership_score: int
-    internal_grade: InternalGrade
+    balance_score: Optional[int] = None
+    charm_score: Optional[int] = None
+    wealth_score: Optional[int] = None
+    career_score: Optional[int] = None
+    leadership_score: Optional[int] = None
+    internal_grade: Optional[InternalGrade] = None
 
 
 class SajuPreviewResult(BaseModel):
@@ -346,6 +346,15 @@ class DebugCheckpoint(BaseModel):
     status: PipelineState
     note: Optional[str] = None
     error_code: Optional[str] = None
+
+
+class InternalAnalysisDebug(BaseModel):
+    balance_score: int
+    charm_score: int
+    wealth_score: int
+    career_score: int
+    leadership_score: int
+    internal_grade: InternalGrade
 
 
 class BirthTimeContextSummary(BaseModel):
@@ -401,6 +410,7 @@ class DebugTrace(BaseModel):
     checkpoints: List[DebugCheckpoint]
     request_echo: Dict[str, str]
     accuracy_mode: AccuracyMode = "legacy"
+    internal_analysis: Optional[InternalAnalysisDebug] = None
     calculation_basis: CalculationBasisSummary = Field(default_factory=CalculationBasisSummary)
     birth_time_context: Optional[BirthTimeContextSummary] = None
     year_month_boundary_context: Dict[str, object] = Field(default_factory=dict)

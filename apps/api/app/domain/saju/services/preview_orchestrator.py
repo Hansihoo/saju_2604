@@ -8,7 +8,7 @@ from app.domain.saju.schemas import SajuPreviewRequest, SajuPreviewResponse
 from app.domain.saju.services.analyze_saju import analyze_saju
 from app.domain.saju.services.accuracy_mode import resolve_calculation_basis
 from app.domain.saju.services.birth_time_policy import resolve_birth_time_policy
-from app.domain.saju.services.build_preview_response import build_preview_response
+from app.domain.saju.services.build_preview_response import ReportRenderMode, build_preview_response
 from app.domain.saju.services.calculate_saju import calculate_saju
 from app.domain.saju.services.detect_uncertainty import detect_uncertainty
 from app.domain.saju.services.generate_candidate_charts import generate_candidate_charts
@@ -28,7 +28,7 @@ def create_saju_preview_response(
     trace_id: str,
     debug_requested: bool,
     service_name: str,
-    render_reports: bool = True,
+    report_mode: ReportRenderMode = "all",
 ) -> SajuPreviewResponse:
     """사주 미리보기 파이프라인 전단계를 실행하고 최종 응답을 만든다."""
     birth_time_policy = resolve_birth_time_policy(payload)
@@ -213,7 +213,7 @@ def create_saju_preview_response(
         primary_chart=saju_calculation,
         candidate_charts=candidate_charts,
     )
-    debug_enabled = debug_requested or payload.debug
+    debug_enabled = debug_requested
 
     analysis_result = analyze_saju(
         saju_calculation=saju_calculation,
@@ -245,5 +245,5 @@ def create_saju_preview_response(
         candidate_charts=candidate_charts,
         uncertainty_flags=uncertainty_flags,
         birth_time_context=birth_time_context,
-        render_reports=render_reports,
+        report_mode=report_mode,
     )

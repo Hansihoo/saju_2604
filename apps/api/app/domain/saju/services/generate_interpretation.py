@@ -191,33 +191,10 @@ def _cycle_label(payload: InterpretationPayload, cycle: InterpretationLuckCycle 
     return f"{cycle.start_age}-{cycle.end_age} with {cycle.display_gan_zhi}"
 
 
-def _dominant_domain(payload: InterpretationPayload) -> Tuple[str, int]:
-    domain_scores = {
-        "love": payload.signals.charm_score,
-        "career": payload.signals.career_score,
-        "wealth": payload.signals.wealth_score,
-        "leadership": payload.signals.leadership_score,
-    }
-    return max(domain_scores.items(), key=lambda item: item[1])
-
-
 def _summary_headline(payload: InterpretationPayload) -> str:
-    dominant_key, _ = _dominant_domain(payload)
     if _locale(payload) == "ko":
-        mapping = {
-            "love": "관계의 기준은 분명하고 오래 보는 사람",
-            "career": "일의 기준을 세우고 꾸준히 밀고 가는 사람",
-            "wealth": "돈의 흐름을 정리하며 안정감을 만드는 사람",
-            "leadership": "판단의 기준을 세우고 책임을 쓰는 사람",
-        }
-        return mapping[dominant_key]
-    mapping = {
-        "love": "A steady person with clear relationship standards",
-        "career": "A steady builder of work standards",
-        "wealth": "A practical organizer of money flow",
-        "leadership": "A responsible person who leads with standards",
-    }
-    return mapping[dominant_key]
+        return "기준을 세우고 생활의 균형을 다듬어 가는 사람"
+    return "A steady builder of clear standards"
 
 
 def _summary_overview(payload: InterpretationPayload) -> str:
@@ -567,11 +544,10 @@ def build_fallback_interpretation_report(payload: InterpretationPayload) -> Inte
     locale = _locale(payload)
     dominant = _local_elements(payload, payload.signals.dominant_elements)
     missing = _local_elements(payload, payload.signals.missing_elements)
-    top_domain, _ = _dominant_domain(payload)
     top_domain_label = {
-        "ko": {"love": "연애", "career": "직장", "wealth": "금전", "leadership": "주도성"},
-        "en": {"love": "love", "career": "career", "wealth": "wealth", "leadership": "initiative"},
-    }[locale][top_domain]
+        "ko": "일·관계·생활 리듬",
+        "en": "work, relationships, and daily rhythm",
+    }[locale]
     active_cycle = _cycle_label(payload, payload.current_flow.active_luck_cycle)
     next_cycle = _cycle_label(payload, payload.current_flow.next_luck_cycle)
     love_star_text = _star_text(payload, payload.love_facts.active_star_labels)
@@ -1151,7 +1127,11 @@ def _call_openai_structured_interpretation(
             fallback_reason="openai_sdk_unavailable",
         )
 
-    client = OpenAI(api_key=settings.openai_api_key)
+    client = OpenAI(
+        api_key=settings.openai_api_key,
+        timeout=settings.llm_timeout_seconds,
+        max_retries=0,
+    )
     token_budgets = [
         max(settings.llm_max_output_tokens, 3200),
         max(settings.llm_max_output_tokens * 2, 5200),
@@ -1162,7 +1142,10 @@ def _call_openai_structured_interpretation(
     last_response_id: str | None = None
     fallback_reason = "openai_response_invalid"
 
-    for attempt_index, token_budget in enumerate(token_budgets, start=1):
+    for attempt_index, token_budget in enumerate(
+        token_budgets[: settings.llm_max_attempts],
+        start=1,
+    ):
         output_text = ""
         response = None
         try:
@@ -1264,7 +1247,7 @@ def _call_openai_structured_interpretation(
                 fallback_reason=fallback_reason,
             )
 
-    if last_output_text:
+    if last_output_text and settings.llm_allow_repair:
         repair_token_budget = max(settings.llm_max_output_tokens, 2400)
         repaired_report, repair_attempt, repair_response_id = _call_openai_repair_interpretation(
             client=client,

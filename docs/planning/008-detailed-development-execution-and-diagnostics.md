@@ -364,10 +364,9 @@
   - 로그 강도 조절
 
 ### 요청 단위 옵션
-- 개발 환경에서만 허용
-- 헤더 또는 body 플래그로 받는다.
-  - `X-Saju-Debug: 1`
-  - `debug: true`
+- 개발 환경에서는 `SAJU_DEBUG=1`로 전체 debug 응답을 켤 수 있다.
+- 배포 환경의 `debug_trace`는 서버에 저장한 `SAJU_INTERNAL_DEBUG_TOKEN`과 일치하는 `X-Saju-Internal-Debug-Token` 헤더가 있을 때만 반환한다.
+- 요청 body의 `debug: true` 및 공개 `X-Saju-Debug` 헤더는 debug 응답을 활성화하지 않는다.
 
 ### debug 응답 확장
 - 일반 사용자 응답에는 숨긴다.

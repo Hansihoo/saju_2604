@@ -204,7 +204,7 @@ export function useSajuInputForm({
         debug,
       };
       setLastSubmittedPayload(payload);
-      const response = await createSajuPreview(payload, debug);
+      const response = await createSajuPreview(payload);
       onSuccess(response);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : texts.noResult);

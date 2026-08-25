@@ -52,13 +52,11 @@ export async function searchRegionSuggestions(query: string): Promise<RegionSugg
 
 export async function createSajuPreview(
   payload: SajuPreviewRequest,
-  debug: boolean,
 ): Promise<SajuPreviewResponse> {
   const response = await fetch(`${API_BASE_URL}/saju/preview`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(debug ? { "X-Saju-Debug": "1" } : {}),
     },
     body: JSON.stringify(payload),
   });
@@ -68,13 +66,11 @@ export async function createSajuPreview(
 
 export async function createSajuFreeDetail(
   payload: SajuPreviewRequest,
-  debug: boolean,
 ): Promise<SajuFreeDetailResponse> {
   const response = await fetch(`${API_BASE_URL}/saju/free-detail`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(debug ? { "X-Saju-Debug": "1" } : {}),
     },
     body: JSON.stringify(payload),
   });
@@ -91,7 +87,6 @@ export async function prepareSajuDetailBundle(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(payload.debug ? { "X-Saju-Debug": "1" } : {}),
     },
     body: JSON.stringify({
       input: payload,
@@ -112,7 +107,6 @@ export async function renderSajuDetailInsight(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(payload.debug ? { "X-Saju-Debug": "1" } : {}),
     },
     body: JSON.stringify({
       detail_type: detailType,

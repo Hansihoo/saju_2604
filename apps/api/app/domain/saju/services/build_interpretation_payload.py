@@ -895,7 +895,6 @@ def _build_love_facts(
     partner_group = "wealth" if request.gender == "male" else "officer"
     partner_count = _sum_ten_gods(distribution, TEN_GOD_GROUPS[partner_group])
     return InterpretationLoveFacts(
-        score=response.result.signals.charm_score,
         spouse_house_label=SPOUSE_HOUSE_LABELS[locale],
         spouse_house_branch=localize_branch(response.manse.pillars.day.branch or "", locale),
         spouse_house_ten_god=localize_ten_god(response.manse.pillars.day.branch_ten_god or "", locale),
@@ -917,7 +916,6 @@ def _build_career_facts(
         _metric(locale, "output", _sum_ten_gods(distribution, TEN_GOD_GROUPS["output"])),
     ]
     return InterpretationCareerFacts(
-        score=response.result.signals.career_score,
         month_pillar_label=localize_pillar_label("month", locale),
         month_pillar_gan_zhi=localize_ganzhi(response.manse.pillars.month.gan_zhi or "", locale),
         month_stem_ten_god=localize_ten_god(response.manse.pillars.month.stem_ten_god or "", locale),
@@ -939,7 +937,6 @@ def _build_wealth_facts(
     ]
     missing_elements = list(response.result.signals.missing_elements)
     return InterpretationWealthFacts(
-        score=response.result.signals.wealth_score,
         key_ten_gods=key_ten_gods,
         active_star_labels=_active_star_labels_by_keywords(stars, WEALTH_STAR_KEYWORDS),
         missing_elements=missing_elements,
@@ -1019,12 +1016,6 @@ def build_interpretation_payload(
             "time": localize_ten_god(response.manse.pillars.time.stem_ten_god or "", locale),
         },
         signals=InterpretationSignalBlock(
-            internal_grade=response.result.signals.internal_grade,
-            balance_score=response.result.signals.balance_score,
-            charm_score=response.result.signals.charm_score,
-            wealth_score=response.result.signals.wealth_score,
-            career_score=response.result.signals.career_score,
-            leadership_score=response.result.signals.leadership_score,
             dominant_elements=response.result.signals.dominant_elements,
             missing_elements=response.result.signals.missing_elements,
         ),

@@ -1,6 +1,7 @@
 import json
 import re
 import unittest
+from collections import OrderedDict
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -16,7 +17,11 @@ from app.domain.saju.schemas import (
     SajuDetailRenderRequest,
     SajuPreviewRequest,
 )
+from app.domain.saju.services import generate_detail_insights
 from app.domain.saju.services.generate_detail_insights import build_fallback_detail_render
+from app.domain.saju.services.generate_free_preview import build_fallback_free_preview_report
+from app.domain.saju.services.generate_interpretation import build_fallback_interpretation_report
+from app.domain.saju.services.preview_orchestrator import create_saju_preview_response
 
 
 class SajuPreviewPipelineTests(unittest.TestCase):
@@ -54,7 +59,7 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         self.assertEqual(response.result.evidence_sections["elements"].status, "ready")
         self.assertEqual(response.result.evidence_sections["ten_gods"].status, "ready")
         self.assertEqual(response.result.signals.visible_pillar_keys, ["year", "month", "day", "time"])
-        self.assertEqual(response.result.signals.internal_grade, "B")
+        self.assertIsNone(response.result.signals.internal_grade)
         self.assertEqual(response.debug_trace.checkpoints[4].stage, "regional_solar_correction")
         self.assertEqual(response.debug_trace.checkpoints[4].status, "passed")
         self.assertEqual(response.debug_trace.checkpoints[5].stage, "saju_calculation")
@@ -62,11 +67,13 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         self.assertEqual(response.debug_trace.checkpoints[6].stage, "analysis_engine")
         self.assertEqual(response.debug_trace.checkpoints[6].status, "passed")
         self.assertEqual(response.debug_trace.checkpoints[7].stage, "llm_formatting")
-        self.assertEqual(response.debug_trace.checkpoints[7].status, "failed")
+        self.assertEqual(response.debug_trace.checkpoints[7].status, "skipped")
         self.assertEqual(response.debug_trace.checkpoints[8].stage, "free_preview_formatting")
         self.assertEqual(response.debug_trace.checkpoints[8].status, "failed")
-        self.assertEqual(response.debug_trace.failed_stage, "llm_formatting")
+        self.assertEqual(response.debug_trace.failed_stage, "free_preview_formatting")
         self.assertIn("Internal grade", response.debug_trace.checkpoints[6].note)
+        self.assertIsNotNone(response.debug_trace.internal_analysis)
+        self.assertEqual(response.debug_trace.internal_analysis.internal_grade, "B")
         self.assertIn("\u7532\u8fb0", response.debug_trace.checkpoints[5].note)
         self.assertEqual(response.region.longitude, 126.991824)
         self.assertEqual(response.regional_solar_correction.corrected_solar_datetime, "2024-02-10 09:57:58")
@@ -102,11 +109,12 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         self.assertEqual(response.manse.meta.day_master, "\u7532")
         self.assertEqual(response.manse.meta.schema_version, "v1")
         self.assertTrue(response.manse.meta.hour_pillar_enabled)
-        self.assertEqual(response.result.signals.balance_score, 35)
+        self.assertIsNone(response.result.signals.balance_score)
         self.assertEqual(response.result.signals.missing_elements, ["metal", "water"])
         self.assertEqual(response.manse.elements.wood, 3)
         self.assertEqual(response.manse.analysis.visible_element_total, 8)
         self.assertEqual(response.manse.analysis.imbalance_gap, 3)
+        self.assertIsNone(response.manse.analysis.balance_score)
         self.assertEqual(response.manse.analysis.element_percentages.wood, 37.5)
         self.assertEqual(response.manse.analysis.element_percentages.metal, 0.0)
         self.assertEqual(response.manse.analysis.visible_ten_god_distribution["비견"], 3)
@@ -153,19 +161,9 @@ class SajuPreviewPipelineTests(unittest.TestCase):
             response.manse.luck_cycles[0].change_datetime or "",
             r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$",
         )
-        self.assertEqual(response.pipeline_status.llm_formatting, "failed")
+        self.assertEqual(response.pipeline_status.llm_formatting, "skipped")
         self.assertEqual(response.pipeline_status.free_preview_formatting, "fallback")
-        self.assertIsNotNone(response.result.interpretation)
-        self.assertEqual(response.result.interpretation.provider, "fallback")
-        self.assertEqual(response.result.interpretation.prompt_version, "saju-report-v15")
-        self.assertIsNotNone(response.result.interpretation.diagnostics)
-        self.assertEqual(
-            response.result.interpretation.diagnostics.fallback_reason,
-            "provider_not_openai",
-        )
-        self.assertTrue(response.result.interpretation.summary.evidence_ids)
-        self.assertTrue(response.result.interpretation.core_analysis.evidence_ids)
-        self.assertTrue(response.result.interpretation.love.body)
+        self.assertIsNone(response.result.interpretation)
         self.assertIsNotNone(response.result.free_preview)
         self.assertEqual(response.result.free_preview.schema_version, "free-preview-v1")
         self.assertEqual(response.result.free_preview.provider, "fallback")
@@ -250,7 +248,7 @@ class SajuPreviewPipelineTests(unittest.TestCase):
             response.manse.notes,
             ["\ucd9c\uc0dd\uc2dc\uac04 \ubbf8\uc0c1\uc73c\ub85c \uc2dc\uc8fc\uc640 \uc2dc\uc8fc \uae30\ubc18 \ub300\uc6b4 \uc815\ubcf4\ub294 \ube44\ud65c\uc131\ud654\ub418\uc5c8\uc2b5\ub2c8\ub2e4."],
         )
-        self.assertEqual(response.result.interpretation.provider, "fallback")
+        self.assertIsNone(response.result.interpretation)
 
     def test_preview_pipeline_respects_requested_output_language(self) -> None:
         request = SimpleNamespace(
@@ -273,13 +271,11 @@ class SajuPreviewPipelineTests(unittest.TestCase):
 
         response = create_saju_preview(payload=payload, request=request)
 
-        self.assertEqual(response.result.interpretation.provider, "fallback")
-        self.assertNotIn("\u4e19", response.result.interpretation.summary.overview)
-        self.assertNotIn("\uc11c\uc6b8", response.result.interpretation.summary.overview)
-        self.assertNotIn("\uc5f0\uc560\uc6b4", response.result.interpretation.love.title)
-        self.assertIn("Love", response.result.interpretation.love.title)
+        self.assertIsNone(response.result.interpretation)
         self.assertIsNotNone(response.result.free_preview)
         self.assertEqual(response.result.free_preview.provider, "fallback")
+        self.assertEqual(response.result.free_preview.headline, "A steady builder of clear standards")
+        self.assertIn("Love", response.result.free_preview.cards[2].title)
 
     def test_preview_pipeline_uses_explicit_luck_cycle_formula(self) -> None:
         request = SimpleNamespace(
@@ -348,10 +344,122 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         self.assertEqual(response.response_mode, "preview")
         self.assertEqual(response.pipeline_status.saju_calculation, "passed")
         self.assertEqual(response.pipeline_status.free_preview_formatting, "fallback")
-        self.assertIsNotNone(response.result.interpretation)
+        self.assertIsNone(response.result.interpretation)
         self.assertIsNotNone(response.result.free_preview)
         self.assertEqual(response.result.free_preview.provider, "fallback")
         self.assertEqual(response.manse.meta.day_master, "\u7532")
+
+    def test_preview_pipeline_marks_successful_codex_reports_as_passed(self) -> None:
+        request = SimpleNamespace(
+            state=SimpleNamespace(
+                trace_id="test-trace-preview-codex",
+                debug_requested=True,
+            )
+        )
+        payload = SajuPreviewRequest(
+            calendar_type="solar",
+            birth_date="2024-02-10",
+            birth_time="10:30",
+            is_birth_time_estimated=False,
+            is_lunar_leap_month=False,
+            gender="male",
+            region_id="kr-seoul",
+            debug=True,
+        )
+
+        def build_codex_free_preview(*, payload, **_):
+            report = build_fallback_free_preview_report(payload)
+            report.provider = "codex"
+            report.model = "codex-cli"
+            return report
+
+        def build_codex_interpretation(*, payload, **_):
+            report = build_fallback_interpretation_report(payload)
+            report.provider = "codex"
+            report.model = "codex-cli"
+            return report
+
+        with patch(
+            "app.domain.saju.services.build_preview_response.generate_free_preview_report",
+            side_effect=build_codex_free_preview,
+        ), patch(
+            "app.domain.saju.services.build_preview_response.generate_interpretation_report",
+            side_effect=build_codex_interpretation,
+        ):
+            response = create_saju_preview_response(
+                payload=payload,
+                trace_id=request.state.trace_id,
+                debug_requested=request.state.debug_requested,
+                service_name="test",
+                report_mode="all",
+            )
+
+        self.assertEqual(response.pipeline_status.llm_formatting, "passed")
+        self.assertEqual(response.pipeline_status.free_preview_formatting, "success")
+        self.assertEqual(response.result.interpretation.provider, "codex")
+        self.assertEqual(response.result.free_preview.provider, "codex")
+        self.assertIsNotNone(response.debug_trace)
+        self.assertEqual(response.debug_trace.checkpoints[7].status, "passed")
+        self.assertEqual(response.debug_trace.checkpoints[8].status, "passed")
+        self.assertIsNone(response.debug_trace.failed_stage)
+
+    def test_preview_and_free_detail_generate_only_the_requested_report(self) -> None:
+        request = SimpleNamespace(
+            state=SimpleNamespace(
+                trace_id="test-trace-report-separation",
+                debug_requested=False,
+            )
+        )
+        payload = SajuPreviewRequest(
+            calendar_type="solar",
+            birth_date="2024-02-10",
+            birth_time="10:30",
+            is_birth_time_estimated=False,
+            is_lunar_leap_month=False,
+            gender="male",
+            region_id="kr-seoul",
+            debug=False,
+        )
+
+        with patch(
+            "app.domain.saju.services.build_preview_response.generate_free_preview_report",
+            side_effect=lambda *, payload, **_: build_fallback_free_preview_report(payload),
+        ) as free_preview_mock, patch(
+            "app.domain.saju.services.build_preview_response.generate_interpretation_report",
+            side_effect=AssertionError("Preview must not generate the full interpretation"),
+        ) as interpretation_mock:
+            preview_response = create_saju_preview(payload=payload, request=request)
+
+        free_preview_mock.assert_called_once()
+        interpretation_mock.assert_not_called()
+        self.assertIsNotNone(preview_response.result.free_preview)
+        self.assertIsNone(preview_response.result.interpretation)
+        self.assertEqual(preview_response.pipeline_status.llm_formatting, "skipped")
+        public_response = model_to_dict(preview_response, exclude_none=True)
+        serialized_public_response = json.dumps(public_response, ensure_ascii=False)
+        for internal_field in (
+            "balance_score",
+            "charm_score",
+            "wealth_score",
+            "career_score",
+            "leadership_score",
+            "internal_grade",
+        ):
+            self.assertNotIn(internal_field, serialized_public_response)
+
+        with patch(
+            "app.domain.saju.services.build_preview_response.generate_free_preview_report",
+            side_effect=AssertionError("Detail must not regenerate the free preview"),
+        ) as free_preview_mock, patch(
+            "app.domain.saju.services.build_preview_response.generate_interpretation_report",
+            side_effect=lambda *, payload, **_: build_fallback_interpretation_report(payload),
+        ) as interpretation_mock:
+            detail_response = create_saju_free_detail(payload=payload, request=request)
+
+        free_preview_mock.assert_not_called()
+        interpretation_mock.assert_called_once()
+        self.assertEqual(detail_response.interpretation.provider, "fallback")
+        self.assertEqual(detail_response.pipeline_status.free_preview_formatting, "skipped")
 
     def test_free_detail_endpoint_returns_existing_interpretation_schema(self) -> None:
         request = SimpleNamespace(
@@ -452,6 +560,28 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         for forbidden in ("무료", "유료", "프리미엄", "결제", "score", "internal_grade", "evidence_id"):
             self.assertNotIn(forbidden, combined)
         self.assertIsNone(re.search(r"[\u3400-\u9fff]", combined))
+
+    def test_detail_cache_is_bounded_and_can_be_disabled(self) -> None:
+        cache = OrderedDict()
+        with patch.object(generate_detail_insights.settings, "detail_cache_ttl_seconds", 900), patch.object(
+            generate_detail_insights.settings,
+            "detail_cache_max_entries",
+            1,
+        ):
+            generate_detail_insights._set_detail_cache_item(cache, ("first",), "first-value")
+            generate_detail_insights._set_detail_cache_item(cache, ("second",), "second-value")
+
+            self.assertIsNone(generate_detail_insights._get_detail_cache_item(cache, ("first",)))
+            self.assertEqual(
+                generate_detail_insights._get_detail_cache_item(cache, ("second",)),
+                "second-value",
+            )
+
+        disabled_cache = OrderedDict()
+        with patch.object(generate_detail_insights.settings, "detail_cache_ttl_seconds", 0):
+            generate_detail_insights._set_detail_cache_item(disabled_cache, ("disabled",), "value")
+
+        self.assertEqual(disabled_cache, OrderedDict())
 
     def test_detail_render_codex_provider_uses_codex_path(self) -> None:
         request = SimpleNamespace(

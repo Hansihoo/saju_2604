@@ -93,6 +93,7 @@ export function DeveloperManseInspector({ locale, result }: DeveloperManseInspec
   const activeSpecialStars = result.manse.special_stars.filter((star) => star.active);
   const activeAuspiciousStars = activeSpecialStars.filter((star) => star.category === "auspicious");
   const activeSinsalStars = activeSpecialStars.filter((star) => star.category === "sinsal");
+  const internalAnalysis = result.debug_trace?.internal_analysis;
   const interpretationDiagnostics = result.result.interpretation?.diagnostics;
   const displayManseJson = formatManseJsonValue(
     {
@@ -143,7 +144,7 @@ export function DeveloperManseInspector({ locale, result }: DeveloperManseInspec
           </div>
           <div className="dev-summary-item">
             <span>{text.grade}</span>
-            <strong>{result.manse.analysis.internal_grade}</strong>
+            <strong>{internalAnalysis?.internal_grade ?? "-"}</strong>
           </div>
           <div className="dev-summary-item">
             <span>{text.direction}</span>

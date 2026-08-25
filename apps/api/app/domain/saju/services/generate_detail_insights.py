@@ -7,8 +7,10 @@ import hashlib
 import json
 import re
 import time
+from collections import OrderedDict
 from datetime import datetime, timezone
 from json import JSONDecodeError
+from threading import Lock
 from typing import Any, Dict, List, Sequence, Tuple
 
 from pydantic import ValidationError
@@ -75,8 +77,15 @@ FORBIDDEN_USER_TEXT = (
     "100점",
 )
 
-_DETAIL_BUNDLE_CACHE: Dict[Tuple[str, str], SajuDetailPreparedReport] = {}
-_DETAIL_RENDER_CACHE: Dict[Tuple[str, str, str, str], Tuple[SajuDetailRenderedReport, str]] = {}
+_DETAIL_BUNDLE_CACHE: OrderedDict[
+    Tuple[str, str],
+    Tuple[SajuDetailPreparedReport, float],
+] = OrderedDict()
+_DETAIL_RENDER_CACHE: OrderedDict[
+    Tuple[str, str, str, str],
+    Tuple[Tuple[SajuDetailRenderedReport, str], float],
+] = OrderedDict()
+_DETAIL_CACHE_LOCK = Lock()
 
 
 DETAIL_RENDER_DEVELOPER_PROMPT = """
@@ -95,6 +104,44 @@ Rules:
 - Keep the result short enough for an inline expanded panel.
 - Return valid JSON only.
 """.strip()
+
+
+def _prune_detail_cache(cache: OrderedDict) -> None:
+    ttl_seconds = settings.detail_cache_ttl_seconds
+    if ttl_seconds <= 0:
+        cache.clear()
+        return
+
+    now = time.monotonic()
+    expired_keys = [
+        key
+        for key, (_, cached_at) in cache.items()
+        if now - cached_at >= ttl_seconds
+    ]
+    for key in expired_keys:
+        cache.pop(key, None)
+
+
+def _get_detail_cache_item(cache: OrderedDict, cache_key: Tuple[str, ...]):
+    with _DETAIL_CACHE_LOCK:
+        _prune_detail_cache(cache)
+        cached = cache.get(cache_key)
+        if cached is None:
+            return None
+        cache.move_to_end(cache_key)
+        return cached[0]
+
+
+def _set_detail_cache_item(cache: OrderedDict, cache_key: Tuple[str, ...], value: Any) -> None:
+    if settings.detail_cache_ttl_seconds <= 0:
+        return
+
+    with _DETAIL_CACHE_LOCK:
+        _prune_detail_cache(cache)
+        cache[cache_key] = (value, time.monotonic())
+        cache.move_to_end(cache_key)
+        while len(cache) > settings.detail_cache_max_entries:
+            cache.popitem(last=False)
 
 
 def compute_detail_input_hash(payload: SajuPreviewRequest) -> str:
@@ -368,16 +415,16 @@ def prepare_detail_analysis_bundle(
 ) -> Tuple[SajuDetailPreparedReport, bool]:
     input_hash = compute_detail_input_hash(request_payload)
     cache_key = (report_id, input_hash)
-    cached = _DETAIL_BUNDLE_CACHE.get(cache_key)
+    cached = _get_detail_cache_item(_DETAIL_BUNDLE_CACHE, cache_key)
     if cached is not None:
         return cached, True
 
     preview = create_saju_preview_response(
         payload=request_payload,
         trace_id=trace_id,
-        debug_requested=request_payload.debug,
+        debug_requested=False,
         service_name=service_name,
-        render_reports=False,
+        report_mode="none",
     )
     interpretation_payload = build_interpretation_payload(request=request_payload, response=preview)
     bundle = SajuDetailPreparedReport(
@@ -387,12 +434,12 @@ def prepare_detail_analysis_bundle(
         base_context=_base_context(interpretation_payload),
         detail_analysis_bundle=_detail_bundle(interpretation_payload),
     )
-    _DETAIL_BUNDLE_CACHE[cache_key] = bundle
+    _set_detail_cache_item(_DETAIL_BUNDLE_CACHE, cache_key, bundle)
     return bundle, False
 
 
 def get_cached_detail_bundle(report_id: str, input_hash: str) -> SajuDetailPreparedReport | None:
-    return _DETAIL_BUNDLE_CACHE.get((report_id, input_hash))
+    return _get_detail_cache_item(_DETAIL_BUNDLE_CACHE, (report_id, input_hash))
 
 
 def _title_for(detail_type: SajuDetailType, locale: str) -> str:
@@ -577,7 +624,11 @@ def _call_openai_detail_render(
     if settings.openai_api_key in {"", PLACEHOLDER_OPENAI_API_KEY}:
         return None
 
-    client = OpenAI(api_key=settings.openai_api_key)
+    client = OpenAI(
+        api_key=settings.openai_api_key,
+        timeout=settings.llm_timeout_seconds,
+        max_retries=0,
+    )
     output_text = ""
     try:
         response = client.responses.create(
@@ -662,7 +713,7 @@ def render_detail_insight(
     bundle: SajuDetailPreparedReport,
 ) -> Tuple[SajuDetailRenderedReport, bool, str]:
     cache_key = (report_id, input_hash, detail_type, locale)
-    cached = _DETAIL_RENDER_CACHE.get(cache_key)
+    cached = _get_detail_cache_item(_DETAIL_RENDER_CACHE, cache_key)
     if cached is not None:
         cached_report, cached_provider = cached
         return cached_report, True, cached_provider
@@ -690,5 +741,5 @@ def render_detail_insight(
         provider = "fallback"
 
     _ = int((time.perf_counter() - started) * 1000)
-    _DETAIL_RENDER_CACHE[cache_key] = (report, provider)
+    _set_detail_cache_item(_DETAIL_RENDER_CACHE, cache_key, (report, provider))
     return report, False, provider

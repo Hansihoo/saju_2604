@@ -28,6 +28,7 @@ For the full product profile, see [docs/PROJECT_PROFILE.md](docs/PROJECT_PROFILE
 - [docs/PROJECT_PROFILE.md](docs/PROJECT_PROFILE.md): product identity, principles, scope, risks, and defaults.
 - [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md): current feature-level progress ledger.
 - [docs/ai/WORK_LOG.md](docs/ai/WORK_LOG.md): recent AI-assisted implementation log.
+- [docs/operations/PUBLIC_BETA_RUNBOOK.md](docs/operations/PUBLIC_BETA_RUNBOOK.md): public-beta environment, privacy, WAF, and observation checklist.
 - [docs/CODEX_RUNBOOK.md](docs/CODEX_RUNBOOK.md): Codex-safe local development workflow.
 - [docs/planning/](docs/planning/): planning history and domain decisions.
 - [docs/delivery/](docs/delivery/): implementation handoff and delivery logs.
@@ -40,6 +41,8 @@ For the full product profile, see [docs/PROJECT_PROFILE.md](docs/PROJECT_PROFILE
 - Applied the essay/document-style result layout to the live service result page.
 - Reworded internal UI labels such as "핵심 카드" into user-facing reading labels.
 - Softened result CTA/button styling so the reading feels more like a document than an app simulator.
+- Split the initial free preview from the lazy full interpretation so one user flow does not generate the full report twice.
+- Kept heuristic scores internal, added PII-safe request logging defaults, and bounded detail caches for public-beta preparation.
 
 ## Structure
 
@@ -216,7 +219,19 @@ OPENAI_API_KEY=...
 OPENAI_MODEL=gpt-5.4
 SAJU_LLM_PROVIDER=openai
 SAJU_CORS_ORIGINS=https://your-production-domain.example
+SAJU_LLM_STORE=0
+SAJU_LLM_MAX_ATTEMPTS=1
+SAJU_LLM_TIMEOUT_SECONDS=45
+SAJU_LLM_ALLOW_REPAIR=0
+SAJU_REQUEST_LOG_ENABLED=0
+SAJU_REQUEST_LOG_INCLUDE_INPUT=0
+SAJU_DETAIL_CACHE_TTL_SECONDS=900
+SAJU_DETAIL_CACHE_MAX_ENTRIES=128
+SAJU_INTERNAL_DEBUG_TOKEN=<long-random-secret>
+SAJU_USE_CANONICAL_YEAR_MONTH_PILLARS=0
 ```
+
+Before making the project public, follow the staged WAF and observation procedure in [docs/operations/PUBLIC_BETA_RUNBOOK.md](docs/operations/PUBLIC_BETA_RUNBOOK.md). The WAF publish step is intentionally a manual Vercel-owner action.
 
 `OPENAI_API_KEY` is only needed for the OpenAI API phrasing layer. Without it, the API keeps returning the deterministic fallback interpretation.
 

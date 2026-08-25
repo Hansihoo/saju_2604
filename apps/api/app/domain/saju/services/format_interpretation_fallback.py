@@ -1,6 +1,6 @@
 """이 파일은 해석 fallback을 포맷하는 로직을 담는다."""
 
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 from app.domain.saju.interpretation import InterpretationLocale, InterpretationNarrative
 from app.domain.saju.llm_payload import InterpretationPayload
@@ -32,22 +32,6 @@ ELEMENT_LABELS: Dict[InterpretationLocale, Dict[ElementKey, str]] = {
     },
 }
 
-DOMAIN_LABELS: Dict[InterpretationLocale, Dict[str, str]] = {
-    "ko": {
-        "charm_score": "대인·연애",
-        "career_score": "직업",
-        "wealth_score": "재물",
-        "leadership_score": "주도성",
-    },
-    "en": {
-        "charm_score": "relationships",
-        "career_score": "career",
-        "wealth_score": "wealth",
-        "leadership_score": "leadership",
-    },
-}
-
-
 def _join_elements(locale: InterpretationLocale, values: List[ElementKey]) -> str:
     """오행 목록 관련 값을 반환하거나 처리한다."""
     labels = ELEMENT_LABELS[locale]
@@ -59,63 +43,30 @@ def _visible_pillar_text(payload: InterpretationPayload) -> str:
     return " / ".join(item.gan_zhi for item in payload.visible_pillars)
 
 
-def _balance_tone(locale: InterpretationLocale, score: int) -> str:
+def _balance_tone(locale: InterpretationLocale, missing_elements: List[ElementKey]) -> str:
     """tone 관련 값을 반환하거나 처리한다."""
     if locale == "ko":
-        if score >= 80:
-            return "전체 흐름이 비교적 안정적입니다."
-        if score >= 60:
-            return "전체 흐름이 비교적 고른 편입니다."
-        if score >= 40:
-            return "강점과 흔들림이 함께 보입니다."
-        return "기운이 한쪽으로 기울기 쉬운 편입니다."
+        if not missing_elements:
+            return "현재 보이는 오행이 함께 드러나므로, 상황에 따라 강점의 쓰임을 살피는 편이 좋습니다."
+        if len(missing_elements) == 1:
+            return "한 기운이 상대적으로 약하게 보여, 생활 리듬으로 보완하는 편이 좋습니다."
+        return "강한 부분과 보완할 부분이 함께 보여, 한쪽으로 치우치지 않는 선택이 중요합니다."
 
-    if score >= 80:
-        return "The overall flow is fairly stable."
-    if score >= 60:
-        return "The overall flow is fairly balanced."
-    if score >= 40:
-        return "The overall flow shows both strengths and swings."
-    return "The overall flow can lean to one side."
-
-
-def _score_tone(locale: InterpretationLocale, score: int, domain_key: str) -> str:
-    """tone 관련 값을 반환하거나 처리한다."""
-    label = DOMAIN_LABELS[locale][domain_key]
-    if locale == "ko":
-        if score >= 75:
-            return f"{label} 흐름은 강점이 비교적 분명합니다."
-        if score >= 55:
-            return f"{label} 흐름은 무난하고 안정적인 편입니다."
-        return f"{label} 흐름은 신중한 접근이 더 유리합니다."
-
-    if score >= 75:
-        return f"There is a clear strength in {label}."
-    if score >= 55:
-        return f"The flow in {label} is fairly steady."
-    return f"A more careful approach is better in {label}."
-
-
-def _top_domain(payload: InterpretationPayload) -> Tuple[str, int]:
-    """domain 관련 값을 반환하거나 처리한다."""
-    domain_scores = {
-        "charm_score": payload.signals.charm_score,
-        "career_score": payload.signals.career_score,
-        "wealth_score": payload.signals.wealth_score,
-        "leadership_score": payload.signals.leadership_score,
-    }
-    return max(domain_scores.items(), key=lambda item: item[1])
+    if not missing_elements:
+        return "The visible elements appear together, so their practical use matters more than a fixed label."
+    if len(missing_elements) == 1:
+        return "One element is relatively weak, so routine can help support the balance."
+    return "Strengths and areas to support appear together, so avoid leaning too hard on one side."
 
 
 def _format_summary(locale: InterpretationLocale, payload: InterpretationPayload) -> str:
     """요약을 포맷한다."""
     pillars = _visible_pillar_text(payload)
-    tone = _balance_tone(locale, payload.signals.balance_score)
+    tone = _balance_tone(locale, payload.signals.missing_elements)
     if locale == "ko":
         summary = (
             f"{payload.profile.region_display_name} 기준으로 확인된 기둥은 {pillars}입니다. "
-            f"균형 점수는 {payload.signals.balance_score}/100, 내부 분석 등급은 "
-            f"{payload.signals.internal_grade}이며 {tone}"
+            f"현재 보이는 오행의 강약을 함께 살펴봅니다. {tone}"
         )
         if payload.profile.is_birth_time_estimated:
             summary += " 출생시간이 미상이어서 시주 기반 해석은 제외했습니다."
@@ -123,8 +74,7 @@ def _format_summary(locale: InterpretationLocale, payload: InterpretationPayload
 
     summary = (
         f"Using {payload.profile.region_display_name} as the location basis, the visible pillars are "
-        f"{pillars}. The balance score is {payload.signals.balance_score}/100 with internal grade "
-        f"{payload.signals.internal_grade}. {tone}"
+        f"{pillars}. The reading considers the visible element pattern together. {tone}"
     )
     if payload.profile.is_birth_time_estimated:
         summary += " Hour-pillar-dependent interpretation is hidden because the birth time is estimated."
@@ -135,21 +85,20 @@ def _format_strengths(locale: InterpretationLocale, payload: InterpretationPaylo
     """strengths을 포맷한다."""
     items: List[str] = []
     dominant = _join_elements(locale, payload.signals.dominant_elements)
-    top_domain_key, top_domain_score = _top_domain(payload)
 
     if locale == "ko":
         if dominant:
             items.append(f"현재 보이는 오행에서는 {dominant} 기운이 상대적으로 중심을 잡고 있습니다.")
         else:
             items.append("현재 보이는 오행에서는 특정 기운이 과도하게 튀지 않습니다.")
-        items.append(_score_tone(locale, top_domain_score, top_domain_key))
+        items.append("관계·일·금전은 각각의 기둥과 십성 근거를 함께 살펴봅니다.")
         return items
 
     if dominant:
         items.append(f"In the visible balance, {dominant} takes the lead.")
     else:
         items.append("No single element is overly dominant in the visible balance.")
-    items.append(_score_tone(locale, top_domain_score, top_domain_key))
+    items.append("Relationships, work, and wealth are considered through their own pillar and Ten-God facts.")
     return items
 
 
@@ -223,8 +172,20 @@ def format_interpretation_fallback(
         summary=_format_summary(locale, payload),
         strengths=_format_strengths(locale, payload),
         cautions=_format_cautions(locale, payload),
-        love=_score_tone(locale, payload.signals.charm_score, "charm_score"),
-        career=_score_tone(locale, payload.signals.career_score, "career_score"),
-        wealth=_score_tone(locale, payload.signals.wealth_score, "wealth_score"),
+        love=(
+            "관계는 배우자궁과 반복되는 생활 리듬을 함께 살펴봅니다."
+            if locale == "ko"
+            else "Relationships are considered through spouse-house facts and repeated daily rhythm."
+        ),
+        career=(
+            "일은 월주와 십성의 역할 신호를 함께 살펴봅니다."
+            if locale == "ko"
+            else "Work is considered through the month pillar and Ten-God role signals."
+        ),
+        wealth=(
+            "금전은 재성·식상 신호와 실제 소비 습관을 함께 살펴봅니다."
+            if locale == "ko"
+            else "Wealth is considered through wealth/output signals and practical spending habits."
+        ),
         action_advice=_format_action(locale, payload),
     )

@@ -2250,7 +2250,7 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
       setDetailError(null);
 
       try {
-        const response = await createSajuFreeDetail(detailPayload, detailPayload.debug);
+        const response = await createSajuFreeDetail(detailPayload);
         setDetailReport(response.detail_report ?? response.interpretation);
         setDetailStatus("ready");
       } catch (_error) {
@@ -2550,7 +2550,7 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
   );
 
   return (
-    <section className="result-screen essay-result">
+    <section className="result-screen ritual-result readable-result">
       <div className="result-header">
         <div className="result-header-copy">
           <h2>{texts.resultTitle}</h2>

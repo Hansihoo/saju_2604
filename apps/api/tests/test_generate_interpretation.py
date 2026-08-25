@@ -128,12 +128,6 @@ def make_payload(locale: str = "ko", estimated: bool = False) -> InterpretationP
         element_counts={"wood": 1, "fire": 3, "earth": 1, "metal": 2, "water": 1},
         ten_god_stems={"year": "겁재", "month": "정관", "day": "", "time": ""},
         signals=InterpretationSignalBlock(
-            internal_grade="B",
-            balance_score=57,
-            charm_score=67,
-            wealth_score=54,
-            career_score=71,
-            leadership_score=48,
             dominant_elements=["fire", "metal"],
             missing_elements=["earth"],
         ),
@@ -189,7 +183,6 @@ def make_payload(locale: str = "ko", estimated: bool = False) -> InterpretationP
             ),
         ),
         love_facts=InterpretationLoveFacts(
-            score=67,
             spouse_house_label="배우자궁" if locale == "ko" else "Spouse house",
             spouse_house_branch="유" if locale == "ko" else "Yu",
             spouse_house_ten_god="편재" if locale == "ko" else "Indirect Wealth",
@@ -198,7 +191,6 @@ def make_payload(locale: str = "ko", estimated: bool = False) -> InterpretationP
             active_star_labels=["도화", "홍염"] if locale == "ko" else ["Peach Blossom", "Red Charm"],
         ),
         career_facts=InterpretationCareerFacts(
-            score=71,
             month_pillar_label="월주" if locale == "ko" else "Month pillar",
             month_pillar_gan_zhi="갑오" if locale == "ko" else "Gap-O",
             month_stem_ten_god="정관" if locale == "ko" else "Direct Officer",
@@ -210,7 +202,6 @@ def make_payload(locale: str = "ko", estimated: bool = False) -> InterpretationP
             active_star_labels=["문창귀인", "학당"] if locale == "ko" else ["Literary Star", "Study Hall"],
         ),
         wealth_facts=InterpretationWealthFacts(
-            score=54,
             key_ten_gods=[
                 InterpretationCountMetric(key="wealth", label="재성" if locale == "ko" else "Wealth stars", count=1),
                 InterpretationCountMetric(key="output", label="식상" if locale == "ko" else "Output stars", count=2),

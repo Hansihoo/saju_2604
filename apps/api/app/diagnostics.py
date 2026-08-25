@@ -2,10 +2,44 @@
 
 import json
 import logging
+import secrets
 from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
 from uuid import uuid4
+
+
+SENSITIVE_LOG_META_KEYS = frozenset(
+    {
+        "birth_date",
+        "birth_time",
+        "input_date",
+        "input_time",
+        "normalized_local_datetime",
+        "normalized_utc_datetime",
+        "normalized_solar_datetime",
+        "normalized_lunar_datetime",
+        "source_local_datetime",
+        "source_solar_datetime",
+        "corrected_solar_datetime",
+        "primary_input_datetime_to_lunar_python",
+        "primary_day_pillar_basis_datetime",
+        "year_pillar",
+        "month_pillar",
+        "day_pillar",
+        "time_pillar",
+        "iljin_query_date",
+        "balance_score",
+        "charm_score",
+        "wealth_score",
+        "career_score",
+        "leadership_score",
+        "internal_grade",
+        "payload",
+        "payload_json",
+        "output_excerpt",
+    }
+)
 
 
 def configure_logging(log_level: str) -> None:
@@ -18,9 +52,9 @@ def create_trace_id() -> str:
     return f"trc_{uuid4().hex[:12]}"
 
 
-def parse_debug_header(value: Optional[str]) -> bool:
-    """디버그 header를 파싱한다."""
-    return value in {"1", "true", "TRUE", "yes", "YES"}
+def is_internal_debug_request(value: Optional[str], token: Optional[str]) -> bool:
+    """Allow remote debug output only with the configured server-side token."""
+    return bool(value and token and secrets.compare_digest(value, token))
 
 
 def log_stage(
@@ -45,7 +79,7 @@ def log_stage(
                 "event": event,
                 "duration_ms": duration_ms,
                 "error_code": error_code,
-                "meta": meta or {},
+                "meta": _redact_log_meta(meta or {}),
             },
             ensure_ascii=True,
         ),
@@ -65,6 +99,46 @@ def to_json_safe(value: Any) -> Any:
     if isinstance(value, (list, tuple, set)):
         return [to_json_safe(item) for item in value]
     return value
+
+
+def _redact_log_meta(value: Any) -> Any:
+    """Remove direct birth details and generated prose from runtime logs."""
+    if isinstance(value, dict):
+        redacted: Dict[str, Any] = {}
+        for key, item in value.items():
+            normalized_key = str(key).lower()
+            if normalized_key in SENSITIVE_LOG_META_KEYS or normalized_key.endswith("_datetime"):
+                redacted[str(key)] = "[redacted]"
+            else:
+                redacted[str(key)] = _redact_log_meta(item)
+        return redacted
+    if isinstance(value, (list, tuple, set)):
+        return [_redact_log_meta(item) for item in value]
+    json_safe_value = to_json_safe(value)
+    if isinstance(json_safe_value, (dict, list, tuple, set)):
+        return _redact_log_meta(json_safe_value)
+    return json_safe_value
+
+
+def _redact_saju_payload(payload: Any) -> Dict[str, Any]:
+    """Keep request logs useful without retaining date, time, or gender input."""
+    value = to_json_safe(payload)
+    if not isinstance(value, dict):
+        return {"input_redacted": True, "input_present": value is not None}
+
+    source = value.get("input") if isinstance(value.get("input"), dict) else value
+    allowed_fields = (
+        "locale",
+        "calendar_type",
+        "is_birth_time_estimated",
+        "is_lunar_leap_month",
+        "region_id",
+        "accuracy_mode",
+    )
+    return {
+        "input_redacted": True,
+        **{field: source[field] for field in allowed_fields if field in source},
+    }
 
 
 def _request_log_backup_path(target: Path, index: int) -> Path:
@@ -126,6 +200,7 @@ def capture_saju_request_event(
     status_code: int,
     payload: Any,
     debug_requested: bool,
+    include_input: bool = False,
     stage: Optional[str] = None,
     error_code: Optional[str] = None,
     message: Optional[str] = None,
@@ -140,7 +215,7 @@ def capture_saju_request_event(
     try:
         target = Path(log_path)
         target.parent.mkdir(parents=True, exist_ok=True)
-        selected_parameters = to_json_safe(payload)
+        selected_parameters = to_json_safe(payload) if include_input else _redact_saju_payload(payload)
         record = {
             "logged_at": datetime.now(timezone.utc).isoformat(),
             "service": service,
@@ -153,8 +228,12 @@ def capture_saju_request_event(
             "message": message,
             "debug_requested": debug_requested,
             "selected_parameters": selected_parameters,
-            "meta": to_json_safe(meta or {}),
-            "replay_command": f"python -m app.tools.replay_saju_request_log --trace-id {trace_id}",
+            "meta": _redact_log_meta(meta or {}),
+            "replay_command": (
+                f"python -m app.tools.replay_saju_request_log --trace-id {trace_id}"
+                if include_input
+                else None
+            ),
         }
         line = json.dumps(record, ensure_ascii=False) + "\n"
         _rotate_request_log_if_needed(

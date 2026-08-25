@@ -102,6 +102,7 @@ const elementLabels = {
 export function ManseTestPanel({ locale, result }: ManseTestPanelProps) {
   const text = ui[locale];
   const elementText = elementLabels[locale];
+  const internalAnalysis = result.debug_trace?.internal_analysis;
   const pillarLabels = {
     year: text.year,
     month: text.month,
@@ -138,7 +139,7 @@ export function ManseTestPanel({ locale, result }: ManseTestPanelProps) {
           </div>
           <div className="result-meta-item">
             <span>{text.grade}</span>
-            <strong>{result.manse.analysis.internal_grade}</strong>
+            <strong>{internalAnalysis?.internal_grade ?? "-"}</strong>
           </div>
         </div>
       </div>

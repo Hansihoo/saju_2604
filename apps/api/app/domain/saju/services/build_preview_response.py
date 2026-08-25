@@ -1,7 +1,7 @@
 """이 파일은 미리보기 응답을 조립하는 로직을 담는다."""
 
 from dataclasses import asdict
-from typing import List, Optional, Tuple
+from typing import List, Literal, Optional, Tuple
 
 from app.config import settings
 from app.diagnostics import log_stage
@@ -17,6 +17,7 @@ from app.domain.saju.schemas import (
     DebugCheckpoint,
     DebugTrace,
     EvidenceSection,
+    InternalAnalysisDebug,
     PipelineStatus,
     RegionalSolarCorrectionSummary,
     SajuPreviewRequest,
@@ -42,6 +43,18 @@ from app.domain.saju.time_correction import (
     RegionalSolarCorrectionResult,
     TimeCorrectionResult,
     build_birth_time_context,
+)
+
+
+SUCCESSFUL_LLM_PROVIDERS = frozenset({"openai", "codex"})
+ReportRenderMode = Literal["all", "free_preview", "interpretation", "none"]
+PUBLIC_SCORING_FIELDS = (
+    "balance_score",
+    "charm_score",
+    "wealth_score",
+    "career_score",
+    "leadership_score",
+    "internal_grade",
 )
 
 
@@ -74,6 +87,13 @@ def _build_result_signals(
     )
 
 
+def _redact_public_scoring(response: SajuPreviewResponse) -> None:
+    """Keep heuristic scores available only while the server assembles internal reports."""
+    for field_name in PUBLIC_SCORING_FIELDS:
+        setattr(response.result.signals, field_name, None)
+        setattr(response.manse.analysis, field_name, None)
+
+
 def _generate_free_preview_safely(
     *,
     interpretation_payload,
@@ -86,7 +106,7 @@ def _generate_free_preview_safely(
             trace_id=trace_id,
             service_name=service_name,
         )
-        status = "success" if free_preview.provider == "openai" else "fallback"
+        status = "success" if free_preview.provider in SUCCESSFUL_LLM_PROVIDERS else "fallback"
         return free_preview, status
     except Exception as exc:  # pragma: no cover - defensive boundary for preview API resilience.
         log_stage(
@@ -126,7 +146,7 @@ def build_preview_response(
     candidate_charts: Optional[List[CandidateChart]] = None,
     uncertainty_flags: Optional[List[UncertaintyFlag]] = None,
     birth_time_context: Optional[BirthTimeContext] = None,
-    render_reports: bool = True,
+    report_mode: ReportRenderMode = "all",
 ) -> SajuPreviewResponse:
     """파이프라인 결과들을 모아 최종 preview API 응답으로 조립한다."""
     birth_time_policy = resolve_birth_time_policy(payload)
@@ -171,6 +191,19 @@ def build_preview_response(
     calculation_basis_summary = CalculationBasisSummary(**asdict(calculation_basis))
     is_placeholder_time = payload.is_birth_time_estimated
     placeholder_reason = "birth_time_unknown" if is_placeholder_time else None
+
+    if payload.locale == "ko":
+        preview_overview = f"{region.city} 기준으로 확인된 기둥은 {visible_pillar_summary}입니다."
+        preview_love = "관계 해석은 배우자궁과 현재 흐름을 함께 살펴봅니다."
+        preview_career = "일 해석은 월주와 십성의 역할 신호를 함께 살펴봅니다."
+        preview_wealth = "금전 해석은 재성·식상 신호와 생활 패턴을 함께 살펴봅니다."
+        preview_action_advice = "강한 기운은 성과에 쓰고, 약한 기운은 생활 리듬과 환경으로 보완해 보세요."
+    else:
+        preview_overview = f"Visible pillars for {region.city}: {visible_pillar_summary}."
+        preview_love = "Relationship reading considers spouse-house facts and the current flow together."
+        preview_career = "Work reading considers the month pillar and Ten-God role signals together."
+        preview_wealth = "Wealth reading considers wealth/output signals and practical habits together."
+        preview_action_advice = "Use the strong side for results and support weaker elements through routine and environment."
 
     evidence_sections = {
         "elements": EvidenceSection(
@@ -223,10 +256,7 @@ def build_preview_response(
     }
 
     preview_result = SajuPreviewResult(
-        overview=(
-            f"Visible pillars for {region.city}: {visible_pillar_summary}. "
-            f"Current balance score is {analysis_result.balance_score}/100 with grade {analysis_result.internal_grade}."
-        ),
+        overview=preview_overview,
         strengths=[
             f"Dominant visible elements: {', '.join(analysis_result.dominant_elements) or 'none'}.",
             analysis_result.strengths[0],
@@ -239,10 +269,10 @@ def build_preview_response(
             ),
             analysis_result.cautions[0],
         ],
-        love=f"Current attraction score: {analysis_result.charm_score}/100.",
-        career=f"Current career fit score: {analysis_result.career_score}/100.",
-        wealth=f"Current wealth score: {analysis_result.wealth_score}/100.",
-        action_advice=analysis_result.action_advice,
+        love=preview_love,
+        career=preview_career,
+        wealth=preview_wealth,
+        action_advice=preview_action_advice,
         limitations=limitations,
         disabled_sections=birth_time_policy.disabled_sections,
         evidence_sections=evidence_sections,
@@ -306,24 +336,34 @@ def build_preview_response(
         result=preview_result,
         debug_trace=None,
     )
-    if not render_reports:
+    if report_mode == "none":
         return base_response
 
     interpretation_payload = build_interpretation_payload(request=payload, response=base_response)
-    free_preview, free_preview_status = _generate_free_preview_safely(
-        interpretation_payload=interpretation_payload,
-        trace_id=trace_id,
-        service_name=settings.app_name,
-    )
-    interpretation = generate_interpretation_report(
-        payload=interpretation_payload,
-        trace_id=trace_id,
-        service_name=settings.app_name,
-    )
-    llm_status = "passed" if interpretation.provider == "openai" else "failed"
-    overview_text = interpretation.summary.headline.strip()
-    if interpretation.summary.overview.strip():
-        overview_text = f"{overview_text} {interpretation.summary.overview}".strip()
+    free_preview = None
+    free_preview_status = "skipped"
+    if report_mode in {"all", "free_preview"}:
+        free_preview, free_preview_status = _generate_free_preview_safely(
+            interpretation_payload=interpretation_payload,
+            trace_id=trace_id,
+            service_name=settings.app_name,
+        )
+
+    interpretation = None
+    llm_status = "skipped"
+    if report_mode in {"all", "interpretation"}:
+        interpretation = generate_interpretation_report(
+            payload=interpretation_payload,
+            trace_id=trace_id,
+            service_name=settings.app_name,
+        )
+        llm_status = "passed" if interpretation.provider in SUCCESSFUL_LLM_PROVIDERS else "failed"
+
+    overview_text = preview_result.overview
+    if interpretation is not None:
+        overview_text = interpretation.summary.headline.strip()
+        if interpretation.summary.overview.strip():
+            overview_text = f"{overview_text} {interpretation.summary.overview}".strip()
 
     result = SajuPreviewResult(
         overview=overview_text,
@@ -358,6 +398,44 @@ def build_preview_response(
             CandidateChartSummary(**asdict(candidate_chart))
             for candidate_chart in (candidate_charts or [])
         ]
+        llm_note = "Structured interpretation was deferred."
+        llm_error_code = None
+        if interpretation is not None:
+            llm_note = (
+                "Structured interpretation finished via "
+                f"{interpretation.provider}."
+                + (
+                    f" Fallback reason: {interpretation.diagnostics.fallback_reason}."
+                    if interpretation.provider == "fallback" and interpretation.diagnostics
+                    else f" Model {interpretation.model}."
+                )
+            )
+            llm_error_code = (
+                interpretation.diagnostics.fallback_reason
+                if interpretation.provider == "fallback" and interpretation.diagnostics
+                else None
+            )
+        free_preview_note = "Free preview was not requested."
+        free_preview_error_code = None
+        if free_preview is not None:
+            free_preview_note = (
+                "Free preview finished via "
+                f"{free_preview.provider}."
+                + (
+                    f" Fallback reason: {free_preview.diagnostics.fallback_reason}."
+                    if (
+                        free_preview.provider == "fallback"
+                        and free_preview.diagnostics
+                        and free_preview.diagnostics.fallback_reason
+                    )
+                    else ""
+                )
+            )
+            free_preview_error_code = (
+                free_preview.diagnostics.fallback_reason
+                if free_preview.provider == "fallback" and free_preview.diagnostics
+                else "free_preview_failed" if free_preview_status == "failed" else None
+            )
         debug_trace = DebugTrace(
             stage_order=[
                 "input_validation",
@@ -370,7 +448,13 @@ def build_preview_response(
                 "llm_formatting",
                 "free_preview_formatting",
             ],
-            failed_stage="llm_formatting" if interpretation.provider == "fallback" else None,
+            failed_stage=(
+                "llm_formatting"
+                if llm_status == "failed"
+                else "free_preview_formatting"
+                if free_preview_status in {"fallback", "failed"}
+                else None
+            ),
             checkpoints=[
                 DebugCheckpoint(stage="input_validation", status="passed"),
                 DebugCheckpoint(
@@ -427,20 +511,8 @@ def build_preview_response(
                 DebugCheckpoint(
                     stage="llm_formatting",
                     status=llm_status,
-                    note=(
-                        "Structured interpretation finished via "
-                        f"{interpretation.provider}."
-                        + (
-                            f" Fallback reason: {interpretation.diagnostics.fallback_reason}."
-                            if interpretation.provider == "fallback" and interpretation.diagnostics
-                            else f" Model {interpretation.model}."
-                        )
-                    ),
-                    error_code=(
-                        interpretation.diagnostics.fallback_reason
-                        if interpretation.provider == "fallback" and interpretation.diagnostics
-                        else None
-                    ),
+                    note=llm_note,
+                    error_code=llm_error_code,
                 ),
                 DebugCheckpoint(
                     stage="free_preview_formatting",
@@ -449,29 +521,8 @@ def build_preview_response(
                         if free_preview_status == "success"
                         else "failed" if free_preview_status in {"fallback", "failed"} else "skipped"
                     ),
-                    note=(
-                        "Free preview finished via "
-                        f"{free_preview.provider if free_preview is not None else 'none'}."
-                        + (
-                            f" Fallback reason: {free_preview.diagnostics.fallback_reason}."
-                            if (
-                                free_preview is not None
-                                and free_preview.provider == "fallback"
-                                and free_preview.diagnostics
-                                and free_preview.diagnostics.fallback_reason
-                            )
-                            else ""
-                        )
-                    ),
-                    error_code=(
-                        free_preview.diagnostics.fallback_reason
-                        if (
-                            free_preview is not None
-                            and free_preview.provider == "fallback"
-                            and free_preview.diagnostics
-                        )
-                        else "free_preview_failed" if free_preview_status == "failed" else None
-                    ),
+                    note=free_preview_note,
+                    error_code=free_preview_error_code,
                 ),
             ],
             request_echo={
@@ -484,6 +535,14 @@ def build_preview_response(
                 "trace_id": trace_id,
             },
             accuracy_mode=payload.accuracy_mode,
+            internal_analysis=InternalAnalysisDebug(
+                balance_score=analysis_result.balance_score,
+                charm_score=analysis_result.charm_score,
+                wealth_score=analysis_result.wealth_score,
+                career_score=analysis_result.career_score,
+                leadership_score=analysis_result.leadership_score,
+                internal_grade=analysis_result.internal_grade,
+            ),
             calculation_basis=calculation_basis_summary,
             birth_time_context=birth_time_context,
             year_month_boundary_context=saju_calculation.year_month_boundary_context,
@@ -491,58 +550,16 @@ def build_preview_response(
             uncertainty_flags=uncertainty_flag_summaries,
         )
 
-    return SajuPreviewResponse(
-        trace_id=trace_id,
-        pipeline_status=PipelineStatus(
-            time_correction="passed",
-            calendar_normalization="passed",
-            regional_solar_correction="passed",
-            saju_calculation="passed",
-            analysis_engine="passed",
-            llm_formatting=llm_status,
-            free_preview_formatting=free_preview_status,
-        ),
-        region=region,
-        time_correction=TimeCorrectionSummary(
-            tzid=time_correction.tzid,
-            source_local_datetime=time_correction.source_local_datetime,
-            normalized_local_datetime=time_correction.normalized_local_datetime,
-            normalized_utc_datetime=time_correction.normalized_utc_datetime,
-            offset_minutes=time_correction.offset_minutes,
-            ambiguous=time_correction.ambiguous,
-            fold=time_correction.fold,
-            is_placeholder_time=is_placeholder_time,
-            placeholder_reason=placeholder_reason,
-        ),
-        regional_solar_correction=RegionalSolarCorrectionSummary(
-            source_solar_datetime=regional_solar_correction.source_solar_datetime,
-            corrected_solar_datetime=regional_solar_correction.corrected_solar_datetime,
-            longitude=regional_solar_correction.longitude,
-            regional_time_offset_minutes=regional_solar_correction.regional_time_offset_minutes,
-            daylight_saving_offset_minutes=regional_solar_correction.daylight_saving_offset_minutes,
-            correction_basis=regional_solar_correction.correction_basis,
-            is_placeholder_time=is_placeholder_time,
-            placeholder_reason=placeholder_reason,
-        ),
-        calendar_normalization=CalendarNormalizationSummary(
-            calendar_type=calendar_normalization.calendar_type,
-            is_lunar_leap_month=calendar_normalization.is_lunar_leap_month,
-            input_date=calendar_normalization.input_date,
-            input_time=calendar_normalization.input_time,
-            normalized_solar_datetime=calendar_normalization.normalized_solar_datetime,
-            normalized_lunar_datetime=calendar_normalization.normalized_lunar_datetime,
-            solar_year=calendar_normalization.solar_year,
-            solar_month=calendar_normalization.solar_month,
-            solar_day=calendar_normalization.solar_day,
-            solar_hour=calendar_normalization.solar_hour,
-            solar_minute=calendar_normalization.solar_minute,
-            lunar_year=calendar_normalization.lunar_year,
-            lunar_month=calendar_normalization.lunar_month,
-            lunar_day=calendar_normalization.lunar_day,
-            is_placeholder_time=is_placeholder_time,
-            placeholder_reason=placeholder_reason,
-        ),
-        manse=manse,
-        result=result,
-        debug_trace=debug_trace,
+    base_response.pipeline_status = PipelineStatus(
+        time_correction="passed",
+        calendar_normalization="passed",
+        regional_solar_correction="passed",
+        saju_calculation="passed",
+        analysis_engine="passed",
+        llm_formatting=llm_status,
+        free_preview_formatting=free_preview_status,
     )
+    base_response.result = result
+    base_response.debug_trace = debug_trace
+    _redact_public_scoring(base_response)
+    return base_response

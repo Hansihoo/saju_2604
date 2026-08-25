@@ -41,7 +41,7 @@ class InterpretationFormatterTests(unittest.TestCase):
 
         self.assertEqual(narrative.locale, "ko")
         self.assertIn("서울특별시", narrative.summary)
-        self.assertIn("균형 점수", narrative.summary)
+        self.assertIn("현재 보이는 오행", narrative.summary)
         self.assertEqual(len(narrative.strengths), 2)
         self.assertEqual(len(narrative.cautions), 2)
         self.assertIn("첫 대운", narrative.action_advice)

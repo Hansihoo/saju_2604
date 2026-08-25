@@ -29,8 +29,17 @@ export default function App() {
     setMode(nextMode);
   }
 
+  const pageShellClassName = [
+    "page-shell",
+    mode === "dev" ? "dev-page" : "",
+    mode === "design" ? "design-page-shell" : "",
+    mode === "service" && result ? "ritual-page-shell" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <div className={`page-shell${mode === "dev" ? " dev-page" : ""}${mode === "design" ? " design-page-shell" : ""}`}>
+    <div className={pageShellClassName}>
       {mode === "dev" ? (
         <DeveloperPage
           locale={locale}

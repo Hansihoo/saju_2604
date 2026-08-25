@@ -16,8 +16,8 @@ from app.diagnostics import (
     capture_saju_request_event,
     configure_logging,
     create_trace_id,
+    is_internal_debug_request,
     log_stage,
-    parse_debug_header,
 )
 from app.domain.saju.time_correction import TimeCorrectionError
 
@@ -60,6 +60,7 @@ def _capture_failed_saju_request(
         status_code=status_code,
         payload=payload if payload is not None else getattr(request.state, "saju_preview_payload", None),
         debug_requested=getattr(request.state, "debug_requested", False),
+        include_input=settings.request_log_include_input,
         stage=stage,
         error_code=error_code,
         message=message,
@@ -211,13 +212,19 @@ async def trace_middleware(request: Request, call_next):
     started_at = perf_counter()
     trace_id = request.headers.get("X-Trace-Id") or create_trace_id()
     request.state.trace_id = trace_id
-    request.state.debug_requested = settings.debug_enabled or parse_debug_header(
-        request.headers.get("X-Saju-Debug")
+    request.state.debug_requested = (
+        settings.debug_enabled and not settings.is_production
+    ) or is_internal_debug_request(
+        request.headers.get("X-Saju-Internal-Debug-Token"),
+        settings.internal_debug_token,
     )
 
     response = await call_next(request)
     duration_ms = int((perf_counter() - started_at) * 1000)
     response.headers["X-Trace-Id"] = trace_id
+    if request.url.path.startswith("/saju/"):
+        response.headers["Cache-Control"] = "private, no-store"
+        response.headers["Pragma"] = "no-cache"
 
     log_stage(
         service=settings.app_name,

@@ -292,12 +292,12 @@ export type ManseAnalysisSummary = {
   missing_elements: Array<"wood" | "fire" | "earth" | "metal" | "water">;
   element_percentages: ManseElementPercentageSummary;
   visible_ten_god_distribution: Record<string, number>;
-  balance_score: number;
-  internal_grade: "S" | "A" | "B" | "C";
-  charm_score: number;
-  wealth_score: number;
-  career_score: number;
-  leadership_score: number;
+  balance_score?: number | null;
+  internal_grade?: "S" | "A" | "B" | "C" | null;
+  charm_score?: number | null;
+  wealth_score?: number | null;
+  career_score?: number | null;
+  leadership_score?: number | null;
   first_luck_cycle_direction?: "forward" | "backward" | null;
   first_luck_cycle_exact_start_age_years?: number | null;
   first_luck_cycle_precise_start_age_years?: number | null;
@@ -325,6 +325,15 @@ export type SajuResultSignals = {
   visible_pillar_values: string[];
   dominant_elements: Array<"wood" | "fire" | "earth" | "metal" | "water">;
   missing_elements: Array<"wood" | "fire" | "earth" | "metal" | "water">;
+  balance_score?: number | null;
+  charm_score?: number | null;
+  wealth_score?: number | null;
+  career_score?: number | null;
+  leadership_score?: number | null;
+  internal_grade?: "S" | "A" | "B" | "C" | null;
+};
+
+export type InternalAnalysisDebug = {
   balance_score: number;
   charm_score: number;
   wealth_score: number;
@@ -478,6 +487,7 @@ export type SajuPreviewResponse = {
     }>;
     request_echo: Record<string, string>;
     accuracy_mode?: AccuracyMode;
+    internal_analysis?: InternalAnalysisDebug | null;
     calculation_basis?: CalculationBasis;
     birth_time_context?: BirthTimeContext | null;
     year_month_boundary_context?: Record<string, unknown>;
