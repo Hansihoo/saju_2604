@@ -28,13 +28,16 @@ model-switch hold; it does not change the production OpenAI API default.
 | Project CLI catalog, no model generation | GPT-6.1 Sol and xhigh available; CLI 0.160.0 |
 | Local runtime health | Web 5173 and API 8000 running; provider endpoint confirms codex |
 | Requested live Codex saju generation | HTTP 200; actual provider/model codex/gpt-6.1-sol; one successful attempt; response schema passed; 277.141s |
-| Remote main | Local main committed at 53f736e; push blocked by GitHub HTTP 403 for theo-s-han |
+| Remote main | Source commit 53f736e and publication revision 10ea42a pushed to origin/main; fresh remote SHA matched local HEAD |
 
-Remote publication is incomplete. GitHub rejected the authenticated push to
-`Hansihoo/saju_2604`; no force push, credential change or alternate publication
-was attempted. The user has been asked to prepare a login with repository write
-access or grant the current account write access. The local code and running app
-remain available while that external prerequisite is unresolved.
+Remote publication is complete. The first push was rejected with HTTP 403 for
+`theo-s-han`. The user then explicitly requested switching the two stored accounts.
+GitHub CLI was switched to `Hansihoo`, repository ADMIN permission was confirmed,
+and its credential helper was connected for github.com. A normal push created
+`origin/main`; a fresh remote lookup matched revision `10ea42a63aee6412357f99e35db3c59f581231d6`.
+The existing `saju` branch and repository default branch are preserved. No force
+push or public deployment was performed. Completion-document changes are
+published in a following documentation commit.
 
 The HTTP failure remains `known_issue.valid_lunar_day30`: the valid lunar date
 1990-02-30 is rejected by Gregorian-shaped request validation. It predates this
