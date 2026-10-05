@@ -1,0 +1,57 @@
+{
+  "schema_version": "product-content-knowledge-v1",
+  "policy_version": "product-interest-2026-10-05.1",
+  "scope": "project_editorial_policy",
+  "source": {
+    "kind": "direct_user_feedback",
+    "date": "2026-10-05",
+    "quote": "연애할 때 난 어떤 타입? 사주를 보고 있는데 어울리지도 않으며, 내 성격에 대한 것은 본인이 잘 알고 있어. 맞지 않은 문구야"
+  },
+  "lessons": [
+    {
+      "id": "QF-001",
+      "problem": "기존 엔진이 답하기 쉬운 성향 질문으로 사용자가 원하는 미래 정보를 대체했다.",
+      "decision": "앞으로의 인연·취업·직장 변화와 시기를 주력 관심사로 삼는다. 성격·연애 타입은 첫 진입의 흥미 장치로 사용하지 않는다.",
+      "applies_to": ["planning", "entry", "question_titles", "follow_up_recommendations"],
+      "exception": "기존 성격 풀이를 보조 결과에 유지할 수 있다. 모든 사용자가 자신의 성격을 안다는 일반적 사실로 확대하지 않는다."
+    },
+    {
+      "id": "QF-002",
+      "problem": "미지원 시기 질문에 제한 문장을 붙인 뒤 기존 성향 풀이를 이어서 질문에 답한 것처럼 보이게 했다.",
+      "decision": "선택 질문을 유지하고 부족한 기간 사실·규칙·자료를 명시한다. 기존 성향의 answer/scene/tradeoff/action/분석 노트/다음 질문을 복사해 대신 답하지 않는다.",
+      "applies_to": ["answer_spec", "verification_answer", "supervisor_question_fit"],
+      "exception": "정직한 지원 한계 안내는 질문을 충족한 답이나 흥미 검증 통과를 뜻하지 않는다."
+    },
+    {
+      "id": "QF-003",
+      "problem": "제목과 말투만 바꾸는 작업을 새 정보나 시기 풀이의 구현으로 취급할 위험이 있다.",
+      "decision": "원하는 답 정의 → 기간별 계산 사실 → 출처·조건·예외를 갖춘 해석 규칙 검토 → 지원 조건 확인 → 질문 공개 순서를 지킨다.",
+      "applies_to": ["knowledge_changes", "release_review", "completion_reporting"],
+      "exception": "사용자 흥미를 높이기 위해 날짜·확률·순위·전문가 승인 주장을 만들어내지 않는다."
+    }
+  ],
+  "priority_questions": [
+    {"id": "love.meeting_window", "title": "인연은 언제쯤 들어올까?", "status": "needs_rule_review"},
+    {"id": "career.entry_window", "title": "취업운은 언제쯤 풀릴까?", "status": "needs_rule_review"}
+  ],
+  "entry_guard": {
+    "forbidden_topic_ids": ["core"],
+    "forbidden_patterns": {
+      "ko": ["성격|성향|타입|스타일|유형", "나도\\s*모르는\\s*내\\s*모습"],
+      "en": ["\\b(?:personality|temperament|style|type)\\b", "\\bwhat\\s+am\\s+i\\s+like\\b"]
+    },
+    "rejected_examples": {
+      "ko": ["연애할 때 난 어떤 타입?", "돈 버는 스타일, 따로 있을까?", "나도 모르는 내 모습은?", "나한테 편한 사람은 어떤 타입일까?"],
+      "en": ["What's my type in love?", "What's my money-making style?", "What am I like in a relationship?"]
+    },
+    "current_safe_labels": ["오늘의 운세", "연애운", "직장 · 금전운", "대운 흐름"]
+  },
+  "unsupported_guard": {
+    "empty_fields": ["scene", "tradeoff", "next_question"],
+    "empty_analysis_note_and_claim_refs": true,
+    "reject_selected_answer_or_action_copy": true,
+    "allow_action": "필요한 입력·규칙·자료의 확인 안내. 기존 성향 판정에 따른 조언을 복사하지 않는다."
+  },
+  "versioning": "제품 편집 정책은 명리 knowledge/rule/copy version과 별도로 관리한다. 정책을 바꾸면 이 policy_version과 역할 prompt/rubric version을 갱신한다.",
+  "limits": "알려진 문구·복사·구조 회귀만 자동 검출한다. 새로운 표현의 의미, 전문가 규칙 검토, 실제 사용자 흥미는 별도 검토한다."
+}

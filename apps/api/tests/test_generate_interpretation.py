@@ -14,6 +14,7 @@ from app.domain.saju.llm_payload import (
     InterpretationCurrentFlowContext,
     InterpretationEvidenceItem,
     InterpretationInputProfile,
+    InterpretationUncertaintyFlag,
     InterpretationLoveFacts,
     InterpretationLuckCycle,
     InterpretationPayload,
@@ -128,7 +129,7 @@ def make_payload(locale: str = "ko", estimated: bool = False) -> InterpretationP
         element_counts={"wood": 1, "fire": 3, "earth": 1, "metal": 2, "water": 1},
         ten_god_stems={"year": "겁재", "month": "정관", "day": "", "time": ""},
         signals=InterpretationSignalBlock(
-            dominant_elements=["fire", "metal"],
+            dominant_elements=["fire"],
             missing_elements=["earth"],
         ),
         evidence=[
@@ -245,7 +246,7 @@ def make_report(confidence: str = "medium") -> InterpretationReport:
     return InterpretationReport(
         provider="openai",
         model="gpt-5.4",
-        prompt_version="saju-report-v15",
+        prompt_version="saju-report-v16",
         summary=InterpretationSummaryBlock(
             headline="기준을 세우고 오래 밀고 가는 사람",
             overview=(
@@ -321,8 +322,75 @@ class GenerateInterpretationTests(unittest.TestCase):
         self.assertNotIn("없음 쪽", combined)
         self.assertNotIn("없음 기운", combined)
         self.assertNotIn("확인 대기 구간", combined)
-        self.assertIn("첫 대운이 시작되기 전", combined)
+        self.assertNotIn("첫 대운이 시작되기 전", combined)
+        self.assertIn("출생시간은 입력되었지만 현재 대운 자료가 제공되지 않았습니다", combined)
         self.assertEqual(_validate_report(report, payload), [])
+
+    def test_unknown_time_full_report_does_not_invent_current_or_next_cycles(self) -> None:
+        for locale in ("ko", "en"):
+            with self.subTest(locale=locale):
+                payload = make_payload(locale=locale, estimated=True)
+                payload.disabled_sections.append("luck_cycles")
+                for evidence in payload.evidence:
+                    if evidence.key == "luck_cycles":
+                        evidence.status = "disabled"
+                payload.luck_flow_facts.current_luck_cycle = "STALE_CURRENT"
+                payload.luck_flow_facts.next_luck_cycle = "STALE_NEXT"
+                payload.luck_flow_facts.current_period = "1900-1910"
+                payload.luck_flow_facts.next_period = "1910-1920"
+                payload.luck_flow_facts.now_action_tags = ["STALE_ACTION"]
+                report = build_fallback_interpretation_report(payload)
+                combined = "\n".join([report.summary.overview, *(getattr(report, key).body for key in ("core_analysis", "love", "career", "wealth", "luck_flow"))])
+                for token in ("STALE_CURRENT", "STALE_NEXT", "STALE_ACTION", "1900-1910", "1910-1920", "첫 대운이 시작되기 전", "the period before the first luck cycle", "현재 대운에서 좋아지는", "The current cycle can feel better", "다음 대운에서는"):
+                    self.assertNotIn(token, combined)
+                self.assertIn("출생시간이 미상" if locale == "ko" else "birth time is unknown", report.summary.overview)
+                self.assertEqual(report.summary.confidence, "low")
+                for block in (report.summary, report.core_analysis, report.love, report.career, report.wealth, report.luck_flow):
+                    self.assertNotIn("luck_cycles", block.evidence_ids)
+                self.assertEqual(_validate_report(report, payload), [])
+                self.assertIsNotNone(payload.current_flow.active_luck_cycle)
+
+    def test_known_time_missing_cycle_and_disabled_cycle_have_distinct_reasons(self) -> None:
+        for locale in ("ko", "en"):
+            with self.subTest(locale=locale):
+                missing = make_payload(locale=locale)
+                missing.current_flow.active_luck_cycle = None
+                missing.current_flow.next_luck_cycle = None
+                disabled = make_payload(locale=locale)
+                disabled.disabled_sections = ["luck_cycles"]
+                missing_report = build_fallback_interpretation_report(missing)
+                disabled_report = build_fallback_interpretation_report(disabled)
+                self.assertIn("출생시간은 입력되었지만" if locale == "ko" else "A birth time was supplied", missing_report.summary.overview)
+                self.assertIn("계산이 비활성화" if locale == "ko" else "calculation is disabled", disabled_report.summary.overview)
+                self.assertNotEqual(missing_report.summary.overview, disabled_report.summary.overview)
+                for report in (missing_report, disabled_report):
+                    self.assertNotIn("첫 대운이 시작되기 전" if locale == "ko" else "before the first luck cycle", report.summary.overview)
+                    self.assertNotIn("luck_cycles", report.luck_flow.evidence_ids)
+                self.assertEqual(_validate_report(missing_report, missing), [])
+                self.assertEqual(_validate_report(disabled_report, disabled), [])
+
+    def test_known_current_cycle_without_next_keeps_only_the_supplied_current_fact(self) -> None:
+        for locale in ("ko", "en"):
+            with self.subTest(locale=locale):
+                payload = make_payload(locale=locale)
+                payload.current_flow.next_luck_cycle = None
+                payload.luck_flow_facts.next_luck_cycle = "STALE_NEXT"
+                report = build_fallback_interpretation_report(payload)
+                self.assertIn(payload.current_flow.active_luck_cycle.display_gan_zhi, report.summary.overview)
+                self.assertIn("다음 대운 자료가 제공되지" if locale == "ko" else "Next-cycle facts were not provided", report.summary.overview)
+                self.assertNotIn("STALE_NEXT", report.luck_flow.body)
+                self.assertEqual(_validate_report(report, payload), [])
+
+    def test_full_provider_diagnostics_preserve_unknown_time_uncertainty(self) -> None:
+        payload = make_payload(estimated=True)
+        payload.uncertainty_summary = [InterpretationUncertaintyFlag(
+            code="day_pillar_uncertain_due_to_unknown_time", severity="critical",
+            affected_fields=["day_pillar"], user_message="Day pillar is unconfirmed.",
+        )]
+        with patch("app.domain.saju.services.generate_interpretation.settings.llm_provider", "fallback"):
+            report = generate_interpretation_report(payload=payload, trace_id="test-full-uncertainty", service_name="suju-insight")
+        self.assertIn("day_pillar_uncertain_due_to_unknown_time", report.warnings)
+        self.assertIn("llm_provider_disabled", report.warnings)
 
     def test_validator_rejects_unknown_evidence_ids(self) -> None:
         payload = make_payload()
@@ -411,7 +479,7 @@ class GenerateInterpretationTests(unittest.TestCase):
     def test_prompt_spec_keeps_version_and_payload_rules_together(self) -> None:
         prompt_spec = get_interpretation_report_prompt()
 
-        self.assertEqual(prompt_spec.version, "saju-report-v15")
+        self.assertEqual(prompt_spec.version, "saju-report-v16")
         self.assertIn("Use only the provided facts and signals.", prompt_spec.narrative_rules)
         self.assertIn("무조건", prompt_spec.validation_banned_phrases)
         self.assertIn("일간", prompt_spec.core_analysis_technical_terms)
@@ -570,7 +638,7 @@ class GenerateInterpretationTests(unittest.TestCase):
                     configured_provider="openai",
                     final_provider="openai",
                     model="gpt-5.4-mini",
-                    prompt_version="saju-report-v15",
+                    prompt_version="saju-report-v16",
                     payload_chars=123,
                     duration_ms=999,
                     final_response_id="resp_test",
@@ -621,7 +689,7 @@ class GenerateInterpretationTests(unittest.TestCase):
             configured_provider="codex",
             final_provider="codex",
             model="codex-cli",
-            prompt_version="saju-report-v15",
+            prompt_version="saju-report-v16",
             payload_chars=123,
             duration_ms=999,
             final_response_id="codex-test",

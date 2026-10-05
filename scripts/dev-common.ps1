@@ -256,7 +256,7 @@ function Start-ManagedProcess {
         Remove-Item -LiteralPath $stdoutLog, $stderrLog -Force -ErrorAction SilentlyContinue
     }
 
-    $process = Start-Process -FilePath $FilePath -WorkingDirectory $WorkingDirectory -ArgumentList $Arguments -RedirectStandardOutput $stdoutLog -RedirectStandardError $stderrLog -PassThru
+    $process = Start-Process -FilePath $FilePath -WorkingDirectory $WorkingDirectory -ArgumentList $Arguments -RedirectStandardOutput $stdoutLog -RedirectStandardError $stderrLog -WindowStyle Hidden -PassThru
 
     return (Write-ServiceMetadata -Name $Name -ProcessId $process.Id -Port $Port -Url $Url -FilePath $FilePath -WorkingDirectory $WorkingDirectory -Arguments $Arguments -StdoutLog $stdoutLog -StderrLog $stderrLog)
 }

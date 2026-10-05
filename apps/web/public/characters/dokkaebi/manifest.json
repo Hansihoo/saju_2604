@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "character": "dokkaebi",
+  "background": "transparent",
+  "generatedWith": "built-in image_gen",
+  "reference": "source-sheet.png",
+  "expressions": [
+    {
+      "id": "smile",
+      "label": "방긋",
+      "file": "smile.png",
+      "prompt": "Use case: identity-preserve. Input image: the approved nine-expression mascot sheet, identity and style reference.\nCreate ONE isolated transparent PNG sticker of the SAME pale lilac round one-horn dokkaebi mascot. Expression: gentle neutral smile, two small round dark eyes and tiny curved smiling mouth. Exactly one character, centered in a square canvas, full silhouette and horn visible, with clear 10% margin. Preserve the approved character's squat rounded dumpling silhouette, one central small rounded horn, lilac fill, dark thick outline, eye/mouth proportions and simple friendly personality. Same front-facing pose. Select this corresponding expression from the sheet and reproduce it as a standalone sticker. Keep the surface simple and flat. No new body parts, limbs, hair, ears, accessories, props, floating marks, text, label, UI or watermark. Genuinely transparent background. A single character asset, NOT a contact sheet, NOT a grid."
+    },
+    {
+      "id": "smirk",
+      "label": "능청",
+      "file": "smirk.png",
+      "prompt": "Use case: identity-preserve. Input image: the approved nine-expression mascot sheet, identity and style reference.\nCreate ONE isolated transparent PNG sticker of the SAME pale lilac round one-horn dokkaebi mascot. Expression: mischievous knowing smirk, slightly lowered tilted eyebrows and asymmetrical curved smile. Exactly one character, centered in a square canvas, full silhouette and horn visible, with clear 10% margin. Preserve the approved character's squat rounded dumpling silhouette, one central small rounded horn, lilac fill, dark thick outline, eye/mouth proportions and simple friendly personality. Same front-facing pose. Select this corresponding expression from the sheet and reproduce it as a standalone sticker. Keep the surface simple and flat. No new body parts, limbs, hair, ears, accessories, props, floating marks, text, label, UI or watermark. Genuinely transparent background. A single character asset, NOT a contact sheet, NOT a grid."
+    },
+    {
+      "id": "laugh",
+      "label": "폭소",
+      "file": "laugh.png",
+      "prompt": "Use case: identity-preserve. Input image: the approved nine-expression mascot sheet, identity and style reference.\nCreate ONE isolated transparent PNG sticker of the SAME pale lilac round one-horn dokkaebi mascot. Expression: laughing, both eyes squeezed shut like angled chevrons and a wide happy open mouth. Exactly one character, centered in a square canvas, full silhouette and horn visible, with clear 10% margin. Preserve the approved character's squat rounded dumpling silhouette, one central small rounded horn, lilac fill, dark thick outline, eye/mouth proportions and simple friendly personality. Same front-facing pose. Select this corresponding expression from the sheet and reproduce it as a standalone sticker. Keep the surface simple and flat. No new body parts, limbs, hair, ears, accessories, props, floating marks, text, label, UI or watermark. Genuinely transparent background. A single character asset, NOT a contact sheet, NOT a grid."
+    },
+    {
+      "id": "surprised",
+      "label": "깜짝",
+      "file": "surprised.png",
+      "prompt": "Use case: identity-preserve. Input image: the approved nine-expression mascot sheet, identity and style reference.\nCreate ONE isolated transparent PNG sticker of the SAME pale lilac round one-horn dokkaebi mascot. Expression: surprised, big round eyes with tiny highlights and a small O-shaped mouth. Exactly one character, centered in a square canvas, full silhouette and horn visible, with clear 10% margin. Preserve the approved character's squat rounded dumpling silhouette, one central small rounded horn, lilac fill, dark thick outline, eye/mouth proportions and simple friendly personality. Same front-facing pose. Select this corresponding expression from the sheet and reproduce it as a standalone sticker. Keep the surface simple and flat. No new body parts, limbs, hair, ears, accessories, props, floating marks, text, label, UI or watermark. Genuinely transparent background. A single character asset, NOT a contact sheet, NOT a grid."
+    },
+    {
+      "id": "shy",
+      "label": "수줍",
+      "file": "shy.png",
+      "prompt": "Use case: identity-preserve. Input image: the approved nine-expression mascot sheet, identity and style reference.\nCreate ONE isolated transparent PNG sticker of the SAME pale lilac round one-horn dokkaebi mascot. Expression: bashful, little round eyes, tiny smile and three simple pink blush strokes on each cheek. Exactly one character, centered in a square canvas, full silhouette and horn visible, with clear 10% margin. Preserve the approved character's squat rounded dumpling silhouette, one central small rounded horn, lilac fill, dark thick outline, eye/mouth proportions and simple friendly personality. Same front-facing pose. Select this corresponding expression from the sheet and reproduce it as a standalone sticker. Keep the surface simple and flat. No new body parts, limbs, hair, ears, accessories, props, floating marks, text, label, UI or watermark. Genuinely transparent background. A single character asset, NOT a contact sheet, NOT a grid."
+    },
+    {
+      "id": "unimpressed",
+      "label": "시큰둥",
+      "file": "unimpressed.png",
+      "prompt": "Use case: identity-preserve. Input image: the approved nine-expression mascot sheet, identity and style reference.\nCreate ONE isolated transparent PNG sticker of the SAME pale lilac round one-horn dokkaebi mascot. Expression: unimpressed side-eye, half-lidded eyes and a tiny horizontal mouth. Exactly one character, centered in a square canvas, full silhouette and horn visible, with clear 10% margin. Preserve the approved character's squat rounded dumpling silhouette, one central small rounded horn, lilac fill, dark thick outline, eye/mouth proportions and simple friendly personality. Same front-facing pose. Select this corresponding expression from the sheet and reproduce it as a standalone sticker. Keep the surface simple and flat. No new body parts, limbs, hair, ears, accessories, props, floating marks, text, label, UI or watermark. Genuinely transparent background. A single character asset, NOT a contact sheet, NOT a grid."
+    },
+    {
+      "id": "cry",
+      "label": "울먹",
+      "file": "cry.png",
+      "prompt": "Use case: identity-preserve. Input image: the approved nine-expression mascot sheet, identity and style reference.\nCreate ONE isolated transparent PNG sticker of the SAME pale lilac round one-horn dokkaebi mascot. Expression: teary sad face, pleading watery eyes, one small blue teardrop under each eye and a downward-curved little mouth. Exactly one character, centered in a square canvas, full silhouette and horn visible, with clear 10% margin. Preserve the approved character's squat rounded dumpling silhouette, one central small rounded horn, lilac fill, dark thick outline, eye/mouth proportions and simple friendly personality. Same front-facing pose. Select this corresponding expression from the sheet and reproduce it as a standalone sticker. Keep the surface simple and flat. No new body parts, limbs, hair, ears, accessories, props, floating marks, text, label, UI or watermark. Genuinely transparent background. A single character asset, NOT a contact sheet, NOT a grid."
+    },
+    {
+      "id": "sleepy",
+      "label": "졸림",
+      "file": "sleepy.png",
+      "prompt": "Use case: identity-preserve. Input image: the approved nine-expression mascot sheet, identity and style reference.\nCreate ONE isolated transparent PNG sticker of the SAME pale lilac round one-horn dokkaebi mascot. Expression: sleepy drooping closed eyes and a tiny round yawning mouth. Exactly one character, centered in a square canvas, full silhouette and horn visible, with clear 10% margin. Preserve the approved character's squat rounded dumpling silhouette, one central small rounded horn, lilac fill, dark thick outline, eye/mouth proportions and simple friendly personality. Same front-facing pose. Select this corresponding expression from the sheet and reproduce it as a standalone sticker. Keep the surface simple and flat. No new body parts, limbs, hair, ears, accessories, props, floating marks, text, label, UI or watermark. Genuinely transparent background. A single character asset, NOT a contact sheet, NOT a grid."
+    },
+    {
+      "id": "wink",
+      "label": "윙크",
+      "file": "wink.png",
+      "prompt": "Use case: identity-preserve. Input image: the approved nine-expression mascot sheet, identity and style reference.\nCreate ONE isolated transparent PNG sticker of the SAME pale lilac round one-horn dokkaebi mascot. Expression: confident friendly wink, one round open eye, one closed angled eye and a tiny smiling mouth. Exactly one character, centered in a square canvas, full silhouette and horn visible, with clear 10% margin. Preserve the approved character's squat rounded dumpling silhouette, one central small rounded horn, lilac fill, dark thick outline, eye/mouth proportions and simple friendly personality. Same front-facing pose. Select this corresponding expression from the sheet and reproduce it as a standalone sticker. Keep the surface simple and flat. No new body parts, limbs, hair, ears, accessories, props, floating marks, text, label, UI or watermark. Genuinely transparent background. A single character asset, NOT a contact sheet, NOT a grid."
+    }
+  ]
+}

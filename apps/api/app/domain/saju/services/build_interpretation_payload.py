@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 import re
-from typing import Dict, Iterable, List, Sequence, Tuple
+from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 try:
     from zoneinfo import ZoneInfo
@@ -235,8 +235,9 @@ def _build_current_flow_context(
     request: SajuPreviewRequest,
     response: SajuPreviewResponse,
     luck_cycles: Sequence[InterpretationLuckCycle],
+    as_of: Optional[datetime] = None,
 ) -> InterpretationCurrentFlowContext:
-    today = _local_today(response.region.tzid)
+    today = as_of.astimezone(ZoneInfo(response.region.tzid)).date() if as_of is not None else _local_today(response.region.tzid)
     current_year = today.year
     current_age = _calculate_current_age(request.birth_date, today)
     active_luck_cycle, next_luck_cycle = _find_current_and_next_luck_cycles(luck_cycles, current_year)
@@ -954,13 +955,14 @@ def build_interpretation_payload(
     *,
     request: SajuPreviewRequest,
     response: SajuPreviewResponse,
+    as_of: Optional[datetime] = None,
 ) -> InterpretationPayload:
     locale = _resolve_locale(request)
     effective_birth_time = "unknown" if request.is_birth_time_estimated else request.birth_time
     visible_pillars = _build_visible_pillars(response, locale)
     luck_cycles = _build_luck_cycles(response, locale)
     special_stars = _build_special_stars(response, locale)
-    current_flow = _build_current_flow_context(request, response, luck_cycles)
+    current_flow = _build_current_flow_context(request, response, luck_cycles, as_of=as_of)
     luck_cycle_analysis = _build_luck_cycle_analysis(
         request=request,
         response=response,
@@ -979,7 +981,7 @@ def build_interpretation_payload(
             "If uncertainty_summary is present, verbalize only those precomputed uncertainty flags; do not infer new uncertainty."
         )
 
-    return InterpretationPayload(
+    payload = InterpretationPayload(
         output_sections=OUTPUT_SECTIONS,
         profile=InterpretationInputProfile(
             locale=locale,
@@ -1046,3 +1048,6 @@ def build_interpretation_payload(
             region_display_name=_localize_region_display_name(response, locale),
         ),
     )
+    from app.domain.saju.services.build_reading_plan import build_reading_plan
+    payload.reading_plan = build_reading_plan(payload)
+    return payload

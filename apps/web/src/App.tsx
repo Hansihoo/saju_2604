@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+import { StickerPage } from "./features/character/StickerPage";
+import { useDokkaebiPreference } from "./features/character/useDokkaebiPreference";
 import { DesignLabPage } from "./features/design-lab/DesignLabPage";
 import { DeveloperPage } from "./features/dev/DeveloperPage";
 import { ServicePage } from "./features/service/ServicePage";
@@ -13,6 +15,7 @@ export default function App() {
   const [mode, setMode] = useState<Mode>(() => getMode(window.location.pathname));
   const [apiHealth, setApiHealth] = useState<ApiHealth | null>(null);
   const [result, setResult] = useState<SajuPreviewResponse | null>(null);
+  const { expression, setExpression } = useDokkaebiPreference();
 
   useEffect(() => {
     const onPopState = () => setMode(getMode(window.location.pathname));
@@ -27,13 +30,15 @@ export default function App() {
   function navigate(nextMode: Mode) {
     window.history.pushState({}, "", getModePath(nextMode));
     setMode(nextMode);
+    window.scrollTo(0, 0);
   }
 
   const pageShellClassName = [
     "page-shell",
     mode === "dev" ? "dev-page" : "",
     mode === "design" ? "design-page-shell" : "",
-    mode === "service" && result ? "ritual-page-shell" : "",
+    mode === "stickers" ? "sticker-page-shell" : "",
+    mode === "service" ? "dokkaebi-page-shell" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -54,12 +59,27 @@ export default function App() {
           onNavigateToService={() => navigate("service")}
         />
       ) : (
-        <ServicePage
-          locale={locale}
-          onLocaleChange={setLocale}
-          result={result}
-          onResultChange={setResult}
-        />
+        <>
+          <div hidden={mode === "stickers"}>
+            <ServicePage
+              locale={locale}
+              onLocaleChange={setLocale}
+              result={result}
+              onResultChange={setResult}
+              expression={expression}
+              onExpressionChange={setExpression}
+              onChooseExpression={() => navigate("stickers")}
+            />
+          </div>
+          {mode === "stickers" ? (
+            <StickerPage
+              locale={locale}
+              expression={expression}
+              onExpressionChange={setExpression}
+              onNavigateToService={() => navigate("service")}
+            />
+          ) : null}
+        </>
       )}
     </div>
   );

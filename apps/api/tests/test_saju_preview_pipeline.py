@@ -177,7 +177,7 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         self.assertIsNotNone(response.result.free_preview)
         self.assertEqual(response.result.free_preview.schema_version, "free-preview-v1")
         self.assertEqual(response.result.free_preview.provider, "fallback")
-        self.assertEqual(response.result.free_preview.prompt_version, "saju-free-preview-v3")
+        self.assertEqual(response.result.free_preview.prompt_version, "saju-free-preview-v4")
         self.assertEqual(len(response.result.free_preview.core_diagnoses), 3)
         self.assertEqual(len(response.result.free_preview.cards), 4)
         self.assertIn("free_preview", model_to_dict(response)["result"])
@@ -284,8 +284,11 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         self.assertIsNone(response.result.interpretation)
         self.assertIsNotNone(response.result.free_preview)
         self.assertEqual(response.result.free_preview.provider, "fallback")
-        self.assertEqual(response.result.free_preview.headline, "A steady builder of clear standards")
-        self.assertIn("Love", response.result.free_preview.cards[2].title)
+        self.assertEqual(response.result.signals.dominant_elements[0], "fire")
+        self.assertEqual(response.result.free_preview.headline, "Energy through response and expression")
+        self.assertEqual(response.result.free_preview.cards[2].key, "love")
+        user_text = json.dumps(model_to_dict(response.result.free_preview), ensure_ascii=False)
+        self.assertIsNone(re.search(r"[\uac00-\ud7a3\u3400-\u9fff]", user_text))
 
     def test_preview_pipeline_uses_explicit_luck_cycle_formula(self) -> None:
         request = SimpleNamespace(
@@ -497,7 +500,7 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         self.assertEqual(response.pipeline_status.saju_calculation, "passed")
         self.assertEqual(response.detail_report, response.interpretation)
         self.assertEqual(response.interpretation.schema_version, "m2-llm-v5")
-        self.assertEqual(response.interpretation.prompt_version, "saju-report-v15")
+        self.assertEqual(response.interpretation.prompt_version, "saju-report-v16")
         self.assertEqual(response.interpretation.provider, "fallback")
         self.assertEqual(response.interpretation.core_analysis.title, "내 사주 특징")
         self.assertEqual(response.interpretation.luck_flow.title, "현재 운과 대운 흐름")
@@ -626,6 +629,9 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         with patch(
             "app.domain.saju.services.generate_detail_insights.settings.llm_provider",
             "codex",
+        ), patch(
+            "app.domain.saju.services.generate_detail_insights.settings.codex_model",
+            None,
         ), patch(
             "app.domain.saju.services.generate_detail_insights._call_openai_detail_render",
             side_effect=AssertionError("OpenAI detail path must not be called in Codex mode"),

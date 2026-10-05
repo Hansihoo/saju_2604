@@ -69,9 +69,19 @@ class InterpretationFormatterTests(unittest.TestCase):
         narrative = format_interpretation_fallback(payload=interpretation_payload, locale="ko")
 
         self.assertIn("출생시간이 미상", narrative.summary)
-        self.assertIn("Birth time is unknown", interpretation_payload.limitations[0])
-        self.assertIn("internal placeholder", interpretation_payload.limitations[0])
-        self.assertIn("Birth time is unknown", narrative.cautions[1])
+        self.assertIn("출생시간이 없어", interpretation_payload.limitations[0])
+        self.assertIn("대운은 제외", interpretation_payload.limitations[0])
+        self.assertIn("날짜 경계", interpretation_payload.limitations[0])
+        self.assertNotIn("internal placeholder", interpretation_payload.limitations[0])
+        self.assertIn("출생시간이 없어", narrative.cautions[1])
+        payload.locale = "en"
+        english_response = create_saju_preview(payload=payload, request=request)
+        english_limitations = " ".join(english_response.result.limitations)
+        self.assertIn("Birth time is unknown", english_limitations)
+        self.assertIn("luck cycles are excluded", english_limitations)
+        self.assertIn("day boundaries", english_limitations)
+        self.assertNotIn("internal placeholder", english_limitations)
+        self.assertNotIn("00:00", english_limitations)
 
 
 if __name__ == "__main__":

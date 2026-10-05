@@ -9,6 +9,8 @@ import {
   SajuPreviewRequest,
   SajuPreviewResponse,
 } from "./contracts";
+import type { Locale } from "../copy";
+import { getApiErrorMessage } from "./errorMessage";
 
 export type {
   ApiHealth,
@@ -24,15 +26,16 @@ export type {
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
-async function parseJsonResponse<T>(response: Response): Promise<T> {
+async function parseJsonResponse<T>(response: Response, locale: Locale = "ko"): Promise<T> {
   if (!response.ok) {
     const rawBody = await response.text();
+    let parsed: unknown;
     try {
-      const parsed = JSON.parse(rawBody) as { message?: string; error_code?: string };
-      throw new Error(parsed.message ?? parsed.error_code ?? `Request failed with ${response.status}`);
+      parsed = JSON.parse(rawBody);
     } catch (_error) {
-      throw new Error(rawBody || `Request failed with ${response.status}`);
+      parsed = null;
     }
+    throw new Error(getApiErrorMessage(response.status, parsed, locale));
   }
 
   return (await response.json()) as T;
@@ -61,7 +64,7 @@ export async function createSajuPreview(
     body: JSON.stringify(payload),
   });
 
-  return parseJsonResponse<SajuPreviewResponse>(response);
+  return parseJsonResponse<SajuPreviewResponse>(response, payload.locale);
 }
 
 export async function createSajuFreeDetail(
@@ -75,7 +78,7 @@ export async function createSajuFreeDetail(
     body: JSON.stringify(payload),
   });
 
-  return parseJsonResponse<SajuFreeDetailResponse>(response);
+  return parseJsonResponse<SajuFreeDetailResponse>(response, payload.locale);
 }
 
 export async function prepareSajuDetailBundle(
@@ -94,7 +97,7 @@ export async function prepareSajuDetailBundle(
     }),
   });
 
-  return parseJsonResponse<SajuDetailPrepareResponse>(response);
+  return parseJsonResponse<SajuDetailPrepareResponse>(response, payload.locale);
 }
 
 export async function renderSajuDetailInsight(
@@ -116,5 +119,5 @@ export async function renderSajuDetailInsight(
     }),
   });
 
-  return parseJsonResponse<SajuDetailRenderResponse>(response);
+  return parseJsonResponse<SajuDetailRenderResponse>(response, payload.locale);
 }

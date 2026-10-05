@@ -1,4 +1,6 @@
 import { Locale } from "../../../shared/copy";
+import { DokkaebiSticker } from "../../character/DokkaebiSticker";
+import type { DokkaebiExpression } from "../../character/dokkaebiCatalog";
 
 type ServiceHeaderProps = {
   title: string;
@@ -8,6 +10,8 @@ type ServiceHeaderProps = {
   mainHomeLabel: string;
   hideIntro?: boolean;
   onLocaleChange: (locale: Locale) => void;
+  expression: DokkaebiExpression;
+  onChooseExpression: () => void;
 };
 
 export function ServiceHeader({
@@ -18,6 +22,8 @@ export function ServiceHeader({
   mainHomeLabel,
   hideIntro = false,
   onLocaleChange,
+  expression,
+  onChooseExpression,
 }: ServiceHeaderProps) {
   return (
     <header className={`service-header${hideIntro ? " is-compact" : ""}`}>
@@ -37,6 +43,12 @@ export function ServiceHeader({
             </select>
           </label>
         </div>
+      </div>
+      <div className="dokkaebi-companion">
+        <DokkaebiSticker expression={expression} locale={locale} size={hideIntro ? 48 : 80} />
+        <button type="button" onClick={onChooseExpression}>
+          {locale === "ko" ? "도깨비 표정 고르기" : "Choose a dokkaebi face"}
+        </button>
       </div>
       {hideIntro ? null : (
         <>

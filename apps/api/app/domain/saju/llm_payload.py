@@ -5,6 +5,7 @@ from typing import Dict, List, Literal, Optional
 from pydantic import BaseModel, Field
 
 from app.domain.saju.localization import OutputLocale
+from app.domain.saju.reading_knowledge import ReadingPlan
 from app.domain.saju.schemas import ElementKey
 
 
@@ -224,3 +225,4 @@ class InterpretationPayload(BaseModel):
     notes: List[str]
     narrative_rules: List[str]
     prompt_seed: Optional[str] = None
+    reading_plan: Optional[ReadingPlan] = None

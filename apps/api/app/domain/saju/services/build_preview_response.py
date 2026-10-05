@@ -1,6 +1,7 @@
 """이 파일은 미리보기 응답을 조립하는 로직을 담는다."""
 
 from dataclasses import asdict
+from datetime import datetime
 from typing import List, Literal, Optional, Tuple
 
 from app.config import settings
@@ -149,6 +150,7 @@ def build_preview_response(
     uncertainty_flags: Optional[List[UncertaintyFlag]] = None,
     birth_time_context: Optional[BirthTimeContext] = None,
     report_mode: ReportRenderMode = "all",
+    as_of: Optional[datetime] = None,
 ) -> SajuPreviewResponse:
     """파이프라인 결과들을 모아 최종 preview API 응답으로 조립한다."""
     birth_time_policy = resolve_birth_time_policy(payload)
@@ -170,16 +172,11 @@ def build_preview_response(
     first_luck_cycle = saju_calculation.luck_cycles[0] if saju_calculation.luck_cycles else None
     limitations: List[str] = []
     if payload.is_birth_time_estimated:
-        interval = birth_time_policy.birth_time_interval
-        interval_text = (
-            f"{interval.start} to {interval.end}"
-            if interval is not None
-            else "the full birth date"
-        )
         limitations.append(
-            "Birth time is unknown. 00:00 is used only as an internal placeholder, "
-            f"and the possible birth-time interval is {interval_text}. "
-            "Hour-pillar, luck-cycle, and interval-sensitive outputs should be treated as unconfirmed."
+            "출생시간이 없어 시간에 따른 풀이와 대운은 제외했어요. 날짜 경계에 따라 일부 해석이 달라질 수 있어요."
+            if payload.locale == "ko" else
+            "Birth time is unknown, so hour-based readings and luck cycles are excluded. "
+            "Some interpretations may change around day boundaries."
         )
     uncertainty_flag_summaries = [
         UncertaintyFlagSummary(**asdict(flag))
@@ -346,6 +343,7 @@ def build_preview_response(
         payload=payload,
         region=region,
         saju_calculation=saju_calculation,
+        as_of=as_of,
     )
 
     base_response = SajuPreviewResponse(
@@ -406,7 +404,7 @@ def build_preview_response(
     if report_mode == "none":
         return base_response
 
-    interpretation_payload = build_interpretation_payload(request=payload, response=base_response)
+    interpretation_payload = build_interpretation_payload(request=payload, response=base_response, as_of=as_of)
     free_preview = None
     free_preview_status = "skipped"
     if report_mode in {"all", "free_preview"}:

@@ -10,6 +10,21 @@ This file explains the safest way to run the project from Codex Desktop or any r
 
 ## Recommended commands
 
+For the requested local Codex setup, install the locked dependencies with `pnpm install`,
+sign in if needed with `pnpm exec codex login`, then run:
+
+```powershell
+pnpm dev:codex
+pnpm dev:bg:status
+```
+
+This starts the local web/API using the project-pinned CLI, `gpt-6.1-sol`, `xhigh`,
+read-only sandbox and a 600-second generation timeout. It uses the signed-in Codex
+account rather than an OpenAI API key. The ignored `apps/api/.env.local` also keeps
+this machine's local choice. CLI flags explicitly forward the requested effort;
+global Codex preferences and production API defaults remain separate. For regression,
+run the fallback-only HTTP verifier before restarting the services in Codex mode.
+
 From the repository root:
 
 ```powershell
@@ -40,6 +55,15 @@ pnpm verify:kasi
 `pnpm verify:kasi` requires `KASI_SERVICE_KEY` and is an explicit live API spot check, not a normal test step.
 
 ## What each command does
+
+Independent verification jobs:
+
+```powershell
+pnpm verify:codex-agents --help
+pnpm verify:codex-agents run --transport fixture --output-dir <new-output-folder>
+```
+
+The output parent must exist; replace the placeholder with an actual path. Fixture is the default and does not call a model. `prepare`, `task`, `execute`, and `evaluate` can run one saved role independently. See `docs/ai/CODEX_AGENT_VERIFICATION.md` for contracts, ownership and explicit Codex evaluation. The existing fallback-only HTTP verifier remains separate.
 
 - `pnpm dev:bg:start`
   Starts API and web as managed background processes and writes metadata/logs to `.dev-runtime/`.

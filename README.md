@@ -12,7 +12,7 @@ The product receives a user's birth date, birth time, gender, and birth region, 
 2. calculates the saju/manse result,
 3. builds deterministic analysis signals in code,
 4. uses an LLM only as a phrasing layer,
-5. renders the result as a document-style personal reading.
+5. presents a short topic reading guided by a dokkaebi, with optional long-form reading and character card export.
 
 Core product rule:
 
@@ -35,10 +35,14 @@ For the full product profile, see [docs/PROJECT_PROFILE.md](docs/PROJECT_PROFILE
 
 ## Recent changes
 
+- Added a versioned knowledge catalog and question/answer/scene/tradeoff/action reading contract. Server fallback cards trace their supplied facts and rules; event timing, probabilities and population ranks remain unsupported. Agents follow [the reading contract](docs/ai/SAJU_READING_AGENT.md).
+
+- Redesigned the live `/` service as a dokkaebi mobile experience: two-step input, topic reading, advice first, and selectable 1080×1350 PNG share cards. UI voice, expression roles, and visual tokens are editable separately; see [the UX design](docs/planning/034-dokkaebi-mobile-reading-experience.md).
+- Added nine transparent dokkaebi emoticon PNGs and `/stickers` for expression selection, individual PNG downloads, and a complete ZIP pack. The chosen face is reused in the service; see [docs/ai/DOKKAEBI_EMOTICONS.md](docs/ai/DOKKAEBI_EMOTICONS.md).
 - Added a local Codex CLI phrasing provider for personal local testing.
 - Kept `openai` as the default and production-oriented LLM provider.
 - Added `/design-lab` to compare document-style result layouts without calling any LLM.
-- Applied the essay/document-style result layout to the live service result page.
+- Retained the earlier essay/document reading as the detailed reading renderer inside the new mobile experience.
 - Reworded internal UI labels such as "핵심 카드" into user-facing reading labels.
 - Softened result CTA/button styling so the reading feels more like a document than an app simulator.
 - Split the initial free preview from the lazy full interpretation so one user flow does not generate the full report twice.
@@ -148,6 +152,8 @@ From the repository root:
 pnpm test:api
 ```
 
+실행 중인 로컬 서비스의 사용자 흐름은 `pnpm verify:user-story`로 별도 검증합니다. API를 `SAJU_LLM_PROVIDER=fallback`으로 실행한 뒤 사용하세요. 개인별 카드·시간 미상 제한·오늘 날짜·상세 연결을 검사하고, 웹 빌드와 회귀 테스트도 실행합니다. 전체 API 회귀는 `pnpm verify:user-story -AllApiTests`입니다. 실제 브라우저/독립 에이전트 검토와 남은 결함은 [사용자 시나리오 검증](docs/ai/USER_STORY_VERIFICATION.md), 기계 판정은 [JSON 보고서](docs/ai/USER_STORY_VERIFICATION.json)에 기록합니다. 확인된 음력 입력 결함이 남아 있으면 전체 판정은 FAIL입니다.
+
 This runs:
 
 - `python -m compileall app`
@@ -168,8 +174,9 @@ This uses the deterministic formatter only. It is the fastest and has no LLM/API
 ```powershell
 SAJU_LLM_PROVIDER=codex
 SAJU_CODEX_COMMAND=codex.cmd
-SAJU_CODEX_MODEL=gpt-5.4
-SAJU_CODEX_TIMEOUT_SECONDS=180
+SAJU_CODEX_MODEL=gpt-6.1-sol
+SAJU_CODEX_REASONING_EFFORT=xhigh
+SAJU_CODEX_TIMEOUT_SECONDS=600
 SAJU_CODEX_SANDBOX=read-only
 ```
 
@@ -240,8 +247,9 @@ Local Codex CLI phrasing option:
 ```powershell
 SAJU_LLM_PROVIDER=codex
 SAJU_CODEX_COMMAND=codex.cmd
-SAJU_CODEX_MODEL=gpt-5.4
-SAJU_CODEX_TIMEOUT_SECONDS=180
+SAJU_CODEX_MODEL=gpt-6.1-sol
+SAJU_CODEX_REASONING_EFFORT=xhigh
+SAJU_CODEX_TIMEOUT_SECONDS=600
 SAJU_CODEX_SANDBOX=read-only
 ```
 
@@ -283,7 +291,7 @@ Implemented backend pipeline:
 - OpenAI API, local Codex CLI, and deterministic fallback phrasing providers
 - debug trace and stage logging
 - document-style result design lab
-- essay/document-style live result layout
+- dokkaebi mobile reading flow with topic tabs, optional detailed reading, and share-card export
 
 Not finished yet:
 

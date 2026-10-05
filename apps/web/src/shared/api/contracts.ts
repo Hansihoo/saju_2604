@@ -333,6 +333,11 @@ export type SajuResultSignals = {
   internal_grade?: "S" | "A" | "B" | "C" | null;
 };
 
+export type ReadingBasisExplanation = {
+  facts: string[];
+  reading: string;
+};
+
 export type PeriodFlowEvidence = {
   label: string;
   value: string;
@@ -362,6 +367,7 @@ export type PeriodFlow = {
   evidence: PeriodFlowEvidence[];
   basis: string;
   notes: string[];
+  basis_explanation?: ReadingBasisExplanation | null;
   current_luck_cycle?: PeriodFlowCycle | null;
 };
 
@@ -424,6 +430,7 @@ export type InterpretationDiagnostics = {
 };
 
 export type InterpretationReport = {
+  reading_sections?: Record<string, ReadingStructure>;
   schema_version: "m2-llm-v5";
   provider: LlmProvider;
   model?: string | null;
@@ -442,6 +449,36 @@ export type FreePreviewDiagnosisKey = "strongest_point" | "repeating_pattern" | 
 
 export type FreePreviewCardKey = "core" | "work_money" | "love" | "luck_flow";
 
+export type ReadingStructure = {
+  format_version: "question-reading-v1";
+  knowledge_version: string;
+  copy_version: string;
+  provenance: "server_project_policy";
+  expert_review: "not_completed";
+  question: string;
+  source_id: string;
+  rule_id: string;
+  rule_version: number;
+  facts: Array<{ id: string; value: string; source_path: string }>;
+  blocks: Array<{
+    role: "answer" | "scene" | "tradeoff" | "action";
+    kind: "interpretation" | "illustration" | "advice";
+    text: string;
+    fact_ids: string[];
+    rule_id: string;
+  }>;
+  analysis_note: ReadingBasisExplanation;
+};
+
+export type QuestionCapability = {
+  question_id: string;
+  question: string;
+  status: "needs_rule_review" | "needs_reference_population";
+  supported_scope: string;
+  missing_requirements: string[];
+  forbidden_claims: string[];
+};
+
 export type FreePreviewDiagnosis = {
   key: FreePreviewDiagnosisKey;
   title: string;
@@ -457,6 +494,8 @@ export type FreePreviewCard = {
   user_takeaway: string;
   next_question: string;
   basis_line: string;
+  basis_explanation?: ReadingBasisExplanation | null;
+  reading_structure?: ReadingStructure | null;
 };
 
 export type FreePreviewReport = {
@@ -470,6 +509,7 @@ export type FreePreviewReport = {
   cards: FreePreviewCard[];
   warnings: string[];
   diagnostics?: InterpretationDiagnostics | null;
+  question_capabilities?: QuestionCapability[];
 };
 
 export type SajuPreviewResponse = {

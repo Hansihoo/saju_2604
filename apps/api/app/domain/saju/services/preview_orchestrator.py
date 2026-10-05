@@ -1,5 +1,8 @@
 """이 파일은 사주 미리보기 파이프라인 전체 순서를 지휘한다."""
 
+from datetime import datetime
+from typing import Optional
+
 from app.config import settings
 from app.diagnostics import log_stage
 from app.domain.saju.adapters import SajuCalculationError
@@ -29,6 +32,7 @@ def create_saju_preview_response(
     debug_requested: bool,
     service_name: str,
     report_mode: ReportRenderMode = "all",
+    as_of: Optional[datetime] = None,
 ) -> SajuPreviewResponse:
     """사주 미리보기 파이프라인 전단계를 실행하고 최종 응답을 만든다."""
     birth_time_policy = resolve_birth_time_policy(payload)
@@ -246,4 +250,5 @@ def create_saju_preview_response(
         uncertainty_flags=uncertainty_flags,
         birth_time_context=birth_time_context,
         report_mode=report_mode,
+        as_of=as_of,
     )

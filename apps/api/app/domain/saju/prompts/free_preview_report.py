@@ -92,11 +92,24 @@ Safety and truthfulness:
 - If birth time is estimated or unknown, mention the limitation calmly and do not treat hour-pillar-based signals as certain.
 - Special stars are supporting indicators only, not sole proof.
 
+Knowledge and output contract (takes priority over examples below):
+- reading_plan separates calculated facts from bounded project interpretation policies.
+- For each available reading_plan.sections entry, preserve its question and interpretation scope.
+- user_takeaway answers the question; preview_paragraphs contain exactly three roles in order: scene, tradeoff, action.
+- A scene is explicitly an example, not an event that you claim happened to this user.
+- Tie every interpretation to that section's supplied facts and rule. Do not add another conclusion.
+- Explain the useful side and possible burden together. More duties are not proof of promotion or better pay.
+- Use question_capabilities to distinguish available reading scope from missing timing/comparison rules.
+- Do not answer a deferred question with guessed dates, meeting probabilities, job/promotion guarantees or population ranks.
+- Do not describe project policies as expert-approved or empirically validated.
+- Never populate reading_structure, basis_explanation, rule ids or provenance: those belong to the backend.
+- Korean main text uses warm, direct conversational endings. Technical basis uses small, formal professional prose.
+
 Product goal:
 - This is not a teaser. It must feel useful as a standalone first result.
 - Make the user feel "this sounds like my pattern" within the hero and four cards.
-- The full output should be about 3000 to 5000 Korean characters for ko, or similarly substantial in English.
-- Each card should be substantial, about 600 to 900 Korean characters for ko.
+- Length follows information roles, not a quota. Do not expand the same advice to fill space.
+- Each card needs an answer, one example, a useful-side/burden distinction, and one action.
 - Do not use the Korean word "무료" in any user-facing JSON field.
 - The first screen must read naturally to users who do not know saju terminology.
 
@@ -143,7 +156,7 @@ headline:
   - 안정과 성장을 함께 보는 사람
 
 hero_overview:
-- 7 to 9 items.
+- 8 to 9 items.
 - Each item is one sentence.
 - Sentence 1: start with an empathetic inner-life observation.
 - Sentence 2: point out a repeating pattern.
@@ -179,7 +192,7 @@ cards:
   - basis_line: one short user-facing basis line
 
 Card direction:
-- core: answer what kind of person this is, strongest trait, difference from average, repeated weakness, and best use.
+- core: describe the supplied distribution and its bounded interpretation; do not compare with an absent population baseline.
 - work_money: connect career and wealth naturally; focus on work style, income structure, leakage points, and management habits.
 - love: describe relationship style and long-term relationship tendency; never guarantee marriage, breakup, reunion, or cheating.
 - luck_flow: focus on the current and next timing flow; do not list the whole table; do not frame it as fixed events.
@@ -206,12 +219,12 @@ Card titles:
   - 지금의 선택이 다음 변화를 가볍게 만듭니다
 
 Card preview_paragraphs:
-- 3 to 4 paragraphs.
+- Exactly 3 paragraphs when a reading_plan section exists; otherwise 3 to 4 paragraphs.
 - Each paragraph should be at most 2 sentences.
-- Paragraph 1: empathetic hook.
-- Paragraph 2: concrete life scene.
-- Paragraph 3: caution pattern.
-- Paragraph 4: what to look at now.
+- Paragraph 1: concrete life scene, explicitly an example.
+- Paragraph 2: useful side and possible burden.
+- Paragraph 3: one action the user can try.
+- Put the direct answer in user_takeaway instead of repeating it in these paragraphs.
 - Do not use meta sentences such as "이 리포트는" or "무료 리포트에서".
 
 user_takeaway:
@@ -240,6 +253,8 @@ Rules:
 - Use the provided InterpretationPayload as the only source of truth.
 - Repair the draft JSON so it exactly matches the FreePreviewReport output schema.
 - Do not invent facts or deterministic predictions.
+- Preserve reading_plan question, answer scope, scene/tradeoff/action roles and question_capabilities restrictions.
+- Repair missing information roles; never pad a card to a character quota.
 - Do not expose scores, internal grades, evidence ids, raw evidence ids, or point-based phrasing.
 - Do not use the Korean word "무료" in any user-facing JSON field.
 - Keep saju jargon out of headline, hero_overview, core_diagnoses.body, card subtitles, chips, preview_paragraphs, user_takeaway, and next_question.
@@ -263,7 +278,7 @@ class FreePreviewPromptSpec:
 
 
 FREE_PREVIEW_REPORT_PROMPT = FreePreviewPromptSpec(
-    version="saju-free-preview-v3",
+    version="saju-free-preview-v4",
     developer_prompt=DEVELOPER_PROMPT,
     repair_prompt=REPAIR_PROMPT,
     validation_banned_phrases=VALIDATION_BANNED_PHRASES,

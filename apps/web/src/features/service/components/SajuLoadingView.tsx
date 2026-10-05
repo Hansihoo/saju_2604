@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 
 import { Locale } from "../../../shared/copy";
+import { DokkaebiSticker } from "../../character/DokkaebiSticker";
+import type { DokkaebiExpression } from "../../character/dokkaebiCatalog";
+
+const loadingExpressions: DokkaebiExpression[] = ["sleepy", "surprised", "smile"];
 
 type LoadingSlide = {
   label: string;
@@ -98,13 +102,18 @@ export function SajuLoadingView({ locale }: SajuLoadingViewProps) {
     return () => window.clearInterval(timer);
   }, [content.slides.length]);
 
-  const activeSlide = content.slides[activeIndex];
+  const activeSlide = content.slides[activeIndex % content.slides.length];
 
   return (
     <section className="loading-view" aria-live="polite" aria-busy="true">
       <div className="loading-status-card">
         <div className="loading-status">
-          <span className="loading-status-indicator" aria-hidden="true" />
+          <DokkaebiSticker
+            expression={loadingExpressions[activeIndex % loadingExpressions.length]}
+            size={72}
+            decorative
+            className="dokkaebi-loading"
+          />
           <div className="loading-status-copy">
             <p className="loading-status-eyebrow">{content.eyebrow}</p>
             <h2>{content.title}</h2>

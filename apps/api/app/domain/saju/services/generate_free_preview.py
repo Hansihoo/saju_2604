@@ -19,11 +19,13 @@ from app.domain.saju.interpretation import (
     FreePreviewReport,
     InterpretationAttemptDiagnostic,
     InterpretationDiagnostics,
+    ReadingBasisExplanation,
 )
 from app.domain.saju.llm_payload import InterpretationPayload
-from app.domain.saju.localization import contains_hangul, contains_hanja
+from app.domain.saju.localization import TEN_GOD_ENGLISH, contains_hangul, contains_hanja, localize_ten_god
 from app.domain.saju.prompts.free_preview_report import get_free_preview_report_prompt
 from app.domain.saju.services.codex_provider import CodexProviderError, call_codex_json
+from app.domain.saju.services.build_reading_plan import apply_reading_plan, build_reading_plan, unsupported_claim_issues, validate_reading_structure
 
 try:
     from openai import OpenAI
@@ -34,7 +36,7 @@ except Exception:  # pragma: no cover - import guard for local test envs
 PROMPT_SPEC = get_free_preview_report_prompt()
 MIN_HERO_SENTENCES = 7
 MAX_HERO_SENTENCES = 9
-MIN_CARD_PREVIEW_CHARS = 480
+MIN_CARD_PREVIEW_CHARS = 120
 MAX_CARD_PREVIEW_CHARS = 1400
 OUTPUT_EXCERPT_LIMIT = 280
 ERROR_MESSAGE_LIMIT = 280
@@ -173,8 +175,11 @@ def _attach_diagnostics(
             "provider": provider,
             "model": _provider_model(provider) or "fallback",
             "prompt_version": PROMPT_SPEC.version,
-            "warnings": list(warnings or []),
+            "warnings": list(dict.fromkeys([*report.warnings, *(warnings or [])])),
             "diagnostics": diagnostics,
+            "cards": report.cards if provider == "fallback" else [
+                _model_copy(card, update={"basis_explanation": None, "reading_structure": None}) for card in report.cards
+            ],
         },
     )
 
@@ -243,42 +248,63 @@ def _star_text(payload: InterpretationPayload, labels: Sequence[str]) -> str:
     return "뚜렷한 보조 신호는 적은 편" if _is_ko(payload) else "few strong auxiliary signals"
 
 
-def _dominant_strength_phrase(payload: InterpretationPayload) -> str:
-    if not _is_ko(payload):
-        return "quickly read a situation, organize priorities, and move with clear standards"
+def _has_confirmed_current_cycle(payload: InterpretationPayload) -> bool:
+    return (
+        not payload.profile.is_birth_time_estimated
+        and "luck_cycles" not in payload.disabled_sections
+        and not any(item.key == "luck_cycles" and item.status == "disabled" for item in payload.evidence)
+        and payload.current_flow.active_luck_cycle is not None
+    )
 
-    phrases = {
+
+def _confirmed_action_tags(payload: InterpretationPayload) -> List[str]:
+    if not _has_confirmed_current_cycle(payload):
+        return []
+    return payload.luck_flow_facts.now_action_tags
+
+
+def _dominant_strength_phrase(payload: InterpretationPayload) -> str:
+    phrases = ({
         "wood": "유연하게 넓히고 가능성을 찾아가는 힘",
         "fire": "빠르게 반응하고 표현하는 힘",
         "earth": "현실을 붙잡고 안정적으로 정리하는 힘",
         "metal": "필요한 것과 아닌 것을 골라내는 힘",
         "water": "상황을 읽고 조율하는 힘",
-    }
+    } if _is_ko(payload) else {
+        "wood": "exploring possibilities and adapting",
+        "fire": "responding and expressing ideas",
+        "earth": "stabilizing practical tasks",
+        "metal": "separating essentials and finishing tasks",
+        "water": "reading situations and coordinating",
+    })
     values = [
         phrases[item]
         for item in payload.signals.dominant_elements
         if item in phrases
     ]
-    return _join(values[:2], fallback="상황을 파악하고 필요한 일을 정리하는 힘")
+    return _join(values[:2], fallback="상황을 살피고 필요한 일을 구분하는 힘" if _is_ko(payload) else "reviewing situations and practical tasks")
 
 
 def _support_need_phrase(payload: InterpretationPayload) -> str:
-    if not _is_ko(payload):
-        return "the parts that need routine and environmental support"
-
-    phrases = {
+    phrases = ({
         "wood": "유연하게 넓히는 힘",
         "fire": "표현하고 활기를 되살리는 힘",
         "earth": "생활을 안정시키고 중심을 잡는 힘",
         "metal": "경계를 세우고 끝맺는 힘",
         "water": "상황을 읽고 조율하는 힘",
-    }
+    } if _is_ko(payload) else {
+        "wood": "adaptability and exploration",
+        "fire": "expression and renewed energy",
+        "earth": "a steady daily rhythm",
+        "metal": "boundaries and completion",
+        "water": "reflection and coordination",
+    })
     values = [
         phrases[item]
         for item in payload.signals.missing_elements
         if item in phrases
     ]
-    return _join(values[:2], fallback="회복 루틴과 주변 환경")
+    return _join(values[:2], fallback="회복 루틴과 주변 환경" if _is_ko(payload) else "recovery routines and the surrounding environment")
 
 
 def _headline_ko(payload: InterpretationPayload) -> str:
@@ -299,7 +325,7 @@ def _diagnoses_ko(payload: InterpretationPayload) -> List[FreePreviewDiagnosis]:
     strength = _dominant_strength_phrase(payload)
     support_need = _support_need_phrase(payload)
     now_actions = _join(
-        payload.luck_flow_facts.now_action_tags[:3],
+        _confirmed_action_tags(payload)[:3],
         fallback="생활 리듬과 주변 환경을 정리하기",
     )
     return [
@@ -332,6 +358,7 @@ def _diagnoses_ko(payload: InterpretationPayload) -> List[FreePreviewDiagnosis]:
 
 def _diagnoses_en(payload: InterpretationPayload) -> List[FreePreviewDiagnosis]:
     current_cycle = _cycle_name(payload, "current")
+    confirmed_timing = _has_confirmed_current_cycle(payload)
     return [
         FreePreviewDiagnosis(
             key="strongest_point",
@@ -353,15 +380,16 @@ def _diagnoses_en(payload: InterpretationPayload) -> List[FreePreviewDiagnosis]:
             key="current_task",
             title="Current task",
             body=(
-                f"The current period is shaped by {current_cycle}, so the practical task is to organize standards rather than expand everything at once. "
-                "The routines built now can make the next cycle easier to use."
+                (f"The supplied current period is {current_cycle}; use the provided action points to review choices rather than expand everything at once. "
+                 if confirmed_timing else "Current timing is unconfirmed, so review observable daily habits without assigning them to a luck-cycle period. ")
+                + "Observable routines can help you check which choices are sustainable."
             ),
         ),
     ]
 
 
 def _cards_ko(payload: InterpretationPayload) -> List[FreePreviewCard]:
-    now_actions = _join(payload.luck_flow_facts.now_action_tags[:4], fallback="관계 거리 조절, 지출 점검, 생활 루틴")
+    now_actions = _join(_confirmed_action_tags(payload)[:4], fallback="관계 거리 조절, 지출 점검, 생활 루틴")
     strength = _dominant_strength_phrase(payload)
     support_need = _support_need_phrase(payload)
     limitation = (
@@ -438,7 +466,7 @@ def _cards_en(payload: InterpretationPayload) -> List[FreePreviewCard]:
     next_cycle = _cycle_name(payload, "next")
     current_period = _period_text(payload, "current")
     next_period = _period_text(payload, "next")
-    now_actions = _join(payload.luck_flow_facts.now_action_tags[:4], fallback="relationship sorting, spending review, daily routines")
+    now_actions = _join(_confirmed_action_tags(payload)[:4], fallback="relationship sorting, spending review, daily routines")
     limitation = (
         "Because the birth time is estimated, hour-pillar-based details should stay conservative. "
         if payload.profile.is_birth_time_estimated
@@ -508,13 +536,357 @@ def _cards_en(payload: InterpretationPayload) -> List[FreePreviewCard]:
     ]
 
 
+# These are plain-language renderings of supplied Ten-God labels, not a new
+# calculation or ranking. The same peer/output/wealth/officer/resource meanings
+# are used by the existing period guidance. Unknown labels stay unclassified.
+FACT_VOICES = {
+    "peer": {
+        "ko": (
+            "같이 일하는데 왜 내 몫만 늘어날까?",
+            "자기 방식과 협업의 경계를 먼저 살펴볼 만합니다. 혼자 해낼 수 있는 일이라도 함께 맡으면 누가 결정하고 어디까지 책임지는지 적어 두는 편이 좋습니다.",
+            "혼자 잘하는 것과 함께 잘하는 건 다릅니다. 내 몫과 공동의 몫을 먼저 나눠 보세요.",
+            "좋아해도 내 시간은 지키고 싶은 걸까?",
+            "가까워지는 마음과 내 생활을 지키는 일을 함께 살펴봅니다. 연락 횟수만 맞추기보다 혼자 쉬는 시간과 함께 보내는 시간을 서로 이야기해 보는 방식이 도움이 될 수 있습니다.",
+            "가까워져도 내 하루는 남겨 두세요. 함께하는 시간과 혼자 쉬는 시간을 말로 맞춰 보세요.",
+        ),
+        "en": (
+            "Working together, carrying it alone?",
+            "Start with personal methods and shared ownership. Even when you can complete a task alone, agreeing who decides and who is responsible makes collaboration easier to check.",
+            "Being good alone and working well together are different tasks. Separate personal and shared ownership.",
+            "Can closeness leave room for your own day?",
+            "Look at closeness alongside personal space. Instead of measuring the bond by message frequency, talk about time together and time to recover alone.",
+            "Leave room for your own day too. Agree on time together and time to recover alone.",
+        ),
+    },
+    "output": {
+        "ko": (
+            "아이디어는 많은데 완성본은 어디 갔을까?",
+            "표현한 생각을 결과물로 남기는 방식을 먼저 살펴볼 만합니다. 제안이 늘어날 때마다 새 일을 벌이기보다 초안 하나를 끝까지 마쳐 누가 쓸 수 있는지 확인해 보세요.",
+            "생각 하나를 남이 쓸 수 있는 완성본으로 바꿔 보세요. 말한 것과 마친 것을 나눠 보면 일이 선명해집니다.",
+            "마음은 있는데 말이 먼저 앞서는 걸까?",
+            "마음을 표현하고 함께 시간을 즐기는 방식을 먼저 살펴봅니다. 대화가 잘 이어지는 순간에도 내 말만 길어지지 않는지, 상대가 답할 자리가 남아 있는지 확인해 볼 만합니다.",
+            "마음을 말로 꺼냈다면 답을 들을 자리도 남겨 두세요. 표현과 경청을 한 쌍으로 보세요.",
+        ),
+        "en": (
+            "Plenty of ideas, but where is the finished work?",
+            "Start with turning expression into a usable result. When proposals keep multiplying, finish one draft and check who can actually use it before opening another task.",
+            "Turn one idea into something another person can use. Separate what was said from what was finished.",
+            "Does the conversation run ahead of the feeling?",
+            "Look first at expression and enjoyment together. Even when conversation feels easy, leave space for the other person to answer instead of carrying the whole exchange yourself.",
+            "After expressing a feeling, leave room for an answer. Read expression and listening together.",
+        ),
+    },
+    "wealth": {
+        "ko": (
+            "열심히 했는데 남는 건 어디에 있을까?",
+            "쓴 시간과 실제로 남은 보상을 함께 살펴볼 만합니다. 바쁜 일정 자체를 성과로 세기보다 일이 끝난 뒤 돈, 기술, 다시 쓸 수 있는 결과물 중 무엇이 남는지 적어 보세요.",
+            "바빴다는 사실보다 남은 결과를 보세요. 쓴 시간과 돌아온 보상을 나란히 적어 보세요.",
+            "설렘 다음에 현실도 같이 보는 걸까?",
+            "호감과 함께 시간, 돈, 생활을 나누는 방식을 살펴봅니다. 마음을 확인하려고 무리한 선물이나 약속을 늘리기보다 함께 보내는 평범한 하루가 서로에게 편한지 볼 만합니다.",
+            "설렘을 확인하느라 생활을 무리하게 쓰지 마세요. 평범한 하루도 함께 편한지 보세요.",
+        ),
+        "en": (
+            "Working hard, but what actually remains?",
+            "Look at time spent alongside the reward that remains. Rather than treating a crowded schedule as an achievement, check whether each task leaves income, a skill, or reusable work.",
+            "Check the result that remains, not only the effort spent. Put time and actual reward side by side.",
+            "What happens when excitement meets daily life?",
+            "Look at affection alongside sharing time, money, and everyday life. Instead of stretching gifts or promises to prove a feeling, check whether an ordinary day together feels manageable.",
+            "Do not stretch daily life just to prove excitement. See whether an ordinary day together feels comfortable.",
+        ),
+    },
+    "officer": {
+        "ko": (
+            "일은 돌아가는데 왜 내 일정은 꽉 찰까?",
+            "책임과 마감을 어디까지 맡는지 먼저 살펴볼 만합니다. 믿고 맡긴다는 말을 들었을 때 모든 요청을 받아들일 필요는 없고, 추가되는 일만큼 일정과 담당 범위도 다시 확인해 보세요.",
+            "새 일을 받으면 마감과 담당 범위도 같이 바꾸세요. 믿고 맡긴다는 말이 내 일정 전체를 뜻하지는 않습니다.",
+            "좋아한다는 말보다 약속이 먼저 보일까?",
+            "관계에서 약속과 책임을 나누는 방식을 먼저 살펴봅니다. 연락이 달콤한 날만 보기보다 취소된 약속을 어떻게 다시 잡는지, 어려운 이야기를 함께 이어갈 수 있는지 볼 만합니다.",
+            "좋아한다는 말과 약속을 지키는 행동을 함께 보세요. 작은 약속 하나부터 서로의 속도를 맞춰 보세요.",
+        ),
+        "en": (
+            "Why does every task fill your calendar?",
+            "Start with the responsibility and deadlines you accept. Being trusted with a task does not require taking every request; confirm scope and timing whenever extra work is added.",
+            "When new work arrives, revise the scope and deadline too. Trust does not mean owning every request.",
+            "Do promises matter before sweet words?",
+            "Look first at shared promises and responsibility. Beyond an affectionate message, watch how a cancelled plan is rearranged and whether difficult conversations can continue.",
+            "Read affectionate words alongside kept promises. Start with one small agreement at a shared pace.",
+        ),
+    },
+    "resource": {
+        "ko": (
+            "많이 배웠는데 써먹을 시간은 있을까?",
+            "배운 것을 실제 일에 옮기는 방식을 먼저 살펴볼 만합니다. 자료를 더 모으는 날과 이미 아는 것을 써보는 날을 나눠 두고, 지식이 쌓인 만큼 일이 조금이라도 편해지는지 확인해 보세요.",
+            "더 배우기 전에 이미 아는 것 하나를 써보세요. 자료를 모으는 시간과 쓰는 시간을 나눠 보세요.",
+            "마음이 편해야 가까워지는 걸까?",
+            "관계 안에서 이해받고 회복할 자리가 있는지 먼저 살펴봅니다. 상대를 더 잘 알기 위해 생각하는 시간도 필요하지만, 대답을 혼자 추측하기보다 작은 질문으로 직접 확인하는 방식이 도움이 될 수 있습니다.",
+            "혼자 오래 해석하기 전에 작은 질문을 건네 보세요. 편안함은 마음을 맞히는 일보다 대화에서 확인하세요.",
+        ),
+        "en": (
+            "Learning plenty, but when do you use it?",
+            "Start with bringing learned knowledge into actual work. Separate collecting material from applying something you already know, and check whether learning makes one task easier.",
+            "Before collecting more knowledge, use one thing you already know. Separate learning time from application time.",
+            "Do you need comfort before getting closer?",
+            "Look first for room to feel understood and recover within a relationship. Time to think can help, but a small direct question is more useful than privately guessing another person's answer.",
+            "Ask a small question before privately interpreting everything. Check comfort through conversation.",
+        ),
+    },
+}
+
+
+def _supplied_ten_god_group(label: str) -> str | None:
+    reverse_english = {value: key for key, value in TEN_GOD_ENGLISH.items()}
+    canonical = reverse_english.get(label, localize_ten_god(label, "ko"))
+    for group, labels in {
+        "peer": {"비견", "겁재"},
+        "output": {"식신", "상관"},
+        "wealth": {"정재", "편재"},
+        "officer": {"정관", "편관"},
+        "resource": {"정인", "편인"},
+    }.items():
+        if canonical in labels:
+            return group
+    return None
+
+
+def _metric_basis(metrics: Sequence[Any], locale: str) -> str:
+    unit = "개" if locale == "ko" else ""
+    values = [f"{item.label} {item.count}{unit}" for item in metrics]
+    return ", ".join(values) or ("확인된 항목 없음" if locale == "ko" else "No supplied metrics")
+
+
+BASIS_READINGS = {
+    "peer": {
+        "ko": ("개인 업무와 공동 업무의 역할 경계", "관계 안에서의 개인 기준과 시간 배분"),
+        "en": ("personal and shared ownership at work", "personal space and time together"),
+    },
+    "output": {
+        "ko": ("생각을 완성된 결과물로 옮기는 방식", "마음을 표현하는 방식과 상대의 응답을 수용할 여지"),
+        "en": ("turning an idea into finished, usable work", "expression and room to hear an answer"),
+    },
+    "wealth": {
+        "ko": ("투입한 시간과 확보한 보상의 균형", "관계에서의 애정 표현과 시간·돈·생활 자원의 배분"),
+        "en": ("time spent and the reward that remains", "affection alongside shared time and everyday resources"),
+    },
+    "officer": {
+        "ko": ("책임의 범위와 마감 관리", "애정 표현과 약속 이행의 일치 여부"),
+        "en": ("the responsibility and deadlines you accept", "affectionate words and kept promises"),
+    },
+    "resource": {
+        "ko": ("학습한 내용을 실제 업무에 적용하는 방식", "관계에서의 이해와 회복을 위한 여유"),
+        "en": ("applying what you have learned", "feeling understood and having room to recover"),
+    },
+}
+
+
+def _cycle_basis_fact(cycle: Any, *, next_cycle: bool, locale: str) -> str | None:
+    label = cycle.display_gan_zhi
+    if not label or contains_hanja(label) or (locale == "en" and contains_hangul(label)):
+        return None
+    start, end = cycle.start_datetime, cycle.change_datetime
+    if start and end and re.match(r"^\d{4}-\d{2}", start) and re.match(r"^\d{4}-\d{2}", end):
+        period = (f"{start[:4]}년 {int(start[5:7])}월 ~ {end[:4]}년 {int(end[5:7])}월" if locale == "ko" else f"{start[:7]} to {end[:7]}")
+    else:
+        period = f"{cycle.start_year} ~ {cycle.end_year}"
+    prefix = ("다음 10년 구간(대운)" if next_cycle else "현재 10년 구간(대운)") if locale == "ko" else ("Next luck-cycle window" if next_cycle else "Current luck-cycle window")
+    return f"{prefix}: {label} · {period}"
+
+
+def _card_basis_explanation(payload: InterpretationPayload, key: str) -> ReadingBasisExplanation | None:
+    """Expose facts behind the existing renderer, without adding chart judgments."""
+    ko = _is_ko(payload)
+    locale = _locale(payload)
+    if key in {"work_money", "love"}:
+        label = payload.career_facts.month_stem_ten_god if key == "work_money" else payload.love_facts.spouse_house_ten_god
+        group = _supplied_ten_god_group(label)
+        if group is None:
+            return None
+        supplied = localize_ten_god(label, locale)
+        prefix = ("태어난 달에서 확인한 단서(월간)" if key == "work_money" else "관계를 살펴본 자리(배우자궁)") if ko else ("Work reference (month stem)" if key == "work_money" else "Relationship reference (spouse house)")
+        theme = BASIS_READINGS[group][locale][0 if key == "work_money" else 1]
+        reference = ("월간 십성" if key == "work_money" else "배우자궁에서 확인된 십성") if ko else ("month-stem ten-god" if key == "work_money" else "spouse-house ten-god")
+        reading = f"{reference}은 ‘{supplied}’입니다. 이를 근거로 {theme}에 관한 해석 방향을 검토했습니다." if ko else f"The {reference} is '{supplied}'. The interpretation considers {theme}."
+        return ReadingBasisExplanation(facts=[f"{prefix}: {supplied}"], reading=reading)
+    if key == "core":
+        labels = {"wood": "목", "fire": "화", "earth": "토", "metal": "금", "water": "수"} if ko else {item: item for item in ("wood", "fire", "earth", "metal", "water")}
+        dominant = payload.signals.dominant_elements[:2]
+        if not dominant or any(item not in labels or payload.element_counts.get(item, 0) <= 0 for item in dominant):
+            return None
+        counts = ", ".join(f"{labels[item]} {payload.element_counts[item]}{'개' if ko else ''}" for item in dominant)
+        facts = [f"보이는 기둥의 강한 오행: {counts}" if ko else f"Stronger visible elements: {counts}"]
+        reading = f"표면 오행의 분포를 {_dominant_strength_phrase(payload)}과 관련된 해석의 참고 자료로 검토했습니다." if ko else f"The visible-element distribution was reviewed in relation to {_dominant_strength_phrase(payload)}."
+        missing = payload.signals.missing_elements
+        if missing and all(item in labels and payload.element_counts.get(item) == 0 for item in missing):
+            values = ", ".join(labels[item] for item in missing)
+            facts.append(f"보이는 기둥에 없는 오행: {values}" if ko else f"Elements absent from the visible pillars: {values}")
+            reading += f" 표면 오행에서 확인되지 않은 항목은 {_support_need_phrase(payload)}을 살펴보는 참고 단서로 검토했습니다." if ko else f" Elements absent from the visible pillars were considered as prompts to review {_support_need_phrase(payload)}."
+        if payload.profile.is_birth_time_estimated:
+            facts.append("출생시간 미상: 시주 제외" if ko else "Unknown birth time: the hour pillar is excluded")
+        return ReadingBasisExplanation(facts=facts, reading=reading)
+    if key != "luck_flow":
+        return None
+    if not _has_confirmed_current_cycle(payload):
+        if payload.profile.is_birth_time_estimated:
+            fact = "출생시간 미상: 시주·대운 계산 비활성" if ko else "Unknown birth time: hour-pillar and luck-cycle calculation are disabled"
+        elif "luck_cycles" in payload.disabled_sections or any(item.key == "luck_cycles" and item.status == "disabled" for item in payload.evidence):
+            fact = "대운 계산 비활성: 현재·다음 구간 미확인" if ko else "Luck-cycle calculation is disabled; current and next windows are unconfirmed"
+        else:
+            fact = "현재 대운 자료: 미확인" if ko else "Current luck-cycle facts: unavailable"
+        return ReadingBasisExplanation(facts=[fact], reading="현재·다음 대운과 전환 시점을 확인할 수 없어 시기 비교를 보류했습니다. 조언은 확인 가능한 생활 점검 항목으로 제한했습니다." if ko else "The current and next luck cycles and their transition timing could not be confirmed, so timing comparison was withheld. Advice is limited to observable everyday checks.")
+    current, following = payload.current_flow.active_luck_cycle, payload.current_flow.next_luck_cycle
+    current_fact = _cycle_basis_fact(current, next_cycle=False, locale=locale)
+    next_fact = _cycle_basis_fact(following, next_cycle=True, locale=locale) if following else None
+    if current_fact is None or (following is not None and next_fact is None):
+        return None
+    facts = [current_fact, next_fact] if next_fact else [current_fact, "다음 대운 자료: 미확인" if ko else "Next luck-cycle facts: unavailable"]
+    flow = payload.luck_flow_facts
+    current_phase = flow.current_phase_label if flow.current_luck_cycle == current.display_gan_zhi else ""
+    next_phase = flow.next_phase_label if following and flow.next_luck_cycle == following.display_gan_zhi else ""
+    if not following:
+        reading = "현재 대운만 확인되어 다음 대운과의 비교는 보류했습니다." if ko else "Only the current luck cycle was confirmed; comparison with the next cycle was withheld."
+    elif current_phase and next_phase and not contains_hanja(current_phase + next_phase) and (ko or not contains_hangul(current_phase + next_phase)):
+        if current_phase == next_phase:
+            reading = f"현재·다음 대운의 제공된 분류에서 ‘{current_phase}’라는 공통 주제를 확인했습니다. 이를 조언의 참고 방향으로 검토했습니다." if ko else f"The supplied current and next luck-cycle classifications share the theme '{current_phase}'. This classification was reviewed as context for the advice."
+        else:
+            reading = f"제공된 분류에서 현재 대운은 ‘{current_phase}’, 다음 대운은 ‘{next_phase}’로 확인했습니다. 각 분류를 조언의 참고 방향으로 검토했습니다." if ko else f"The supplied classifications identify '{current_phase}' for the current luck cycle and '{next_phase}' for the next. These classifications were reviewed as context for the advice."
+    else:
+        reading = "제공된 현재·다음 대운의 기간을 생활 점검의 시간 범위로 검토했습니다. 특정 사건의 발생일을 산출하거나 확정하지 않았습니다." if ko else "The supplied current and next luck-cycle periods were reviewed as timing context for everyday choices. No date for a specific event was calculated or confirmed."
+    return ReadingBasisExplanation(facts=facts, reading=reading)
+
+
+def _fact_aware_cards(payload: InterpretationPayload, cards: List[FreePreviewCard]) -> List[FreePreviewCard]:
+    """Render supplied facts without inferring missing counts, stars or timing.
+
+    A missing/zero fact must not become a negative prediction. These cards are
+    practical reference prompts selected by the already calculated categories.
+    """
+    ko = _is_ko(payload)
+    locale = _locale(payload)
+    by_key = {card.key: card for card in cards}
+    work = by_key["work_money"]
+    love = by_key["love"]
+    core = by_key["core"]
+    luck = by_key["luck_flow"]
+    work_group = _supplied_ten_god_group(payload.career_facts.month_stem_ten_god)
+    love_group = _supplied_ten_god_group(payload.love_facts.spouse_house_ten_god)
+    if work_group:
+        voice = FACT_VOICES[work_group][locale]
+        work.title = work.subtitle = voice[0]
+        work.preview_paragraphs[0] = voice[1] + (
+            " 직업 이름 하나를 정답으로 고르기보다 일을 맡고 마치는 방식부터 확인하는 참고 포인트입니다. 잘해낼 수 있는 일과 계속 감당할 수 있는 일이 같은지도 함께 보세요."
+            if ko else " This is a reference point for how work is accepted and completed, not a choice of one destined occupation. Check both what you can do and what you can keep doing sustainably."
+        )
+        work.user_takeaway = voice[2]
+    else:
+        work.title = work.subtitle = "어떤 일이 남는 결과로 이어질까?" if ko else "Which tasks leave a useful result?"
+        work.preview_paragraphs[0] = (
+            "현재 확인된 자료만으로 한 가지 일하는 방식을 강하게 고르기는 어렵습니다. 직업 이름이나 성공 가능성을 단정하는 대신, 일주일 동안 맡은 일과 끝낸 일을 적어 어떤 환경에서 힘이 덜 드는지 살펴볼 만합니다. 역할이 분명한 날과 요청이 계속 바뀌는 날을 나눠 보면 실제로 지속할 수 있는 일이 무엇인지 더 쉽게 확인할 수 있습니다."
+            if ko else "The supplied facts do not support singling out one strong working method. Instead of choosing a destined job or predicting success, record the tasks accepted and completed during one week and compare the environments that require less effort. Separate days with clear ownership from days when requests keep changing."
+        )
+        work.user_takeaway = "맡은 일과 끝낸 일을 나란히 적어 보세요. 내게 남는 결과부터 확인하세요." if ko else "Put accepted and finished tasks side by side. Check what actually remains for you."
+    present_wealth = any(item.key == "wealth" and item.count > 0 for item in payload.wealth_facts.key_ten_gods)
+    present_output = any(item.key == "output" and item.count > 0 for item in payload.wealth_facts.key_ten_gods)
+    if present_wealth:
+        work.preview_paragraphs[1] = (
+            "돈과 자원을 다루는 단서가 현재 확인된 자료에 있어, 들어온 돈과 남은 돈을 나눠 살펴봅니다. 수입이 생겨도 유지 비용이나 반복 지출이 함께 커지면 체감이 늦어질 수 있으니, 금액을 예측하기보다 한 달 동안 들어오고 나간 항목을 같은 종이에 적어 보세요."
+            if ko else "The supplied facts include money-and-resource signals, so compare incoming money with what remains. Income can feel less useful when carrying costs and recurring expenses rise alongside it. Rather than predicting an amount, put one month's inflows and outflows on the same page."
+        )
+    elif present_output:
+        work.preview_paragraphs[1] = (
+            "현재 확인된 자료에서는 표현하고 만드는 단서를 참고할 수 있지만, 이것만으로 수입의 크기를 정할 수는 없습니다. 만든 결과물을 누가 쓰고 어떤 대가를 지불하는지 연결해 보는 편이 좋습니다. 작업 시간이 길었다는 사실과 실제 보상으로 이어진 일을 나눠 적으면 계속할 일과 조정할 일이 더 분명해집니다."
+            if ko else "The supplied facts include expression-and-output signals, which cannot determine the size of an income. Check who uses a finished result and what they pay for it. Separate long hours from work that actually creates compensation, so continuing or adjusting a task becomes easier to assess."
+        )
+    else:
+        work.preview_paragraphs[1] = (
+            "현재 확인된 자료에서 돈과 결과물의 연결을 강하게 고를 단서는 제한적입니다. 이것을 돈을 못 벌거나 일이 안 된다는 뜻으로 읽지는 않습니다. 사주 문장보다 실제 수입과 지출 기록을 함께 보고, 생활에 필요한 비용과 선택해서 쓰는 비용을 나눠 지금 조정할 수 있는 항목부터 확인해 보세요."
+            if ko else "The supplied facts provide limited signals for singling out a money-and-output connection. That does not mean an inability to earn or succeed. Compare the reading with actual income and expense records, separating essential costs from optional choices before selecting one item you can adjust now."
+        )
+    work.basis_line = (
+        f"월간 {payload.career_facts.month_stem_ten_god or '미확인'}; 일 단서 {_metric_basis(payload.career_facts.key_ten_gods, locale)}; 돈 단서 {_metric_basis(payload.wealth_facts.key_ten_gods, locale)}."
+        if ko else f"Month-stem signal: {payload.career_facts.month_stem_ten_god or 'unavailable'}; career: {_metric_basis(payload.career_facts.key_ten_gods, locale)}; wealth: {_metric_basis(payload.wealth_facts.key_ten_gods, locale)}."
+    )
+    if love_group:
+        voice = FACT_VOICES[love_group][locale]
+        love.title = love.subtitle = voice[3]
+        love.preview_paragraphs[0] = voice[4] + (
+            " 약속을 잡는 날과 각자 쉬는 날을 나눠 생각해 보세요. 같은 연락도 바쁜 날과 여유로운 날에는 다르게 느껴질 수 있으니, 원하는 속도를 서로 말해보는 편이 도움이 됩니다."
+            if ko else " Compare a day with plans together and a day spent recovering alone. The same message can feel different on a busy day and a quiet one, so name the pace you would each prefer."
+        )
+        love.user_takeaway = voice[5]
+    else:
+        love.title = love.subtitle = "내가 편한 관계는 어떤 모습일까?" if ko else "What does a comfortable bond look like for you?"
+        love.preview_paragraphs[0] = (
+            "현재 확인된 자료만으로 관계 습관 하나를 강하게 고르기는 어렵습니다. 연락의 속도나 만나는 횟수보다 함께 있을 때 편한 점과 불편한 점을 하나씩 말해보는 편이 좋습니다. 좋아하는 장소를 정하거나 쉬는 날을 맞춰보는 작은 선택에서도 서로 편한 방식이 어떻게 다른지 직접 확인할 수 있습니다."
+            if ko else "The supplied facts do not support singling out one strong relationship habit. Instead of measuring message speed or meeting frequency, name one comfortable and one uncomfortable part of being together. Small choices, such as picking a place or arranging a quiet day, can show how your preferred ways differ."
+        )
+        love.user_takeaway = "편한 점과 불편한 점을 하나씩 말해보세요. 상대의 답은 직접 들어보세요." if ko else "Name one comfortable and one uncomfortable part. Hear the other person's answer directly."
+    love.preview_paragraphs[1] = (
+        ("관계를 보는 기본 단서가 확인되어, 기대와 책임을 어떻게 나누는지 함께 살펴봅니다. 데이트 날짜를 정할 때 한 사람만 계속 양보하는지, 일정이 바뀌면 다시 맞춰보는지 볼 만합니다. 평소 지킬 수 있는 작은 약속을 하나 정하고, 서로 힘든 날에도 그 약속을 조정할 수 있는지 확인해 보세요."
+         if payload.love_facts.partner_star_count > 0 else
+         "관계를 보는 기본 단서가 현재 확인된 자료에서는 두드러지지 않습니다. 이것을 연애 기회가 없거나 마음을 나누기 어렵다는 뜻으로 읽지는 않습니다. 실제 관계에서 내가 편해지는 대화와 불편해지는 상황을 하나씩 적어 보면, 문장만으로 알 수 없는 생활의 차이를 직접 확인할 수 있습니다.")
+        if ko else
+        ("The supplied facts include partner-related signals, so look at how expectations and responsibility are shared. When arranging a date, notice whether one person always yields or both help rearrange changed plans. Agree on one small promise that can be kept and check whether it can be adjusted together on a difficult day."
+         if payload.love_facts.partner_star_count > 0 else
+         "Partner-related signals are not prominent in the supplied facts. This does not mean having no chance to date or share affection. Record conversations that feel comfortable and situations that feel difficult in actual relationships, so everyday differences can be checked rather than guessed from a reading.")
+    )
+    love.basis_line = (
+        f"배우자궁 십성 {payload.love_facts.spouse_house_ten_god or '미확인'}; {payload.love_facts.partner_star_label} {payload.love_facts.partner_star_count}개."
+        if ko else f"Spouse-house signal: {payload.love_facts.spouse_house_ten_god or 'unavailable'}; {payload.love_facts.partner_star_label}: {payload.love_facts.partner_star_count}."
+    )
+    localized_star_labels = [
+        label for label in payload.love_facts.active_star_labels
+        if not contains_hanja(label) and (ko or not contains_hangul(label))
+    ]
+    if localized_star_labels:
+        love.basis_line += (" 보조 단서 " if ko else " Supporting signals: ") + ", ".join(localized_star_labels) + "."
+    love.preview_paragraphs[2] = (
+        "사주만으로 상대의 속마음이나 관계의 결과를 알 수는 없습니다. 편한 관계를 찾으려면 기대하는 연락과 약속의 양을 말로 나눠 보는 편이 좋습니다. 작은 불편을 이야기했을 때 서로 고칠 방법을 찾을 수 있는지도 함께 확인해 보세요. 실제로 들은 대답과 반복되는 행동을 보면 혼자 해석하던 부분을 대화로 풀어볼 수 있습니다."
+        if ko else "A chart cannot reveal another person's private feelings or decide a relationship outcome. Talk about the amount of contact and commitment each person expects, and see whether small difficulties can lead to shared adjustments. Actual answers and repeated behavior can bring a private interpretation into a conversation you can both take part in."
+    )
+    if not ko:
+        love.preview_paragraphs[3] = "Think of a dinner plan that changes at the last minute. Does one person quietly absorb the inconvenience, or can both suggest a new plan? A short conversation about time, cost, and energy can make an ordinary evening easier than trying to decode every message. Notice which small adjustments leave both people more comfortable."
+    core.user_takeaway = (
+        f"강점은 {_dominant_strength_phrase(payload)}, 보완할 것은 {_support_need_phrase(payload)}입니다. 두 가지를 함께 쓸 수 있는 역할을 골라보세요."
+        if ko else f"Review {_dominant_strength_phrase(payload)} alongside support for {_support_need_phrase(payload)}. Choose a role where both are sustainable."
+    )
+    if ko:
+        core.preview_paragraphs[-1] += " 하루를 마칠 때 힘이 남은 일과 금방 소모된 일을 하나씩 적어보세요. 능력이 부족해서였는지, 요청이 바뀌거나 쉴 틈이 없어서였는지 나눠 보면 맡을 역할과 도움을 청할 부분을 더 구체적으로 찾을 수 있습니다."
+    core.basis_line = (
+        f"보이는 오행: 강한 부분 {_element_text(payload)}; 보완 신호 {_missing_element_text(payload)}."
+        if ko else f"Supplied dominant elements: {_element_text(payload)}; missing elements: {_missing_element_text(payload)}."
+    )
+    timing_available = _has_confirmed_current_cycle(payload)
+    if timing_available and payload.luck_flow_facts.now_action_tags:
+        action = payload.luck_flow_facts.now_action_tags[0]
+        luck.user_takeaway = f"먼저 살펴볼 일은 {action}입니다. 이번 주에 반복할 수 있는 작은 행동 하나로 줄여보세요." if ko else f"Start by reviewing {action}. Reduce it to one small action you can repeat this week."
+    elif not timing_available:
+        luck.subtitle = "시기보다 지금 확인할 수 있는 것" if ko else "What can be checked without confirmed timing"
+        luck.preview_paragraphs[0] = (
+            "출생시간이나 현재 시기 자료가 충분하지 않아 지금과 다음의 전환 시점을 확정하지 않았습니다. 특정 해에 무엇이 좋아진다고 말하는 대신, 현재 생활에서 확인할 수 있는 약속과 지출, 일의 부담을 나눠 살펴보세요. 바꿀 수 있는 작은 항목 하나부터 적으면 시기를 단정하지 않고도 오늘의 선택을 점검할 수 있습니다."
+            if ko else "Birth-time or current-period facts are insufficient to confirm the current and next transition timing. Instead of assigning improvement to a particular year, examine the promises, expenses, and work demands visible in daily life. Start by writing down one small item you can change without making a timing claim."
+        )
+        luck.preview_paragraphs[1] = (
+            "전환 시점이 확인되지 않았다고 선택을 멈출 필요는 없습니다. 생활에서 반복되는 부담과 편안한 상황을 구분하고, 이미 지키는 약속 중 너무 무거워진 것이 있는지 돌아볼 만합니다. 이 조언은 특정 시기의 유불리를 계산한 결론이 아니라 지금의 행동을 점검하는 일반적인 참고 질문입니다."
+            if ko else "Unconfirmed timing does not require stopping every decision. Compare recurring demands with comfortable situations and examine whether an existing promise has become too heavy. This advice is a general action-check question, not a conclusion about the favorability of a calculated period."
+        )
+        luck.user_takeaway = "시기 판단은 보류하고, 지금 확인할 수 있는 부담 하나부터 점검해 보세요." if ko else "Leave timing unconfirmed and check one demand you can actually observe now."
+        luck.basis_line = "현재·다음 대운 연결은 확정하지 않았으며, 시간에 의존하는 근거를 사용하지 않았습니다." if ko else "Current and next luck-cycle connections are unconfirmed; time-dependent evidence was not used."
+        if not ko:
+            luck.preview_paragraphs[2] = "Picture a day when several small requests arrive together. Before accepting them all, list what is already promised and which request can wait. A pause can help you choose from the demands you can actually observe, without treating the day as a favorable or unfavorable period."
+            luck.preview_paragraphs[3] = "Pick one ordinary habit to review: an expense you repeat, a task you keep postponing, or a conversation you want to have. Make one small adjustment and check whether it helps during the week. Use the observed result to keep, change, or drop the adjustment rather than assigning it to a future cycle."
+    for card in cards:
+        card.basis_explanation = _card_basis_explanation(payload, card.key)
+    # Pydantic may reuse model instances without checking fields changed after
+    # construction. Validate the rendered values before the public response does.
+    return [_model_validate(FreePreviewCard, _model_dump_json(card)) for card in cards]
+
+
 def build_fallback_free_preview_report(payload: InterpretationPayload) -> FreePreviewReport:
     if _is_ko(payload):
         headline = _headline_ko(payload)
         strength = _dominant_strength_phrase(payload)
         support_need = _support_need_phrase(payload)
         now_actions = _join(
-            payload.luck_flow_facts.now_action_tags[:3],
+            _confirmed_action_tags(payload)[:3],
             fallback="생활 리듬, 지출, 관계의 경계",
         )
         hero_overview = [
@@ -528,25 +900,37 @@ def build_fallback_free_preview_report(payload: InterpretationPayload) -> FreePr
             "이 결과는 정해진 사건을 말하기보다, 편해지는 선택과 소모가 커지는 선택을 구분하는 참고 자료입니다.",
         ]
         diagnoses = _diagnoses_ko(payload)
-        cards = _cards_ko(payload)
+        cards = _fact_aware_cards(payload, _cards_ko(payload))
     else:
-        headline = "A steady builder of clear standards"
+        headlines = {
+            "wood": "An explorer of possibilities and directions",
+            "fire": "Energy through response and expression",
+            "earth": "A steady anchor for practical tasks",
+            "metal": "A person who separates essentials and finishes",
+            "water": "A reader and coordinator of situations",
+        }
+        headline = next((headlines[item] for item in payload.signals.dominant_elements if item in headlines), "Finding a workable way through everyday choices")
         current_cycle = _cycle_name(payload, "current")
         next_cycle = _cycle_name(payload, "next")
+        confirmed_timing = _has_confirmed_current_cycle(payload)
         hero_overview = [
             "This chart becomes stronger when clear standards are in place.",
             f"The main strength is the ability to respond and organize through the {_element_text(payload)} side of the chart.",
             "The repeating pattern is strong focus in a fitting environment and faster fatigue when standards are unclear.",
-            f"The current period is influenced by {current_cycle}, making it useful to reorganize work, money, and relationship standards.",
+            (f"The supplied current period is {current_cycle}; compare its action points with actual work, money, and relationship choices."
+             if confirmed_timing else "Current timing is unconfirmed, so work, money, and relationship habits are reviewed without a luck-cycle claim."),
             "The caution is that speed without structure can increase spending pressure and relationship strain.",
             "The best use of the chart is to turn strengths into results while supporting weaker parts through routine.",
             "In relationships, daily rhythm and responsibility matter more than quick certainty.",
             "In work and money, output, responsibility, and management rules become connected.",
-            f"The next flow moves toward {next_cycle}, so the standards built now can make later choices clearer.",
+            (f"The supplied next cycle is {next_cycle}; use it as reference context rather than an event prediction."
+             if confirmed_timing and payload.current_flow.next_luck_cycle else "The next transition is unconfirmed; use routines and observed choices without assigning a future date."),
         ]
         diagnoses = _diagnoses_en(payload)
-        cards = _cards_en(payload)
+        cards = _fact_aware_cards(payload, _cards_en(payload))
 
+    plan = apply_reading_plan(payload, cards)
+    payload.reading_plan = plan
     return FreePreviewReport(
         provider="fallback",
         model="fallback",
@@ -555,6 +939,7 @@ def build_fallback_free_preview_report(payload: InterpretationPayload) -> FreePr
         hero_overview=hero_overview,
         core_diagnoses=diagnoses,
         cards=cards,
+        question_capabilities=plan.question_capabilities,
         warnings=[flag.code for flag in payload.uncertainty_summary],
     )
 
@@ -576,7 +961,7 @@ def _build_provider_report(parsed: FreePreviewLLMOutput, *, provider: str) -> Fr
         headline=parsed.headline,
         hero_overview=parsed.hero_overview,
         core_diagnoses=parsed.core_diagnoses,
-        cards=parsed.cards,
+        cards=[_model_validate(FreePreviewCard, {**_model_dump_json(card), "basis_explanation": None, "reading_structure": None}) for card in parsed.cards],
         warnings=[],
     )
 
@@ -725,8 +1110,8 @@ def _call_codex_free_preview(
                 "The response object must contain headline, hero_overview, core_diagnoses, and cards only.",
                 "Write exactly 8 hero_overview sentences.",
                 "Each core_diagnoses body must be at least 100 Korean characters.",
-                "Each card must have 4 preview_paragraphs. The combined preview_paragraphs text for each card must be between 760 and 1200 Korean characters.",
-                "Each preview paragraph should be 190 to 260 Korean characters. If any card has less than 760 Korean characters in preview_paragraphs, the answer is invalid.",
+                "Use reading_plan: answer in user_takeaway; three preview_paragraphs in scene, tradeoff, action order.",
+                "Every paragraph must add its own information role. Never pad length or invent timing/comparison data.",
                 "Do not expose scores, internal ids, Hanja, or deterministic event guarantees.",
             ),
         )
@@ -824,7 +1209,7 @@ def _call_codex_repair_free_preview(
             schema_name="saju_free_preview_repair",
             extra_instructions=(
                 "Fix only the validation issues. Keep the same schema and do not add commentary.",
-                "For cards.*:preview_too_short, expand that card to 4 preview_paragraphs with 190 to 260 Korean characters each.",
+                "For missing/short roles, restore the scene, tradeoff and action from reading_plan without repeating or padding advice.",
                 "For first_screen_jargon issues, rewrite the affected first-screen text in plain everyday Korean.",
                 "Avoid first-screen technical saju terms such as 일간, 월주, 일주, 십성, 정관, 편관, 재성, 식상, 인성, 비겁, 대운, 세운, 용신, 도화, 홍염.",
                 "Do not expose scores, internal ids, Hanja, or deterministic event guarantees.",
@@ -998,12 +1383,18 @@ def _validate_free_preview_report(report: FreePreviewReport, payload: Interpreta
     card_keys = [item.key for item in report.cards]
     if card_keys != list(CARD_KEYS):
         issues.append("cards:unexpected_keys")
+    planned_topics = build_reading_plan(payload).sections
     for card in report.cards:
         preview_text = _card_preview_text(card)
+        issues.extend(validate_reading_structure(card, payload))
+        if len(set(part.strip() for part in card.preview_paragraphs)) != len(card.preview_paragraphs):
+            issues.append(f"cards.{card.key}:duplicate_paragraph_role")
         if len(card.chips) < 3 or len(card.chips) > 5:
             issues.append(f"cards.{card.key}:invalid_chip_count")
         if len(card.preview_paragraphs) < 3:
             issues.append(f"cards.{card.key}:too_few_preview_paragraphs")
+        if card.key in planned_topics and len(card.preview_paragraphs) != 3:
+            issues.append(f"cards.{card.key}:reading_role_count_mismatch")
         if len(preview_text) < MIN_CARD_PREVIEW_CHARS:
             issues.append(f"cards.{card.key}:preview_too_short")
         if len(preview_text) > MAX_CARD_PREVIEW_CHARS:
@@ -1016,6 +1407,7 @@ def _validate_free_preview_report(report: FreePreviewReport, payload: Interpreta
             issues.append(f"cards.{card.key}:missing_basis_line")
 
     for text in _collect_user_texts(report):
+        issues.extend(unsupported_claim_issues(text))
         if _contains_internal_value(text):
             issues.append("internal_value_exposed_in_user_text")
         for phrase in PLACEHOLDER_USER_PHRASES:
@@ -1162,6 +1554,7 @@ def generate_free_preview_report(
                 repaired_report = _sanitize_codex_first_screen_jargon(repaired_report)
                 repaired_issues = _validate_free_preview_report(repaired_report, payload)
                 if not repaired_issues:
+                    repaired_report.question_capabilities = fallback_report.question_capabilities
                     repaired_report = _attach_diagnostics(
                         repaired_report,
                         diagnostics,
@@ -1207,6 +1600,7 @@ def generate_free_preview_report(
         return fallback_report
 
     final_provider = diagnostics.final_provider
+    report.question_capabilities = fallback_report.question_capabilities
     report = _attach_diagnostics(report, diagnostics, provider=final_provider)
     log_stage(
         service=service_name,

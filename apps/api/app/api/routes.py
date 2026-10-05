@@ -75,6 +75,21 @@ def read_health() -> Dict[str, Any]:
     }
 
 
+@router.get("/verification/provider", include_in_schema=False)
+def read_verification_provider(request: Request) -> Dict[str, Any]:
+    """Expose only the local test provider so verification cannot start paid calls."""
+    client = getattr(request, "client", None)
+    if settings.is_production or getattr(client, "host", None) not in {"127.0.0.1", "::1"}:
+        raise HTTPException(status_code=404, detail="Not found")
+    return {"configured_provider": settings.llm_provider, "fallback_only": settings.llm_provider == "fallback"}
+
+
+def _guard_verification_provider(request: Request) -> None:
+    expected = getattr(request, "headers", {}).get("x-saju-verification-provider")
+    if expected is not None and (expected != "fallback" or settings.llm_provider != "fallback"):
+        raise HTTPException(status_code=409, detail={"error_code": "VERIFICATION_PROVIDER_MISMATCH", "message": "Fallback verification requires the fallback provider."})
+
+
 @router.get("/regions/search", response_model=RegionSearchResponse)
 def search_regions_endpoint(
     request: Request,
@@ -100,6 +115,7 @@ def create_saju_preview(
     request: Request,
 ) -> SajuPreviewResponse:
     """사주 미리보기 요청을 받아 파이프라인을 실행한다."""
+    _guard_verification_provider(request)
     payload_snapshot = to_json_safe(payload)
     request.state.saju_preview_payload = payload_snapshot
     response = create_saju_preview_response(
@@ -139,6 +155,7 @@ def create_saju_free_detail(
     request: Request,
 ) -> SajuFreeDetailResponse:
     """Return the detailed interpretation as a lazy-loadable report."""
+    _guard_verification_provider(request)
     payload_snapshot = to_json_safe(payload)
     request.state.saju_preview_payload = payload_snapshot
     preview_response = create_saju_preview_response(

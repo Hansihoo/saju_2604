@@ -1,0 +1,231 @@
+.dokkaebi-sticker {
+  display: block;
+  flex: 0 0 auto;
+  max-width: 100%;
+  object-fit: contain;
+  user-select: none;
+}
+
+.dokkaebi-companion {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.dokkaebi-companion button,
+.sticker-back {
+  border: 0;
+  padding: 10px 0;
+  background: transparent;
+  color: #605173;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.dokkaebi-loading {
+  width: 72px;
+  height: 72px;
+}
+
+.sticker-page {
+  width: min(480px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 24px 0 48px;
+  color: #241c30;
+}
+
+.sticker-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.sticker-page-header > span {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #736482;
+}
+
+.sticker-intro {
+  margin: 28px 0 20px;
+}
+
+.sticker-eyebrow {
+  margin: 0 0 10px;
+  color: #76618e;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.sticker-intro h1 {
+  margin: 0;
+  font-size: clamp(2rem, 8vw, 2.75rem);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.055em;
+}
+
+.sticker-intro > p:last-child {
+  max-width: 32ch;
+  margin: 14px 0 0;
+  color: #736482;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.sticker-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  min-height: 208px;
+  margin: 20px 0 24px;
+  padding: 12px;
+  border-radius: 24px;
+  background: #f6f1fc;
+}
+
+.sticker-preview > p {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  min-width: 0;
+}
+
+.sticker-preview strong {
+  font-size: 1.3rem;
+}
+
+.sticker-preview p > span {
+  color: #736482;
+  font-size: 0.75rem;
+}
+
+.dokkaebi-picker {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.dokkaebi-picker legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.dokkaebi-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.dokkaebi-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  min-width: 0;
+  padding: 8px 4px 12px;
+  border: 2px solid #ece6f3;
+  border-radius: 16px;
+  background: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dokkaebi-option.is-selected {
+  border-color: #76569f;
+  background: #f6f1fc;
+}
+
+.dokkaebi-option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.dokkaebi-option:focus-within,
+.sticker-page :is(button, a):focus-visible,
+.dokkaebi-companion button:focus-visible {
+  outline: 3px solid #a08abd;
+  outline-offset: 3px;
+}
+
+.sticker-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.sticker-primary,
+.sticker-download {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  border: 1px solid #39264e;
+  border-radius: 14px;
+  padding: 12px 16px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  text-align: center;
+  text-decoration: none;
+}
+
+.sticker-primary {
+  background: #39264e;
+  color: #ffffff;
+}
+
+.sticker-download {
+  border-color: #e0d5ed;
+  background: #ffffff;
+  color: #554069;
+}
+
+.sticker-pack-download {
+  justify-self: center;
+  padding: 10px;
+  color: #6a547e;
+  font-size: 0.875rem;
+  text-underline-offset: 4px;
+}
+
+.sticker-note {
+  margin: 16px auto 0;
+  color: #736482;
+  font-size: 0.75rem;
+  line-height: 1.6;
+  text-align: center;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 359px) {
+  .sticker-preview {
+    gap: 12px;
+  }
+
+  .sticker-preview .dokkaebi-sticker {
+    width: 144px;
+    height: 144px;
+  }
+}

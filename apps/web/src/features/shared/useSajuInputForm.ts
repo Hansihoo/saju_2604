@@ -53,6 +53,7 @@ export function useSajuInputForm({
   const [error, setError] = useState<string | null>(null);
 
   const regionBoxRef = useRef<HTMLDivElement | null>(null);
+  const knownBirthTimeRef = useRef(initialValues?.birthTime ?? "");
 
   function formatBirthDateInput(value: string) {
     const digits = value.replace(/\D/g, "").slice(0, 8);
@@ -84,27 +85,29 @@ export function useSajuInputForm({
   }
 
   useEffect(() => {
+    let cancelled = false;
+    setRegionOptions([]);
+    setHighlightedRegionIndex(-1);
     if (!isRegionFocused || selectedRegion || regionQuery.trim().length === 0) {
-      setRegionOptions([]);
-      setHighlightedRegionIndex(-1);
+      setRegionLoading(false);
       return;
     }
 
+    setRegionLoading(true);
     const timeoutId = window.setTimeout(async () => {
-      setRegionLoading(true);
       try {
         const items = await searchRegionSuggestions(regionQuery.trim());
+        if (cancelled) return;
         setRegionOptions(items);
         setHighlightedRegionIndex(items.length > 0 ? 0 : -1);
       } catch (_error) {
-        setRegionOptions([]);
-        setHighlightedRegionIndex(-1);
+        if (!cancelled) { setRegionOptions([]); setHighlightedRegionIndex(-1); }
       } finally {
-        setRegionLoading(false);
+        if (!cancelled) setRegionLoading(false);
       }
     }, 250);
 
-    return () => window.clearTimeout(timeoutId);
+    return () => { cancelled = true; window.clearTimeout(timeoutId); };
   }, [isRegionFocused, regionQuery, selectedRegion]);
 
   useEffect(() => {
@@ -121,9 +124,12 @@ export function useSajuInputForm({
   function handleUnknownTimeChange(checked: boolean) {
     setIsBirthTimeEstimated(checked);
     if (checked) {
+      knownBirthTimeRef.current = birthTime;
       setBirthTime("00:00");
-      setError(null);
+    } else {
+      setBirthTime(knownBirthTimeRef.current);
     }
+    setError(null);
   }
 
   function handleRegionSelect(region: RegionSuggestion) {

@@ -21,6 +21,7 @@ except ImportError:  # pragma: no cover - Python 3.8 fallback
     from backports.zoneinfo import ZoneInfo
 
 from app.domain.saju.engine import LuckCycle, SajuCalculationResult
+from app.domain.saju.interpretation import ReadingBasisExplanation
 from app.domain.saju.localization import (
     localize_branch,
     localize_ganzhi,
@@ -349,11 +350,17 @@ def _find_month_context(as_of_local: datetime, timezone_id: str) -> _MonthContex
 
 
 def _ten_god_for(day_stem: str, target_stem: str) -> str:
-    return LunarUtil.SHI_SHEN.get(f"{day_stem}{target_stem}") or "日主"
+    value = LunarUtil.SHI_SHEN.get(f"{day_stem}{target_stem}")
+    if value is None:
+        raise ValueError("Cannot derive period ten-god from supplied stems")
+    return value
 
 
 def _ten_god_group(value: str) -> str:
-    return TEN_GOD_GROUP_BY_LABEL.get(localize_ten_god(value, "ko"), "peer")
+    group = TEN_GOD_GROUP_BY_LABEL.get(localize_ten_god(value, "ko"))
+    if group is None:
+        raise ValueError("Unsupported period ten-god label")
+    return group
 
 
 def _element_label(stem: str, locale: str) -> str:
@@ -364,6 +371,37 @@ def _element_label(stem: str, locale: str) -> str:
 def _rule(value: str, locale: str) -> Dict[str, object]:
     group = _ten_god_group(value)
     return RULES[group][locale]  # type: ignore[index]
+
+
+def _period_basis_explanation(
+    *, kind: str, locale: str, target_label: str, natal_stem: str, ten_god: str,
+    relation_match: Optional[Tuple[str, str, str]], estimated: bool, period_label: str = "",
+) -> Optional[ReadingBasisExplanation]:
+    """Describe only inputs used by the existing category and relation rules."""
+    canonical = localize_ten_god(ten_god, "ko")
+    if canonical not in TEN_GOD_GROUP_BY_LABEL:
+        return None
+    ko = locale == "ko"
+    signal = localize_ten_god(ten_god, locale)
+    stem = localize_stem(natal_stem, locale)
+    facts = [
+        (f"{period_label or '오늘 날짜'}의 일진: {target_label}" if kind == "today" else f"절기 기준 {period_label or '이번 구간'} 월주: {target_label}") if ko else
+        (f"Day pillar for {period_label or 'today'}: {target_label}" if kind == "today" else f"Solar-term month pillar for {period_label or 'this window'}: {target_label}"),
+        f"태어난 날의 기준(일간) {stem}에서 확인한 단서: {signal}" if ko else f"Signal relative to natal day stem {stem}: {signal}",
+    ]
+    focus = "·".join(_rule(ten_god, locale)["focus"]) if ko else " and ".join(_rule(ten_god, locale)["focus"]).lower()
+    reference = ("일간과 일진 천간" if kind == "today" else "일간과 해당 절기 월주 천간") if ko else ("the natal day stem and the daily stem" if kind == "today" else "the natal day stem and the solar-term month stem")
+    reading = f"{reference}의 관계에서 ‘{signal}’ 십성을 확인했습니다. 이를 ‘{focus}’의 관점에서 검토했습니다." if ko else f"The relation between {reference} gives the ten-god '{signal}'. The interpretation considers {focus}."
+    if relation_match:
+        relation, pillar_key, natal_branch = relation_match
+        relation_copy = _localized_relation(relation, locale)
+        pillar = localize_pillar_label(pillar_key, locale)
+        branch = localize_branch(natal_branch, locale)
+        facts.append(f"함께 본 지지 관계: {pillar} {branch} · {relation_copy['label']}" if ko else f"Branch relation used: {pillar} {branch} · {relation_copy['label']}")
+        reading += f" 지지 관계는 ‘{relation_copy['focus']}’의 관점에서 함께 검토했습니다." if ko else f" The branch relation was also reviewed in relation to {relation_copy['focus'].lower()}."
+    if estimated:
+        reading += " 출생시간 미상으로 시주와 대운 연결은 분석에서 제외했습니다." if ko else " Hour-pillar and luck-cycle connections were excluded due to unknown birth time."
+    return ReadingBasisExplanation(facts=facts, reading=reading)
 
 
 def _relation_matches(
@@ -604,6 +642,13 @@ def build_period_flows(
         evidence=day_evidence,
         basis=day_basis,
         notes=day_notes,
+        basis_explanation=_period_basis_explanation(
+            kind="today", locale=locale, target_label=localized_day_gan_zhi,
+            natal_stem=day_stem, ten_god=day_ten_god,
+            relation_match=day_relation[0] if day_relation else None,
+            estimated=payload.is_birth_time_estimated,
+            period_label=day_label,
+        ),
     )
 
     month_target = month_context.gan_zhi
@@ -720,6 +765,13 @@ def build_period_flows(
         basis=month_basis,
         notes=month_notes,
         current_luck_cycle=_cycle_schema(current_cycle),
+        basis_explanation=_period_basis_explanation(
+            kind="month", locale=locale, target_label=localized_month_gan_zhi,
+            natal_stem=day_stem, ten_god=month_ten_god,
+            relation_match=month_relation[0] if month_relation else None,
+            estimated=payload.is_birth_time_estimated,
+            period_label=month_label,
+        ),
     )
 
     return PeriodFlows(

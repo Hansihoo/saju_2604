@@ -13,6 +13,9 @@ REPO_ROOT = API_DIR.parent.parent
 
 def _default_codex_command() -> str:
     command_name = "codex.cmd" if os.name == "nt" else "codex"
+    project_command = REPO_ROOT / "node_modules" / ".bin" / command_name
+    if project_command.exists():
+        return str(project_command)
     resolved = shutil.which(command_name) or shutil.which("codex")
     if resolved:
         return resolved
@@ -40,6 +43,9 @@ def _default_node_command() -> Optional[str]:
 
 
 def _default_codex_js_path() -> Optional[str]:
+    project_entry = REPO_ROOT / "node_modules" / "@openai" / "codex" / "bin" / "codex.js"
+    if project_entry.exists():
+        return str(project_entry)
     appdata = os.getenv("APPDATA")
     if not appdata:
         return None
@@ -147,6 +153,7 @@ class Settings:
     codex_node_command: Optional[str] = os.getenv("SAJU_CODEX_NODE_COMMAND") or DEFAULT_CODEX_NODE_COMMAND
     codex_js_path: Optional[str] = os.getenv("SAJU_CODEX_JS_PATH") or DEFAULT_CODEX_JS_PATH
     codex_model: Optional[str] = os.getenv("SAJU_CODEX_MODEL") or None
+    codex_reasoning_effort: Optional[str] = os.getenv("SAJU_CODEX_REASONING_EFFORT") or None
     codex_profile: Optional[str] = os.getenv("SAJU_CODEX_PROFILE") or None
     codex_sandbox: str = os.getenv("SAJU_CODEX_SANDBOX", "read-only")
     codex_timeout_seconds: int = _parse_int_env("SAJU_CODEX_TIMEOUT_SECONDS", 180, minimum=1)

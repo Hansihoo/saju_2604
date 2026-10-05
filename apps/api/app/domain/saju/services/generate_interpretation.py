@@ -25,6 +25,8 @@ from app.domain.saju.llm_payload import InterpretationLuckCycle, InterpretationP
 from app.domain.saju.localization import contains_hangul, contains_hanja
 from app.domain.saju.prompts.interpretation_report import get_interpretation_report_prompt
 from app.domain.saju.services.codex_provider import CodexProviderError, call_codex_json
+from app.domain.saju.services.build_reading_plan import unsupported_claim_issues
+from app.domain.saju.services.generate_free_preview import build_fallback_free_preview_report
 
 try:
     from openai import OpenAI
@@ -58,7 +60,7 @@ def _model_json_schema(model_class: Any) -> Dict[str, Any]:
 
 PROMPT_SPEC = get_interpretation_report_prompt()
 MIN_SUMMARY_LENGTH = 220
-MIN_SECTION_LENGTH = 850
+MIN_SECTION_LENGTH = 120
 OUTPUT_EXCERPT_LIMIT = 280
 ERROR_MESSAGE_LIMIT = 280
 SCHEMA_NOISE_KEYS = {
@@ -207,8 +209,8 @@ def _cycle_period_context(
             return f"{cycle.display_gan_zhi} 대운 구간"
         return f"the {cycle.display_gan_zhi} luck-cycle period"
     if _locale(payload) == "ko":
-        return "첫 대운이 시작되기 전의 현재 구간" if position == "current" else "다음 대운이 확인되지 않은 구간"
-    return "the period before the first luck cycle" if position == "current" else "a period without a confirmed next luck cycle"
+        return "현재 대운이 확인되지 않은 상태" if position == "current" else "다음 대운이 확인되지 않은 상태"
+    return "an unconfirmed current luck cycle" if position == "current" else "an unconfirmed next luck cycle"
 
 
 def _summary_headline(payload: InterpretationPayload) -> str:
@@ -568,17 +570,9 @@ If the current cycle is more about adjustment, the next cycle is more about turn
 Luck cycles show broad ten-year environmental changes. This section compares only the current and next cycle using backend-calculated cycle traits, favorable domains, and caution tags.
 """
 
+    active_period = _cycle_period_context(payload, payload.current_flow.active_luck_cycle, position="current")
+    next_period = _cycle_period_context(payload, payload.current_flow.next_luck_cycle, position="next")
     if _locale(payload) == "ko":
-        active_period = _cycle_period_context(
-            payload,
-            payload.current_flow.active_luck_cycle,
-            position="current",
-        )
-        next_period = _cycle_period_context(
-            payload,
-            payload.current_flow.next_luck_cycle,
-            position="next",
-        )
         limitation = (
             "\n출생 시간이 미상이거나 추정이면 대운 전환 해석은 확정적으로 보지 않고 방향성만 참고해야 합니다."
             if payload.profile.is_birth_time_estimated
@@ -624,7 +618,144 @@ def _section(title: str, body: str, evidence_ids: Sequence[str]) -> Interpretati
     return InterpretationNarrativeSection(title=title, body=body.strip(), evidence_ids=list(evidence_ids)[:6] or ["elements"])
 
 
+def _contract_section_body(card, locale: str) -> str:
+    headings = REQUIRED_SECTION_HEADINGS[locale]
+    blocks = card.reading_structure.blocks
+    basis = card.basis_explanation
+    facts = "\n".join("- " + fact for fact in basis.facts) if basis else card.basis_line
+    note = basis.reading if basis else card.basis_line
+    return (f"{headings[0]}\n{blocks[0].text}\n\n"
+            f"{headings[1]}\n{blocks[1].text}\n\n{blocks[2].text}\n\n"
+            f"{headings[2]}\n- {blocks[3].text}\n\n"
+            f"{headings[3]}\n{facts}\n\n{headings[4]}\n{note}")
+
+
+def _align_fallback_reading_contract(report: InterpretationReport, payload: InterpretationPayload) -> InterpretationReport:
+    """Reuse preview judgments instead of independently expanding them into other traits."""
+    preview = build_fallback_free_preview_report(payload)
+    topics = {"core": "core_analysis", "love": "love", "work_money": "career", "luck_flow": "luck_flow"}
+    limited = _limited_timing_reason(payload)
+    for card in preview.cards:
+        if card.reading_structure is None or (card.key == "luck_flow" and limited):
+            continue
+        key = topics[card.key]
+        getattr(report, key).body = _contract_section_body(card, payload.profile.locale)
+        report.reading_sections[key] = card.reading_structure
+    if not limited:
+        report.summary.headline = preview.headline
+        core = next(card for card in preview.cards if card.key == "core")
+        if core.reading_structure:
+            first_sentence = re.split(r"(?<=[.!?])\s+", report.summary.overview, maxsplit=1)
+            report.summary.overview = core.user_takeaway + " " + (first_sentence[1] if len(first_sentence) > 1 else "")
+    return report
+
+
+def _limited_timing_reason(payload: InterpretationPayload) -> str | None:
+    if payload.profile.is_birth_time_estimated:
+        return "birth_time_unknown"
+    if "luck_cycles" in payload.disabled_sections or any(
+        item.key == "luck_cycles" and item.status == "disabled" for item in payload.evidence
+    ):
+        return "luck_cycles_disabled"
+    if payload.current_flow.active_luck_cycle is None:
+        return "current_cycle_missing"
+    if payload.current_flow.next_luck_cycle is None:
+        return "next_cycle_missing"
+    return None
+
+
+def _build_timing_limited_fallback(payload: InterpretationPayload, reason: str) -> InterpretationReport:
+    """Offer visible-fact guidance when a cycle comparison cannot be made.
+
+    Do not pass missing-cycle placeholders through the normal timed narrative.
+    In particular, an unknown birth time is not evidence that the first cycle
+    has not started. The preview renderer supplies the same fact-linked topics
+    without fabricating current/next timing or time-dependent action tags.
+    """
+    locale = _locale(payload)
+    ko = locale == "ko"
+    # A supplied current cycle can still be mentioned as a fact in the notice,
+    # but no complete cycle comparison is inferred from a partial payload.
+    untimed_payload = _model_copy(payload, update={
+        "current_flow": _model_copy(payload.current_flow, update={
+            "active_luck_cycle": None, "next_luck_cycle": None,
+        }),
+    })
+    preview = build_fallback_free_preview_report(untimed_payload)
+    cards = {card.key: card for card in preview.cards}
+    notices = {
+        "ko": {
+            "birth_time_unknown": "출생시간이 미상이라 시주와 대운을 사용하지 않았습니다. 현재·다음 대운이나 전환 시점은 확인하지 않았습니다.",
+            "luck_cycles_disabled": "대운 계산이 비활성화되어 현재·다음 대운과 전환 시점을 사용하지 않았습니다. 출생시간 미상으로 임의 분류하지 않았습니다.",
+            "current_cycle_missing": "출생시간은 입력되었지만 현재 대운 자료가 제공되지 않았습니다. 이를 첫 대운 시작 전으로 판단하지 않고 시기 비교를 보류했습니다.",
+            "next_cycle_missing": "다음 대운 자료가 제공되지 않아 현재·다음 대운의 차이와 전환 시점 비교를 보류했습니다.",
+        },
+        "en": {
+            "birth_time_unknown": "The birth time is unknown, so the hour pillar and luck cycles were not used. Current/next cycles and transition timing are unconfirmed.",
+            "luck_cycles_disabled": "Luck-cycle calculation is disabled, so current/next cycles and transition timing were not used. This is not classified as an unknown birth time.",
+            "current_cycle_missing": "A birth time was supplied, but current-cycle facts were not provided. This is not classified as being before the first cycle; timing comparison is withheld.",
+            "next_cycle_missing": "Next-cycle facts were not provided, so the current/next comparison and transition timing are withheld.",
+        },
+    }
+    notice = notices[locale][reason]
+    if reason == "next_cycle_missing":
+        current = payload.current_flow.active_luck_cycle
+        if current:
+            notice += (f" 제공된 현재 대운은 {current.display_gan_zhi}입니다." if ko else f" The supplied current cycle is {current.display_gan_zhi}.")
+    ready_ids = {item.key for item in payload.evidence if item.status == "ready"}
+    headings = REQUIRED_SECTION_HEADINGS[locale]
+    topic_keys = {"core_analysis": "core", "love": "love", "career": "work_money", "wealth": "work_money", "luck_flow": "luck_flow"}
+    sections: Dict[str, InterpretationNarrativeSection] = {}
+    for key, topic in topic_keys.items():
+        card = cards[topic]
+        if ko:
+            actions = [
+                card.user_takeaway,
+                "바로 결론을 내리기보다 최근 일주일에서 떠오르는 장면을 하나 적어보세요. 이 설명이 맞는 부분과 다른 부분을 나누면 실제 생활에서 확인할 질문을 고르기 쉽습니다.",
+                "부담을 줄일 수 있는 작은 조정 하나를 골라보세요. 바꾼 뒤 어떤 점이 편해졌는지 살피고, 맞지 않았던 조언은 계속 밀어붙이지 않아도 됩니다.",
+            ]
+            note = "이 내용은 계산된 보이는 기둥과 오행·십성 자료를 생활 질문으로 옮긴 참고 풀이입니다. 확정하지 못한 시기의 유불리나 미래 사건을 말하지 않았습니다. 시기에 관한 빈 자료를 임의로 채우지 않았으며, 실제 경험과 함께 확인할 수 있는 행동만 남겼습니다."
+        else:
+            actions = [
+                card.user_takeaway,
+                "Before reaching a conclusion, write down one recent scene from the past week. Separating parts that fit from parts that do not fit makes it easier to choose a question you can check in daily life.",
+                "Choose one small adjustment that may reduce a demand. Observe what becomes easier afterward; advice that does not fit does not need to be forced into your experience.",
+            ]
+            note = "This reference reading turns supplied visible-pillar, element, and Ten-God facts into everyday questions. It does not describe the favorability of unconfirmed timing or future events. Missing timing facts were not filled in; the guidance is limited to actions that can be compared with actual experience."
+        explanation = "\n\n".join(card.preview_paragraphs)
+        body = (
+            f"{headings[0]}\n{card.user_takeaway}\n\n"
+            f"{headings[1]}\n{explanation}\n\n"
+            f"{headings[2]}\n" + "\n".join(f"- {action}" for action in actions) + "\n\n"
+            f"{headings[3]}\n{card.basis_line}\n\n"
+            f"{headings[4]}\n{notice}\n{note}"
+        )
+        requested_ids = ["elements", "ten_gods"] if key in {"core_analysis", "career"} else ["ten_gods"] if key == "love" else ["elements"]
+        evidence_ids = [item for item in requested_ids if item in ready_ids]
+        if key == "love":
+            evidence_ids += [star.evidence_id for star in payload.special_stars if star.display_label in payload.love_facts.active_star_labels]
+        if reason == "next_cycle_missing" and "luck_cycles" in ready_ids:
+            evidence_ids.append("luck_cycles")
+        sections[key] = _section(SECTION_TITLES[locale][key], body, evidence_ids)
+    summary_evidence = [item for item in ("elements", "ten_gods") if item in ready_ids]
+    if reason == "next_cycle_missing" and "luck_cycles" in ready_ids:
+        summary_evidence.append("luck_cycles")
+    return InterpretationReport(
+        provider="fallback", model="fallback", prompt_version=PROMPT_SPEC.version,
+        summary=InterpretationSummaryBlock(
+            headline=preview.headline,
+            overview=notice + " " + " ".join(preview.hero_overview[:5]),
+            confidence="low", evidence_ids=summary_evidence or ["elements"],
+        ),
+        **sections,
+        warnings=[flag.code for flag in payload.uncertainty_summary],
+    )
+
+
 def build_fallback_interpretation_report(payload: InterpretationPayload) -> InterpretationReport:
+    limited_reason = _limited_timing_reason(payload)
+    if limited_reason is not None:
+        return _align_fallback_reading_contract(_build_timing_limited_fallback(payload, limited_reason), payload)
     locale = _locale(payload)
     dominant = _local_elements(payload, payload.signals.dominant_elements)
     missing_values = payload.signals.missing_elements
@@ -1036,7 +1167,7 @@ Luck-flow reading is based on the provided current cycle, next cycle, luck-cycle
         luck_flow=_section(titles["luck_flow"], luck_flow_body, ["luck_cycles"]),
         warnings=[flag.code for flag in payload.uncertainty_summary],
     )
-    return report
+    return _align_fallback_reading_contract(report, payload)
 
 
 def _clean_excerpt(text: str, *, limit: int = OUTPUT_EXCERPT_LIMIT) -> str:
@@ -1096,13 +1227,14 @@ def _attach_diagnostics(
     warnings: List[str] | None = None,
     provider: str | None = None,
 ) -> InterpretationReport:
-    updated_warnings = list(dict.fromkeys((warnings if warnings is not None else report.warnings)))
+    updated_warnings = list(dict.fromkeys([*report.warnings, *(warnings or [])]))
     return _model_copy(
         report,
         update={
             "provider": provider or report.provider,
             "warnings": updated_warnings,
             "diagnostics": diagnostics,
+            "reading_sections": report.reading_sections if (provider or report.provider) == "fallback" else {},
         }
     )
 
@@ -1695,6 +1827,15 @@ def _validate_language(report: InterpretationReport, payload: InterpretationPayl
 def _validate_report(report: InterpretationReport, payload: InterpretationPayload) -> List[str]:
     issues: List[str] = []
     locale = _locale(payload)
+    if report.reading_sections:
+        preview = build_fallback_free_preview_report(payload)
+        topics = {"core_analysis": "core", "love": "love", "career": "work_money", "luck_flow": "luck_flow"}
+        cards = {card.key: card for card in preview.cards}
+        for key, structure in report.reading_sections.items():
+            card = cards.get(topics.get(key))
+            if (report.provider != "fallback" or card is None or card.reading_structure != structure or
+                    getattr(report, key).body != _contract_section_body(card, locale)):
+                issues.append(key + ":reading_contract_mismatch")
     headline = report.summary.headline.strip()
     headline_compact_len = len(re.sub(r"\s+", "", headline))
     if not headline:
@@ -1714,6 +1855,7 @@ def _validate_report(report: InterpretationReport, payload: InterpretationPayloa
     if _section_openings_are_repetitive(report):
         issues.append("sections.body:repeated_opening")
     for text in _collect_report_texts(report):
+        issues.extend(unsupported_claim_issues(text))
         if _contains_numeric_relative_claim(text):
             issues.append("relative_wording_without_percentile:numeric")
         if _contains_exposed_score(text):

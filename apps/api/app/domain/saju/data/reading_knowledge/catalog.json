@@ -1,0 +1,912 @@
+{
+  "schema_version": "saju-knowledge-v1",
+  "knowledge_version": "project-policy-2026-10-05.1",
+  "format_version": "question-reading-v1",
+  "copy_version": "dokkaebi-2026-10-05.2",
+  "sources": [
+    {
+      "id": "project-ten-god-policy",
+      "kind": "project_policy",
+      "reference": "apps/api/app/domain/saju/services/generate_free_preview.py:FACT_VOICES",
+      "expert_review": "not_completed",
+      "description": "Existing five-group themes. Engineering-reviewed migration; no expert or empirical validation."
+    },
+    {
+      "id": "project-element-policy",
+      "kind": "project_policy",
+      "reference": "apps/api/app/domain/saju/services/generate_free_preview.py:_dominant_strength_phrase",
+      "expert_review": "not_completed",
+      "description": "Existing visible-element themes; counts are not whole-chart strength or favorable-element analysis."
+    },
+    {
+      "id": "project-cycle-policy",
+      "kind": "project_policy",
+      "reference": "apps/api/app/domain/saju/services/build_interpretation_payload.py:_group_luck_profile",
+      "expert_review": "not_completed",
+      "description": "Existing five-group long-cycle themes; no event dates, probabilities or favorable rankings."
+    }
+  ],
+  "rules": [
+    {
+      "id": "work_money.peer",
+      "version": 1,
+      "source_id": "project-ten-god-policy",
+      "status": "active_project_policy",
+      "claim_scope": "interpretation_only",
+      "topic": "work_money",
+      "feature": "career.month_stem_ten_god",
+      "any_of": [
+        "비견",
+        "겁재"
+      ],
+      "exclusions": [
+        "missing_or_unrecognized_fact",
+        "critical_calculation_uncertainty"
+      ],
+      "wording": {
+        "ko": {
+          "question": "같이 하는 일, 어디까지 내 몫일까?",
+          "answer": "자기 방식과 협업의 경계를 먼저 보는 풀이야.",
+          "scene": "예를 들면, 같이 맡은 프로젝트에서 각자 결정할 일과 함께 정할 일을 나누는 장면이야.",
+          "tradeoff": "자기 방식이 선명한 것은 장점이지만, 함께 맡은 일까지 혼자 끌어안으면 부담이 커질 수 있어.",
+          "action": "같이 맡은 일 하나를 골라 내 몫과 함께 정할 몫을 나눠봐.",
+          "next_question": "내가 편한 일의 환경은 어떤 모습일까?",
+          "analysis_note": "월간 십성은 {feature_label}입니다. 이를 근거로 자기 방식과 공동 역할의 경계에 관한 해석 방향을 검토했습니다."
+        },
+        "en": {
+          "question": "Shared work: where does your part end?",
+          "answer": "Start with personal methods and shared ownership.",
+          "scene": "For example, separate individual decisions from shared decisions on a joint project.",
+          "tradeoff": "A clear personal method can help, but carrying shared work alone can increase the burden.",
+          "action": "Being good alone and working well together are different tasks. Separate personal and shared ownership.",
+          "next_question": "What work setting feels manageable?",
+          "analysis_note": "The month-stem ten-god is {feature_label}. The interpretation considers personal methods and shared ownership."
+        }
+      }
+    },
+    {
+      "id": "love.peer",
+      "version": 1,
+      "source_id": "project-ten-god-policy",
+      "status": "active_project_policy",
+      "claim_scope": "interpretation_only",
+      "topic": "love",
+      "feature": "love.spouse_house_ten_god",
+      "any_of": [
+        "비견",
+        "겁재"
+      ],
+      "exclusions": [
+        "missing_or_unrecognized_fact",
+        "critical_calculation_uncertainty"
+      ],
+      "wording": {
+        "ko": {
+          "question": "좋아해도 내 시간은 지키고 싶은 걸까?",
+          "answer": "가까워지는 마음과 내 생활을 지키는 일을 함께 보는 풀이야.",
+          "scene": "예를 들면, 주말에 만나더라도 각자 혼자 쉬는 시간을 남겨 두는 장면이야.",
+          "tradeoff": "가까워지는 마음과 혼자 쉴 공간이 함께 중요해질 수 있어. 각자의 속도가 다르면 대화가 필요해. 사주만으로 상대의 속마음이나 관계의 결과를 알 수는 없어.",
+          "action": "다음 약속을 잡을 때 함께할 시간과 혼자 쉴 시간을 같이 말해봐.",
+          "next_question": "내가 편한 관계는 어떤 모습일까?",
+          "analysis_note": "배우자궁 십성은 {feature_label}입니다. 이를 근거로 관계의 친밀함과 각자의 생활 공간에 관한 해석 방향을 검토했습니다."
+        },
+        "en": {
+          "question": "Can closeness leave room for your own day?",
+          "answer": "Look at closeness alongside personal space.",
+          "scene": "For example, leave each person some time alone when meeting over the weekend.",
+          "tradeoff": "Closeness and personal space can both matter. Different paces need a conversation. A chart cannot reveal another person's private feelings or decide a relationship outcome.",
+          "action": "Leave room for your own day too. Agree on time together and time to recover alone.",
+          "next_question": "What does a comfortable relationship look like?",
+          "analysis_note": "The spouse-house ten-god is {feature_label}. The interpretation considers closeness and personal space."
+        }
+      }
+    },
+    {
+      "id": "work_money.output",
+      "version": 1,
+      "source_id": "project-ten-god-policy",
+      "status": "active_project_policy",
+      "claim_scope": "interpretation_only",
+      "topic": "work_money",
+      "feature": "career.month_stem_ten_god",
+      "any_of": [
+        "식신",
+        "상관"
+      ],
+      "exclusions": [
+        "missing_or_unrecognized_fact",
+        "critical_calculation_uncertainty"
+      ],
+      "wording": {
+        "ko": {
+          "question": "아이디어는 많은데 완성본은 어디 갔을까?",
+          "answer": "표현한 생각을 결과물로 남기는 방식을 먼저 보는 풀이야.",
+          "scene": "예를 들면, 회의에서 나온 아이디어 하나를 실제로 보여줄 초안으로 만드는 장면이야.",
+          "tradeoff": "생각을 꺼내는 힘은 유용하지만, 새 아이디어가 늘 때 마무리가 밀릴 수 있어.",
+          "action": "떠오른 아이디어 하나를 남에게 보여줄 초안으로 만들어봐.",
+          "next_question": "내가 편한 일의 환경은 어떤 모습일까?",
+          "analysis_note": "월간 십성은 {feature_label}입니다. 이를 근거로 표현과 결과물의 완성에 관한 해석 방향을 검토했습니다."
+        },
+        "en": {
+          "question": "Plenty of ideas, but where is the finished work?",
+          "answer": "Start with turning expression into a usable result.",
+          "scene": "For example, turn one idea from a meeting into a draft that someone can use.",
+          "tradeoff": "Expressing ideas can help, but repeatedly starting new ideas can delay completion.",
+          "action": "Turn one idea into something another person can use. Separate what was said from what was finished.",
+          "next_question": "What work setting feels manageable?",
+          "analysis_note": "The month-stem ten-god is {feature_label}. The interpretation considers expression and completion of usable output."
+        }
+      }
+    },
+    {
+      "id": "love.output",
+      "version": 1,
+      "source_id": "project-ten-god-policy",
+      "status": "active_project_policy",
+      "claim_scope": "interpretation_only",
+      "topic": "love",
+      "feature": "love.spouse_house_ten_god",
+      "any_of": [
+        "식신",
+        "상관"
+      ],
+      "exclusions": [
+        "missing_or_unrecognized_fact",
+        "critical_calculation_uncertainty"
+      ],
+      "wording": {
+        "ko": {
+          "question": "마음은 있는데 말이 먼저 앞서는 걸까?",
+          "answer": "마음을 표현하고 함께 시간을 즐기는 방식을 먼저 보는 풀이야.",
+          "scene": "예를 들면, 하고 싶은 말을 꺼낸 뒤 상대가 어떻게 느꼈는지 물어보는 장면이야.",
+          "tradeoff": "마음을 표현하는 힘은 도움이 되지만, 말이 길어질 때 상대의 답을 놓칠 수 있어. 사주만으로 상대의 속마음이나 관계의 결과를 알 수는 없어.",
+          "action": "마음을 한 문장으로 말한 다음, 상대의 답을 들을 자리를 남겨봐.",
+          "next_question": "내가 편한 관계는 어떤 모습일까?",
+          "analysis_note": "배우자궁 십성은 {feature_label}입니다. 이를 근거로 마음의 표현과 경청에 관한 해석 방향을 검토했습니다."
+        },
+        "en": {
+          "question": "Does the conversation run ahead of the feeling?",
+          "answer": "Look first at expression and enjoyment together.",
+          "scene": "For example, express a feeling and then ask how the other person received it.",
+          "tradeoff": "Expression can help, but a long explanation may leave little room for an answer. A chart cannot reveal another person's private feelings or decide a relationship outcome.",
+          "action": "After expressing a feeling, leave room for an answer. Read expression and listening together.",
+          "next_question": "What does a comfortable relationship look like?",
+          "analysis_note": "The spouse-house ten-god is {feature_label}. The interpretation considers expression and listening."
+        }
+      }
+    },
+    {
+      "id": "work_money.wealth",
+      "version": 1,
+      "source_id": "project-ten-god-policy",
+      "status": "active_project_policy",
+      "claim_scope": "interpretation_only",
+      "topic": "work_money",
+      "feature": "career.month_stem_ten_god",
+      "any_of": [
+        "편재",
+        "정재"
+      ],
+      "exclusions": [
+        "missing_or_unrecognized_fact",
+        "critical_calculation_uncertainty"
+      ],
+      "wording": {
+        "ko": {
+          "question": "열심히 했는데 남는 건 어디에 있을까?",
+          "answer": "쓴 시간과 실제로 남은 보상을 함께 보는 풀이야.",
+          "scene": "예를 들면, 일이 끝난 뒤 쓴 시간과 받은 보상, 남은 기술을 나란히 적어보는 장면이야.",
+          "tradeoff": "현실적인 조건을 보는 것은 유용하지만, 받은 대가만으로 모든 경험을 평가하면 배운 것을 놓칠 수 있어.",
+          "action": "맡은 일 하나에서 쓰는 시간과 보상 조건을 나란히 적어봐.",
+          "next_question": "내가 편한 일의 환경은 어떤 모습일까?",
+          "analysis_note": "월간 십성은 {feature_label}입니다. 이를 근거로 자원 배분과 보상 조건에 관한 해석 방향을 검토했습니다."
+        },
+        "en": {
+          "question": "Working hard, but what actually remains?",
+          "answer": "Look at time spent alongside the reward that remains.",
+          "scene": "For example, compare time spent, actual reward and skills remaining after a task.",
+          "tradeoff": "Practical terms can help, but measuring every experience only by its reward can hide what you learned.",
+          "action": "Check the result that remains, not only the effort spent. Put time and actual reward side by side.",
+          "next_question": "What work setting feels manageable?",
+          "analysis_note": "The month-stem ten-god is {feature_label}. The interpretation considers resource allocation and reward conditions."
+        }
+      }
+    },
+    {
+      "id": "love.wealth",
+      "version": 1,
+      "source_id": "project-ten-god-policy",
+      "status": "active_project_policy",
+      "claim_scope": "interpretation_only",
+      "topic": "love",
+      "feature": "love.spouse_house_ten_god",
+      "any_of": [
+        "편재",
+        "정재"
+      ],
+      "exclusions": [
+        "missing_or_unrecognized_fact",
+        "critical_calculation_uncertainty"
+      ],
+      "wording": {
+        "ko": {
+          "question": "설렘 다음에 현실도 같이 보는 걸까?",
+          "answer": "호감과 함께 시간, 돈, 생활을 나누는 방식을 보는 풀이야.",
+          "scene": "예를 들면, 특별한 선물보다 평범한 주말의 시간과 비용을 편하게 맞추는 장면이야.",
+          "tradeoff": "함께 시간과 비용을 맞추는 것은 유용하지만, 모든 호감을 주고받은 양으로 재면 편안함을 놓칠 수 있어. 사주만으로 상대의 속마음이나 관계의 결과를 알 수는 없어.",
+          "action": "다음 약속에서 시간과 비용을 어떻게 나눌지 가볍게 맞춰봐.",
+          "next_question": "내가 편한 관계는 어떤 모습일까?",
+          "analysis_note": "배우자궁 십성은 {feature_label}입니다. 이를 근거로 함께 나누는 시간과 자원의 조율에 관한 해석 방향을 검토했습니다."
+        },
+        "en": {
+          "question": "What happens when excitement meets daily life?",
+          "answer": "Look at affection alongside sharing time, money, and everyday life.",
+          "scene": "For example, agree on the time and cost of an ordinary weekend together.",
+          "tradeoff": "Sharing resources can help, but measuring affection by exchanged amounts can miss comfort. A chart cannot reveal another person's private feelings or decide a relationship outcome.",
+          "action": "Do not stretch daily life just to prove excitement. See whether an ordinary day together feels comfortable.",
+          "next_question": "What does a comfortable relationship look like?",
+          "analysis_note": "The spouse-house ten-god is {feature_label}. The interpretation considers coordination of shared time and resources."
+        }
+      }
+    },
+    {
+      "id": "work_money.officer",
+      "version": 1,
+      "source_id": "project-ten-god-policy",
+      "status": "active_project_policy",
+      "claim_scope": "interpretation_only",
+      "topic": "work_money",
+      "feature": "career.month_stem_ten_god",
+      "any_of": [
+        "편관",
+        "정관"
+      ],
+      "exclusions": [
+        "missing_or_unrecognized_fact",
+        "critical_calculation_uncertainty"
+      ],
+      "wording": {
+        "ko": {
+          "question": "책임을 맡으면 인정도 따라올까?",
+          "answer": "책임과 마감을 어디까지 맡는지 먼저 보는 풀이야.",
+          "scene": "예를 들면, 추가 업무를 받을 때 담당 범위와 마감도 함께 다시 정하는 장면이야.",
+          "tradeoff": "책임을 맡는 방식은 장점으로 쓰일 수 있지만, 역할이 늘어나는 것과 대우가 좋아지는 것은 따로 확인해야 해.",
+          "action": "맡은 일 하나의 책임 범위와 평가 기준을 구체적으로 확인해봐.",
+          "next_question": "내가 편한 일의 환경은 어떤 모습일까?",
+          "analysis_note": "월간 십성은 {feature_label}입니다. 이를 근거로 책임 범위와 평가 기준에 관한 해석 방향을 검토했습니다."
+        },
+        "en": {
+          "question": "Does responsibility bring recognition too?",
+          "answer": "Start with the responsibility and deadlines you accept.",
+          "scene": "For example, agree on ownership and the deadline again when an extra task arrives.",
+          "tradeoff": "Responsibility can help, but more duties and better treatment need to be checked separately.",
+          "action": "When new work arrives, revise the scope and deadline too. Trust does not mean owning every request.",
+          "next_question": "What work setting feels manageable?",
+          "analysis_note": "The month-stem ten-god is {feature_label}. The interpretation considers responsibility and evaluation criteria."
+        }
+      }
+    },
+    {
+      "id": "love.officer",
+      "version": 1,
+      "source_id": "project-ten-god-policy",
+      "status": "active_project_policy",
+      "claim_scope": "interpretation_only",
+      "topic": "love",
+      "feature": "love.spouse_house_ten_god",
+      "any_of": [
+        "편관",
+        "정관"
+      ],
+      "exclusions": [
+        "missing_or_unrecognized_fact",
+        "critical_calculation_uncertainty"
+      ],
+      "wording": {
+        "ko": {
+          "question": "좋아한다는 말보다 약속이 먼저 보일까?",
+          "answer": "관계에서 약속과 책임을 나누는 방식을 먼저 보는 풀이야.",
+          "scene": "예를 들면, 취소된 약속을 어떻게 다시 잡을지 함께 이야기하는 장면이야.",
+          "tradeoff": "약속을 중요하게 보는 것은 도움이 되지만, 작은 실수까지 시험처럼 받아들이면 서로 긴장할 수 있어. 사주만으로 상대의 속마음이나 관계의 결과를 알 수는 없어.",
+          "action": "둘 다 지킬 수 있는 작은 약속 하나를 정하고 속도를 맞춰봐.",
+          "next_question": "내가 편한 관계는 어떤 모습일까?",
+          "analysis_note": "배우자궁 십성은 {feature_label}입니다. 이를 근거로 관계의 약속과 기대 기준에 관한 해석 방향을 검토했습니다."
+        },
+        "en": {
+          "question": "Do promises matter before sweet words?",
+          "answer": "Look first at shared promises and responsibility.",
+          "scene": "For example, talk about how to rearrange a cancelled plan together.",
+          "tradeoff": "Kept promises can help, but treating every small mistake as a test can create tension. A chart cannot reveal another person's private feelings or decide a relationship outcome.",
+          "action": "Read affectionate words alongside kept promises. Start with one small agreement at a shared pace.",
+          "next_question": "What does a comfortable relationship look like?",
+          "analysis_note": "The spouse-house ten-god is {feature_label}. The interpretation considers commitments and expectations in a relationship."
+        }
+      }
+    },
+    {
+      "id": "work_money.resource",
+      "version": 1,
+      "source_id": "project-ten-god-policy",
+      "status": "active_project_policy",
+      "claim_scope": "interpretation_only",
+      "topic": "work_money",
+      "feature": "career.month_stem_ten_god",
+      "any_of": [
+        "편인",
+        "정인"
+      ],
+      "exclusions": [
+        "missing_or_unrecognized_fact",
+        "critical_calculation_uncertainty"
+      ],
+      "wording": {
+        "ko": {
+          "question": "많이 배웠는데 써먹을 시간은 있을까?",
+          "answer": "배운 것을 실제 일에 옮기는 방식을 먼저 보는 풀이야.",
+          "scene": "예를 들면, 새 강의를 더 듣기 전에 배운 방법 하나를 업무에 써보는 장면이야.",
+          "tradeoff": "배우고 확인하는 방식은 도움이 되지만, 준비가 길어지면 실제로 써볼 시간이 줄 수 있어.",
+          "action": "자료를 더 모으기 전에, 이미 아는 것 하나를 오늘의 일에 적용해봐.",
+          "next_question": "내가 편한 일의 환경은 어떤 모습일까?",
+          "analysis_note": "월간 십성은 {feature_label}입니다. 이를 근거로 학습과 회복을 위한 여유에 관한 해석 방향을 검토했습니다."
+        },
+        "en": {
+          "question": "Learning plenty, but when do you use it?",
+          "answer": "Start with bringing learned knowledge into actual work.",
+          "scene": "For example, apply a method you already learned before starting another course.",
+          "tradeoff": "Learning and checking can help, but prolonged preparation can leave less time for application.",
+          "action": "Before collecting more knowledge, use one thing you already know. Separate learning time from application time.",
+          "next_question": "What work setting feels manageable?",
+          "analysis_note": "The month-stem ten-god is {feature_label}. The interpretation considers room for learning and recovery."
+        }
+      }
+    },
+    {
+      "id": "love.resource",
+      "version": 1,
+      "source_id": "project-ten-god-policy",
+      "status": "active_project_policy",
+      "claim_scope": "interpretation_only",
+      "topic": "love",
+      "feature": "love.spouse_house_ten_god",
+      "any_of": [
+        "편인",
+        "정인"
+      ],
+      "exclusions": [
+        "missing_or_unrecognized_fact",
+        "critical_calculation_uncertainty"
+      ],
+      "wording": {
+        "ko": {
+          "question": "마음이 편해야 가까워지는 걸까?",
+          "answer": "관계 안에서 이해받고 회복할 자리가 있는지 먼저 보는 풀이야.",
+          "scene": "예를 들면, 답장을 혼자 해석하기 전에 궁금한 것을 짧게 물어보는 장면이야.",
+          "tradeoff": "이해받고 편안해지는 과정은 중요하지만, 생각만 길어지면 실제 대화가 늦어질 수 있어. 사주만으로 상대의 속마음이나 관계의 결과를 알 수는 없어.",
+          "action": "답장을 혼자 해석하기 전에, 궁금한 것 하나를 짧게 물어봐.",
+          "next_question": "내가 편한 관계는 어떤 모습일까?",
+          "analysis_note": "배우자궁 십성은 {feature_label}입니다. 이를 근거로 이해받는 경험과 정서적 회복에 관한 해석 방향을 검토했습니다."
+        },
+        "en": {
+          "question": "Do you need comfort before getting closer?",
+          "answer": "Look first for room to feel understood and recover within a relationship.",
+          "scene": "For example, ask a short question before privately interpreting a reply.",
+          "tradeoff": "Feeling understood can help, but prolonged private interpretation can delay a conversation. A chart cannot reveal another person's private feelings or decide a relationship outcome.",
+          "action": "Ask a small question before privately interpreting everything. Check comfort through conversation.",
+          "next_question": "What does a comfortable relationship look like?",
+          "analysis_note": "The spouse-house ten-god is {feature_label}. The interpretation considers feeling understood and emotional recovery."
+        }
+      }
+    },
+    {
+      "id": "core.wood",
+      "version": 1,
+      "source_id": "project-element-policy",
+      "status": "active_project_policy",
+      "claim_scope": "interpretation_only",
+      "topic": "core",
+      "feature": "core.dominant_element",
+      "any_of": [
+        "wood"
+      ],
+      "exclusions": [
+        "missing_or_inconsistent_element_counts",
+        "critical_calculation_uncertainty"
+      ],
+      "wording": {
+        "ko": {
+          "question": "내가 잘하는 방식은 언제 부담이 될까?",
+          "answer": "확인된 분포에서는 넓히고 시도하는 방식에 초점을 맞춰 읽었어.",
+          "scene": "예를 들면, 작은 시도를 반복하는 것을 일상에서 시험해보는 장면이야.",
+          "tradeoff": "이 방식이 유용한 순간도 있지만, 계속 같은 방법만 쓰면 시작한 일을 끝까지 남기는 것이 필요해질 수 있어.",
+          "action": "새로 시작할 일 하나와 지금 마칠 일 하나를 나란히 적어봐.",
+          "next_question": "내 강점을 편하게 쓰는 환경은 어떤 모습일까?",
+          "analysis_note": "보이는 오행의 최다 항목은 {dominant_label}입니다. 이 분포를 시작과 확장의 방향에서 검토했습니다. 오행 개수만으로 신강·신약이나 용신을 판정하지 않습니다."
+        },
+        "en": {
+          "question": "When can your useful approach become a burden?",
+          "answer": "The supplied distribution is read through expansion and trying.",
+          "scene": "For example, try small repeated attempts in one ordinary task.",
+          "tradeoff": "This approach can help, but repeating it in every situation may call for finishing what you start.",
+          "action": "List one thing to start and one current task to finish.",
+          "next_question": "What setting lets you use this approach comfortably?",
+          "analysis_note": "The most frequent visible elements are {dominant_label}. This distribution is considered in relation to starting and expanding. Element counts alone do not establish whole-chart strength or favorable elements."
+        }
+      }
+    },
+    {
+      "id": "core.fire",
+      "version": 1,
+      "source_id": "project-element-policy",
+      "status": "active_project_policy",
+      "claim_scope": "interpretation_only",
+      "topic": "core",
+      "feature": "core.dominant_element",
+      "any_of": [
+        "fire"
+      ],
+      "exclusions": [
+        "missing_or_inconsistent_element_counts",
+        "critical_calculation_uncertainty"
+      ],
+      "wording": {
+        "ko": {
+          "question": "내가 잘하는 방식은 언제 부담이 될까?",
+          "answer": "확인된 분포에서는 반응하고 표현하는 방식에 초점을 맞춰 읽었어.",
+          "scene": "예를 들면, 생각을 밖으로 꺼내는 것을 일상에서 시험해보는 장면이야.",
+          "tradeoff": "이 방식이 유용한 순간도 있지만, 계속 같은 방법만 쓰면 속도를 줄이고 답을 듣는 것이 필요해질 수 있어.",
+          "action": "떠오른 생각 하나를 말하고, 돌아오는 반응도 한 번 들어봐.",
+          "next_question": "내 강점을 편하게 쓰는 환경은 어떤 모습일까?",
+          "analysis_note": "보이는 오행의 최다 항목은 {dominant_label}입니다. 이 분포를 표현과 반응의 방향에서 검토했습니다. 오행 개수만으로 신강·신약이나 용신을 판정하지 않습니다."
+        },
+        "en": {
+          "question": "When can your useful approach become a burden?",
+          "answer": "The supplied distribution is read through response and expression.",
+          "scene": "For example, try bringing an idea into the open in one ordinary task.",
+          "tradeoff": "This approach can help, but repeating it in every situation may call for slowing down to hear an answer.",
+          "action": "Express one idea and leave room to hear the response.",
+          "next_question": "What setting lets you use this approach comfortably?",
+          "analysis_note": "The most frequent visible elements are {dominant_label}. This distribution is considered in relation to expression and response. Element counts alone do not establish whole-chart strength or favorable elements."
+        }
+      }
+    },
+    {
+      "id": "core.earth",
+      "version": 1,
+      "source_id": "project-element-policy",
+      "status": "active_project_policy",
+      "claim_scope": "interpretation_only",
+      "topic": "core",
+      "feature": "core.dominant_element",
+      "any_of": [
+        "earth"
+      ],
+      "exclusions": [
+        "missing_or_inconsistent_element_counts",
+        "critical_calculation_uncertainty"
+      ],
+      "wording": {
+        "ko": {
+          "question": "내가 잘하는 방식은 언제 부담이 될까?",
+          "answer": "확인된 분포에서는 안정적으로 이어가는 방식에 초점을 맞춰 읽었어.",
+          "scene": "예를 들면, 익숙한 일을 꾸준히 쌓는 것을 일상에서 시험해보는 장면이야.",
+          "tradeoff": "이 방식이 유용한 순간도 있지만, 계속 같은 방법만 쓰면 바뀐 조건을 다시 확인하는 것이 필요해질 수 있어.",
+          "action": "계속 맡아온 일 하나에서 내가 유지할 몫과 나눌 몫을 정해봐.",
+          "next_question": "내 강점을 편하게 쓰는 환경은 어떤 모습일까?",
+          "analysis_note": "보이는 오행의 최다 항목은 {dominant_label}입니다. 이 분포를 유지와 조율의 방향에서 검토했습니다. 오행 개수만으로 신강·신약이나 용신을 판정하지 않습니다."
+        },
+        "en": {
+          "question": "When can your useful approach become a burden?",
+          "answer": "The supplied distribution is read through steady continuity.",
+          "scene": "For example, try building on familiar work in one ordinary task.",
+          "tradeoff": "This approach can help, but repeating it in every situation may call for checking changed conditions again.",
+          "action": "For one ongoing commitment, separate what to maintain from what to share.",
+          "next_question": "What setting lets you use this approach comfortably?",
+          "analysis_note": "The most frequent visible elements are {dominant_label}. This distribution is considered in relation to maintenance and coordination. Element counts alone do not establish whole-chart strength or favorable elements."
+        }
+      }
+    },
+    {
+      "id": "core.metal",
+      "version": 1,
+      "source_id": "project-element-policy",
+      "status": "active_project_policy",
+      "claim_scope": "interpretation_only",
+      "topic": "core",
+      "feature": "core.dominant_element",
+      "any_of": [
+        "metal"
+      ],
+      "exclusions": [
+        "missing_or_inconsistent_element_counts",
+        "critical_calculation_uncertainty"
+      ],
+      "wording": {
+        "ko": {
+          "question": "내가 잘하는 방식은 언제 부담이 될까?",
+          "answer": "확인된 분포에서는 판단하고 마무리하는 방식에 초점을 맞춰 읽었어.",
+          "scene": "예를 들면, 완료 조건을 분명히 하는 것을 일상에서 시험해보는 장면이야.",
+          "tradeoff": "이 방식이 유용한 순간도 있지만, 계속 같은 방법만 쓰면 상대와 다른 기준을 맞추는 것이 필요해질 수 있어.",
+          "action": "오늘 결정할 일 하나에서 꼭 필요한 조건 두 개만 남겨봐.",
+          "next_question": "내 강점을 편하게 쓰는 환경은 어떤 모습일까?",
+          "analysis_note": "보이는 오행의 최다 항목은 {dominant_label}입니다. 이 분포를 기준과 정리의 방향에서 검토했습니다. 오행 개수만으로 신강·신약이나 용신을 판정하지 않습니다."
+        },
+        "en": {
+          "question": "When can your useful approach become a burden?",
+          "answer": "The supplied distribution is read through judgment and completion.",
+          "scene": "For example, try making the finish line clear in one ordinary task.",
+          "tradeoff": "This approach can help, but repeating it in every situation may call for agreeing on different standards.",
+          "action": "For one decision today, keep just two essential criteria.",
+          "next_question": "What setting lets you use this approach comfortably?",
+          "analysis_note": "The most frequent visible elements are {dominant_label}. This distribution is considered in relation to standards and organization. Element counts alone do not establish whole-chart strength or favorable elements."
+        }
+      }
+    },
+    {
+      "id": "core.water",
+      "version": 1,
+      "source_id": "project-element-policy",
+      "status": "active_project_policy",
+      "claim_scope": "interpretation_only",
+      "topic": "core",
+      "feature": "core.dominant_element",
+      "any_of": [
+        "water"
+      ],
+      "exclusions": [
+        "missing_or_inconsistent_element_counts",
+        "critical_calculation_uncertainty"
+      ],
+      "wording": {
+        "ko": {
+          "question": "내가 잘하는 방식은 언제 부담이 될까?",
+          "answer": "확인된 분포에서는 읽고 조율하는 방식에 초점을 맞춰 읽었어.",
+          "scene": "예를 들면, 상황을 확인하고 속도를 맞추는 것을 일상에서 시험해보는 장면이야.",
+          "tradeoff": "이 방식이 유용한 순간도 있지만, 계속 같은 방법만 쓰면 생각을 실제 선택으로 옮기는 것이 필요해질 수 있어.",
+          "action": "더 알아볼 질문 하나와 지금 정할 선택 하나를 구별해봐.",
+          "next_question": "내 강점을 편하게 쓰는 환경은 어떤 모습일까?",
+          "analysis_note": "보이는 오행의 최다 항목은 {dominant_label}입니다. 이 분포를 관찰과 준비의 방향에서 검토했습니다. 오행 개수만으로 신강·신약이나 용신을 판정하지 않습니다."
+        },
+        "en": {
+          "question": "When can your useful approach become a burden?",
+          "answer": "The supplied distribution is read through reading and coordination.",
+          "scene": "For example, try checking a situation and matching its pace in one ordinary task.",
+          "tradeoff": "This approach can help, but repeating it in every situation may call for turning thought into a concrete choice.",
+          "action": "Separate one question to research from one choice to make now.",
+          "next_question": "What setting lets you use this approach comfortably?",
+          "analysis_note": "The most frequent visible elements are {dominant_label}. This distribution is considered in relation to observation and preparation. Element counts alone do not establish whole-chart strength or favorable elements."
+        }
+      }
+    },
+    {
+      "id": "core.mixed",
+      "version": 1,
+      "source_id": "project-element-policy",
+      "status": "active_project_policy",
+      "claim_scope": "interpretation_only",
+      "topic": "core",
+      "feature": "core.dominant_element",
+      "any_of": [
+        "mixed"
+      ],
+      "exclusions": [
+        "missing_or_inconsistent_element_counts",
+        "critical_calculation_uncertainty"
+      ],
+      "wording": {
+        "ko": {
+          "question": "내가 잘하는 방식은 언제 부담이 될까?",
+          "answer": "확인된 분포에서는 여러 방식을 함께 쓰는 모습에 초점을 맞춰 읽었어.",
+          "scene": "예를 들면, 상황에 맞게 방법을 바꾸는 것을 일상에서 시험해보는 장면이야.",
+          "tradeoff": "이 방식이 유용한 순간도 있지만, 계속 같은 방법만 쓰면 한 가지 강점으로 단정하지 않는 것이 필요해질 수 있어.",
+          "action": "선택 하나를 두 방식으로 비교한 뒤, 오늘 쓸 방식 하나를 골라봐.",
+          "next_question": "내 강점을 편하게 쓰는 환경은 어떤 모습일까?",
+          "analysis_note": "보이는 오행의 최다 항목은 {dominant_label}입니다. 이 분포를 복수의 해석 방향에서 검토했습니다. 오행 개수만으로 신강·신약이나 용신을 판정하지 않습니다."
+        },
+        "en": {
+          "question": "When can your useful approach become a burden?",
+          "answer": "The supplied distribution is read through several approaches together.",
+          "scene": "For example, try changing methods to fit the situation in one ordinary task.",
+          "tradeoff": "This approach can help, but repeating it in every situation may call for avoiding a single defining strength.",
+          "action": "Compare two approaches to one choice, then pick an approach for today.",
+          "next_question": "What setting lets you use this approach comfortably?",
+          "analysis_note": "The most frequent visible elements are {dominant_label}. This distribution is considered in relation to multiple interpretation themes. Element counts alone do not establish whole-chart strength or favorable elements."
+        }
+      }
+    },
+    {
+      "id": "luck_flow.peer",
+      "version": 1,
+      "source_id": "project-cycle-policy",
+      "status": "active_project_policy",
+      "claim_scope": "interpretation_only",
+      "topic": "luck_flow",
+      "feature": "luck.current_stem_ten_god",
+      "any_of": [
+        "비견",
+        "겁재"
+      ],
+      "exclusions": [
+        "unknown_birth_time",
+        "disabled_luck_flow",
+        "missing_confirmed_current_cycle",
+        "critical_calculation_uncertainty"
+      ],
+      "wording": {
+        "ko": {
+          "question": "지금의 큰 흐름에서 먼저 볼 것은 무엇일까?",
+          "answer": "현재 확인된 {period}의 큰 흐름은 내 기준과 함께 맡은 몫을 살펴보는 쪽으로 읽었어.",
+          "scene": "예를 들면, 이번 주에 내 기준과 함께 맡은 몫과 관련된 선택 하나를 따로 적어보는 장면이야.",
+          "tradeoff": "활용할 부분과 부담은 함께 봐야 해. 자기 방식이 강해질 때 협업의 경계도 따로 확인해봐.",
+          "action": "현재 함께 맡은 일 하나에서 내 결정과 공동 결정을 나눠봐.",
+          "next_question": "현재 흐름에서 내가 조정할 수 있는 것은 무엇일까?",
+          "analysis_note": "현재 대운({period})의 천간 십성은 {feature_label}입니다. 이를 자기 방식과 공동 역할의 경계의 관점에서 검토했습니다. 이 규칙으로 사건의 발생 시기나 결과를 확정하지 않습니다."
+        },
+        "en": {
+          "question": "What matters in this long cycle?",
+          "answer": "The supplied {period} long cycle is read through standards and shared ownership.",
+          "scene": "For example, write down one decision this week involving standards and shared ownership.",
+          "tradeoff": "Useful aspects and burdens need to be considered together. Check the boundary of collaboration separately.",
+          "action": "Separate personal decisions from shared decisions on one current task.",
+          "next_question": "What can you adjust in the current long cycle?",
+          "analysis_note": "The current cycle ({period}) has the stem ten-god {feature_label}. This is considered in relation to personal methods and shared ownership. This rule does not establish event dates or outcomes."
+        }
+      }
+    },
+    {
+      "id": "luck_flow.output",
+      "version": 1,
+      "source_id": "project-cycle-policy",
+      "status": "active_project_policy",
+      "claim_scope": "interpretation_only",
+      "topic": "luck_flow",
+      "feature": "luck.current_stem_ten_god",
+      "any_of": [
+        "식신",
+        "상관"
+      ],
+      "exclusions": [
+        "unknown_birth_time",
+        "disabled_luck_flow",
+        "missing_confirmed_current_cycle",
+        "critical_calculation_uncertainty"
+      ],
+      "wording": {
+        "ko": {
+          "question": "지금의 큰 흐름에서 먼저 볼 것은 무엇일까?",
+          "answer": "현재 확인된 {period}의 큰 흐름은 표현과 결과물을 살펴보는 쪽으로 읽었어.",
+          "scene": "예를 들면, 이번 주에 표현과 결과물과 관련된 선택 하나를 따로 적어보는 장면이야.",
+          "tradeoff": "활용할 부분과 부담은 함께 봐야 해. 새로운 시도가 늘 때 마무리도 따로 확인해봐.",
+          "action": "지금 진행 중인 생각 하나를 보여줄 수 있는 결과물로 바꿔봐.",
+          "next_question": "현재 흐름에서 내가 조정할 수 있는 것은 무엇일까?",
+          "analysis_note": "현재 대운({period})의 천간 십성은 {feature_label}입니다. 이를 표현과 결과물의 완성의 관점에서 검토했습니다. 이 규칙으로 사건의 발생 시기나 결과를 확정하지 않습니다."
+        },
+        "en": {
+          "question": "What matters in this long cycle?",
+          "answer": "The supplied {period} long cycle is read through expression and output.",
+          "scene": "For example, write down one decision this week involving expression and output.",
+          "tradeoff": "Useful aspects and burdens need to be considered together. Check completion when new ideas multiply separately.",
+          "action": "Turn one idea in progress into a result someone can see.",
+          "next_question": "What can you adjust in the current long cycle?",
+          "analysis_note": "The current cycle ({period}) has the stem ten-god {feature_label}. This is considered in relation to expression and completion of usable output. This rule does not establish event dates or outcomes."
+        }
+      }
+    },
+    {
+      "id": "luck_flow.wealth",
+      "version": 1,
+      "source_id": "project-cycle-policy",
+      "status": "active_project_policy",
+      "claim_scope": "interpretation_only",
+      "topic": "luck_flow",
+      "feature": "luck.current_stem_ten_god",
+      "any_of": [
+        "편재",
+        "정재"
+      ],
+      "exclusions": [
+        "unknown_birth_time",
+        "disabled_luck_flow",
+        "missing_confirmed_current_cycle",
+        "critical_calculation_uncertainty"
+      ],
+      "wording": {
+        "ko": {
+          "question": "지금의 큰 흐름에서 먼저 볼 것은 무엇일까?",
+          "answer": "현재 확인된 {period}의 큰 흐름은 자원과 보상의 조건을 살펴보는 쪽으로 읽었어.",
+          "scene": "예를 들면, 이번 주에 자원과 보상의 조건과 관련된 선택 하나를 따로 적어보는 장면이야.",
+          "tradeoff": "활용할 부분과 부담은 함께 봐야 해. 얻으려는 것이 늘 때 유지 비용도 따로 확인해봐.",
+          "action": "지금 쓰는 시간과 자원 하나를 골라, 돌아오는 보상 조건을 확인해봐.",
+          "next_question": "현재 흐름에서 내가 조정할 수 있는 것은 무엇일까?",
+          "analysis_note": "현재 대운({period})의 천간 십성은 {feature_label}입니다. 이를 자원 배분과 보상 조건의 관점에서 검토했습니다. 이 규칙으로 사건의 발생 시기나 결과를 확정하지 않습니다."
+        },
+        "en": {
+          "question": "What matters in this long cycle?",
+          "answer": "The supplied {period} long cycle is read through resources and reward terms.",
+          "scene": "For example, write down one decision this week involving resources and reward terms.",
+          "tradeoff": "Useful aspects and burdens need to be considered together. Check carrying costs when expectations grow separately.",
+          "action": "For one use of time or resources, check the reward conditions.",
+          "next_question": "What can you adjust in the current long cycle?",
+          "analysis_note": "The current cycle ({period}) has the stem ten-god {feature_label}. This is considered in relation to resource allocation and reward conditions. This rule does not establish event dates or outcomes."
+        }
+      }
+    },
+    {
+      "id": "luck_flow.officer",
+      "version": 1,
+      "source_id": "project-cycle-policy",
+      "status": "active_project_policy",
+      "claim_scope": "interpretation_only",
+      "topic": "luck_flow",
+      "feature": "luck.current_stem_ten_god",
+      "any_of": [
+        "편관",
+        "정관"
+      ],
+      "exclusions": [
+        "unknown_birth_time",
+        "disabled_luck_flow",
+        "missing_confirmed_current_cycle",
+        "critical_calculation_uncertainty"
+      ],
+      "wording": {
+        "ko": {
+          "question": "지금의 큰 흐름에서 먼저 볼 것은 무엇일까?",
+          "answer": "현재 확인된 {period}의 큰 흐름은 책임과 역할을 살펴보는 쪽으로 읽었어.",
+          "scene": "예를 들면, 이번 주에 책임과 역할과 관련된 선택 하나를 따로 적어보는 장면이야.",
+          "tradeoff": "활용할 부분과 부담은 함께 봐야 해. 맡은 몫이 늘 때 일정과 대우도 따로 확인해봐.",
+          "action": "현재 맡은 책임 하나에서 평가 기준과 지원받을 범위를 확인해봐.",
+          "next_question": "현재 흐름에서 내가 조정할 수 있는 것은 무엇일까?",
+          "analysis_note": "현재 대운({period})의 천간 십성은 {feature_label}입니다. 이를 책임 범위와 평가 기준의 관점에서 검토했습니다. 이 규칙으로 사건의 발생 시기나 결과를 확정하지 않습니다."
+        },
+        "en": {
+          "question": "What matters in this long cycle?",
+          "answer": "The supplied {period} long cycle is read through responsibility and roles.",
+          "scene": "For example, write down one decision this week involving responsibility and roles.",
+          "tradeoff": "Useful aspects and burdens need to be considered together. Check schedule and compensation when duties grow separately.",
+          "action": "Check the evaluation criteria and available support for one current responsibility.",
+          "next_question": "What can you adjust in the current long cycle?",
+          "analysis_note": "The current cycle ({period}) has the stem ten-god {feature_label}. This is considered in relation to responsibility and evaluation criteria. This rule does not establish event dates or outcomes."
+        }
+      }
+    },
+    {
+      "id": "luck_flow.resource",
+      "version": 1,
+      "source_id": "project-cycle-policy",
+      "status": "active_project_policy",
+      "claim_scope": "interpretation_only",
+      "topic": "luck_flow",
+      "feature": "luck.current_stem_ten_god",
+      "any_of": [
+        "편인",
+        "정인"
+      ],
+      "exclusions": [
+        "unknown_birth_time",
+        "disabled_luck_flow",
+        "missing_confirmed_current_cycle",
+        "critical_calculation_uncertainty"
+      ],
+      "wording": {
+        "ko": {
+          "question": "지금의 큰 흐름에서 먼저 볼 것은 무엇일까?",
+          "answer": "현재 확인된 {period}의 큰 흐름은 배움과 회복을 살펴보는 쪽으로 읽었어.",
+          "scene": "예를 들면, 이번 주에 배움과 회복과 관련된 선택 하나를 따로 적어보는 장면이야.",
+          "tradeoff": "활용할 부분과 부담은 함께 봐야 해. 준비가 길어질 때 실제 적용도 따로 확인해봐.",
+          "action": "준비해온 것 하나를 실제 일에 써보고, 회복할 시간도 잡아봐.",
+          "next_question": "현재 흐름에서 내가 조정할 수 있는 것은 무엇일까?",
+          "analysis_note": "현재 대운({period})의 천간 십성은 {feature_label}입니다. 이를 학습과 회복을 위한 여유의 관점에서 검토했습니다. 이 규칙으로 사건의 발생 시기나 결과를 확정하지 않습니다."
+        },
+        "en": {
+          "question": "What matters in this long cycle?",
+          "answer": "The supplied {period} long cycle is read through learning and recovery.",
+          "scene": "For example, write down one decision this week involving learning and recovery.",
+          "tradeoff": "Useful aspects and burdens need to be considered together. Check practical application when preparation takes longer separately.",
+          "action": "Apply one thing you have prepared and make room for recovery.",
+          "next_question": "What can you adjust in the current long cycle?",
+          "analysis_note": "The current cycle ({period}) has the stem ten-god {feature_label}. This is considered in relation to room for learning and recovery. This rule does not establish event dates or outcomes."
+        }
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "love.meeting_window",
+      "topic": "love",
+      "question": {
+        "ko": "연인을 만날 가능성이 커지는 때는 언제쯤일까?",
+        "en": "When might meeting a partner become more likely?"
+      },
+      "status": "needs_rule_review",
+      "required_data": [
+        "expert_reviewed_relationship_timing_rules",
+        "annual_and_monthly_interactions"
+      ],
+      "supported_scope": "relationship_pattern_only",
+      "forbidden_claims": [
+        "event_probability",
+        "guaranteed_event_date",
+        "population_percentile"
+      ]
+    },
+    {
+      "id": "career.entry_window",
+      "topic": "career",
+      "question": {
+        "ko": "좋은 일자리에 지원할 때는 언제쯤일까?",
+        "en": "When should I focus on applying for a job?"
+      },
+      "status": "needs_rule_review",
+      "required_data": [
+        "expert_reviewed_job_entry_rules",
+        "annual_and_monthly_interactions",
+        "job_goal_definition"
+      ],
+      "supported_scope": "work_style_only",
+      "forbidden_claims": [
+        "event_probability",
+        "guaranteed_event_date",
+        "population_percentile"
+      ]
+    },
+    {
+      "id": "career.recognition_window",
+      "topic": "career",
+      "question": {
+        "ko": "직장에서 인정받을 때는 언제쯤일까?",
+        "en": "When should I focus on recognition at work?"
+      },
+      "status": "needs_rule_review",
+      "required_data": [
+        "expert_reviewed_recognition_rules",
+        "annual_and_monthly_interactions"
+      ],
+      "supported_scope": "role_and_responsibility_only",
+      "forbidden_claims": [
+        "event_probability",
+        "guaranteed_event_date",
+        "population_percentile"
+      ]
+    },
+    {
+      "id": "career.reward_window",
+      "topic": "wealth",
+      "question": {
+        "ko": "맡은 일에 비해 대우가 좋아질 때는 언제쯤일까?",
+        "en": "When should I focus on better compensation?"
+      },
+      "status": "needs_rule_review",
+      "required_data": [
+        "expert_reviewed_compensation_rules",
+        "annual_and_monthly_interactions",
+        "compensation_goal_definition"
+      ],
+      "supported_scope": "reward_conditions_only",
+      "forbidden_claims": [
+        "event_probability",
+        "guaranteed_event_date",
+        "population_percentile"
+      ]
+    },
+    {
+      "id": "fortune.population_comparison",
+      "topic": "comparison",
+      "question": {
+        "ko": "다른 사람과 비교하면 내 운은 어느 정도일까?",
+        "en": "How does my fortune compare with other people?"
+      },
+      "status": "needs_reference_population",
+      "required_data": [
+        "versioned_comparison_metric",
+        "documented_reference_population",
+        "validated_sampling_policy"
+      ],
+      "supported_scope": "no_population_comparison",
+      "forbidden_claims": [
+        "event_probability",
+        "guaranteed_event_date",
+        "population_percentile"
+      ]
+    }
+  ]
+}

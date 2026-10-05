@@ -3,6 +3,7 @@
 from typing import Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field
+from app.domain.saju.reading_knowledge import QuestionCapability, ReadingAnalysisNote, ReadingStructure
 
 
 InterpretationLocale = Literal["ko", "en"]
@@ -92,6 +93,7 @@ class InterpretationDiagnostics(BaseModel):
 
 
 class InterpretationReport(InterpretationLLMOutput):
+    reading_sections: Dict[str, ReadingStructure] = Field(default_factory=dict)
     schema_version: Literal["m2-llm-v5"] = "m2-llm-v5"
     provider: LLMProvider
     model: Optional[str] = None
@@ -106,7 +108,11 @@ class FreePreviewDiagnosis(BaseModel):
     body: str = Field(max_length=700)
 
 
-class FreePreviewCard(BaseModel):
+class ReadingBasisExplanation(ReadingAnalysisNote):
+    pass
+
+
+class FreePreviewLLMCard(BaseModel):
     key: FreePreviewCardKey
     title: str = Field(max_length=48)
     subtitle: str = Field(max_length=96)
@@ -117,20 +123,28 @@ class FreePreviewCard(BaseModel):
     basis_line: str = Field(max_length=180)
 
 
+class FreePreviewCard(FreePreviewLLMCard):
+    # Only checked backend facts may populate this optional public explanation.
+    basis_explanation: Optional[ReadingBasisExplanation] = None
+    reading_structure: Optional[ReadingStructure] = None
+
+
 class FreePreviewLLMOutput(BaseModel):
     headline: str = Field(max_length=64)
     hero_overview: List[str] = Field(min_items=8, max_items=10)
     core_diagnoses: List[FreePreviewDiagnosis] = Field(min_items=3, max_items=3)
-    cards: List[FreePreviewCard] = Field(min_items=4, max_items=4)
+    cards: List[FreePreviewLLMCard] = Field(min_items=4, max_items=4)
 
 
 class FreePreviewReport(FreePreviewLLMOutput):
+    cards: List[FreePreviewCard] = Field(min_items=4, max_items=4)
     schema_version: Literal["free-preview-v1"] = "free-preview-v1"
     provider: LLMProvider
     model: Optional[str] = None
     prompt_version: str = "saju-free-preview-v1"
     warnings: List[str] = Field(default_factory=list)
     diagnostics: Optional[InterpretationDiagnostics] = None
+    question_capabilities: List[QuestionCapability] = Field(default_factory=list)
 
 
 class SajuDetailPreparedReport(BaseModel):

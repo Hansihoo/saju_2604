@@ -1,0 +1,60 @@
+{
+  "schema_version": "verification-implementation-evidence-v1",
+  "verified_at": "2026-10-05T04:05:07.537202+00:00",
+  "api_regression_checkpoint": {
+    "passed": 379
+  },
+  "final_agent_tests": {
+    "passed": 41
+  },
+  "live_codex_calls": 0,
+  "smoke": {
+    "provider": "fixture",
+    "calls": 9,
+    "status": "HOLD",
+    "cases": {
+      "S2": "HOLD",
+      "S3": "HOLD",
+      "S5": "HOLD"
+    }
+  },
+  "expanded": {
+    "provider": "fixture",
+    "calls": 15,
+    "status": "FAIL",
+    "cases": {
+      "S1": "HOLD",
+      "S2": "HOLD",
+      "S3": "HOLD",
+      "S4": "HOLD",
+      "S5": "HOLD",
+      "S6": "FAIL"
+    }
+  },
+  "standalone_supervisor": {
+    "provider": "fixture",
+    "execution": "completed",
+    "contract": "passed",
+    "calls": 1
+  },
+  "fallback_http": {
+    "status": "FAIL",
+    "summary": {
+      "PASS": 456,
+      "WARN": 3,
+      "FAIL": 1
+    }
+  },
+  "limits": {
+    "observation_scope": "content_only",
+    "synthetic_interest": "not_measured",
+    "live_semantic_accuracy": "not_observed",
+    "developer_ui": "not_implemented"
+  },
+  "sources": [
+    "D:\\5_project\\saju_2604\\.dev-runtime\\agent-verification-20261005\\smoke\\report.json",
+    "D:\\5_project\\saju_2604\\.dev-runtime\\agent-verification-20261005\\all-cases\\report.json",
+    "D:\\5_project\\saju_2604\\.dev-runtime\\agent-verification-20261005\\standalone-supervisor\\result.json",
+    "D:\\5_project\\saju_2604\\.dev-runtime\\agent-verification-20261005\\user-story.json"
+  ]
+}

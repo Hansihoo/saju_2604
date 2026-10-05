@@ -25,12 +25,14 @@ import {
 import { Locale, getCopy } from "../../../shared/copy";
 import { formatManseText } from "../../shared/manseDisplay";
 import { PeriodFlowCards } from "./PeriodFlowCards";
+import { experienceCopy } from "../experience/experienceCopy";
 
 type SajuResultViewProps = {
   locale: Locale;
   result: SajuPreviewResponse;
   detailPayload?: SajuPreviewRequest | null;
   onReset: () => void;
+  readingOnly?: boolean;
 };
 
 type SectionKey = "core_analysis" | "love" | "career" | "wealth" | "luck_flow";
@@ -2018,10 +2020,11 @@ function CoreDiagnosisBlock({
   );
 }
 
-export function SajuResultView({ locale, result, detailPayload, onReset }: SajuResultViewProps) {
+export function SajuResultView({ locale, result, detailPayload, onReset, readingOnly = false }: SajuResultViewProps) {
   const texts = getCopy(locale);
   const viewTexts = sectionViewCopy[locale];
   const detailTexts = detailLazyCopy[locale];
+  const experienceTexts = experienceCopy[locale];
   const statusTexts = disabledStateCopy[locale];
   const isBirthTimeUnknown = !result.result.hour_pillar_enabled;
   const visiblePillars = result.result.signals.visible_pillar_values
@@ -2357,7 +2360,7 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
     sectionKey: string,
     heading: string,
     detailTypes: AvailableSectionInsightType[],
-  ) => (
+  ) => result.manse.luck_cycles_enabled && !isBirthTimeUnknown ? (
     <SectionInsightChips
       activeDetailType={activeSectionInsights[sectionKey] ?? null}
       heading={heading}
@@ -2366,14 +2369,14 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
       states={sectionInsightStates}
       onOpen={(detailType) => void openSectionInsight(sectionKey, detailType)}
     />
-  );
+  ) : null;
 
   return (
     <section
-      className="result-screen ritual-result readable-result overflow-safe"
+      className={`result-screen ritual-result readable-result overflow-safe${readingOnly ? " is-reading-only" : ""}`}
       data-overflow-audit-root
     >
-      <div className="result-header">
+      {!readingOnly ? <div className="result-header">
         <div className="result-header-copy">
           <h2>{texts.resultTitle}</h2>
           <p>{visiblePillars}</p>
@@ -2381,10 +2384,11 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
         <button className="secondary-button" type="button" onClick={onReset}>
           {texts.backToForm}
         </button>
-      </div>
+      </div> : null}
 
       <div className="result-layout">
         <div className="result-main-column">
+          {!readingOnly ? <>
           {isBirthTimeUnknown ? (
             <section className="result-disabled-banner">
               <div className="result-disabled-banner-head">
@@ -2439,6 +2443,7 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
 
           <UncertaintySummaryNotice locale={locale} result={result} />
           <CompactPillarTable locale={locale} result={result} />
+          </> : null}
 
           {hasDetailReport ? (
             <>
@@ -2501,9 +2506,13 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
             </>
           ) : (
             <section className="detailLazyPanel" id="free-detail">
-              <span className="result-panel-label">{detailTexts.label}</span>
-              <h3>{detailStatus === "loading" ? detailTexts.loadingTitle : detailTexts.title}</h3>
-              <p>{detailStatus === "loading" ? detailTexts.loadingBody : detailTexts.body}</p>
+              {!readingOnly ? (
+                <>
+                  <span className="result-panel-label">{detailTexts.label}</span>
+                  <h3>{detailStatus === "loading" ? detailTexts.loadingTitle : detailTexts.title}</h3>
+                  <p>{detailStatus === "loading" ? detailTexts.loadingBody : detailTexts.body}</p>
+                </>
+              ) : null}
               {detailError ? <p className="detailLazyError">{detailError}</p> : null}
               <button
                 className="detailLazyButton"
@@ -2511,13 +2520,13 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
                 disabled={detailStatus === "loading"}
                 onClick={() => void loadFreeDetail("#core-analysis")}
               >
-                {detailStatus === "loading" ? detailTexts.loadingTitle : detailTexts.button}
+                {detailStatus === "loading" ? detailTexts.loadingTitle : readingOnly ? experienceTexts.deepButton : detailTexts.button}
               </button>
             </section>
           )}
         </div>
 
-        <aside className="result-side-column">
+        {!readingOnly ? <aside className="result-side-column">
           <section className="result-side-panel">
             <span className="result-panel-label">{viewTexts.outlineLabel}</span>
             <nav className="result-section-nav" aria-label={viewTexts.outlineLabel}>
@@ -2535,7 +2544,7 @@ export function SajuResultView({ locale, result, detailPayload, onReset }: SajuR
             </nav>
           </section>
 
-        </aside>
+        </aside> : null}
       </div>
     </section>
   );

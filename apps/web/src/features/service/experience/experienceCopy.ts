@@ -1,0 +1,175 @@
+import type { FreePreviewCardKey } from "../../../shared/api/contracts";
+import type { Locale } from "../../../shared/copy";
+import type { DokkaebiExpression } from "../../character/dokkaebiCatalog";
+
+// Interface voice is independent of personalized reading text from the API.
+// The character speaks casually, warmly, and honestly; utility copy stays clear.
+// Calculation fidelity is a brand promise, never certainty about someone's future.
+export const experienceCopy = {
+  ko: {
+    home: "처음으로",
+    back: "이전으로",
+    faces: "표정 고르기",
+    resultLanguageNote: "풀이 언어는 출생 정보를 입력할 때 선택할 수 있어요.",
+    heroTitle: ["사주에 있는", "그대로 말해줄게."],
+    chooseTopic: "궁금한 사주 선택",
+    birthTitle: "출생 정보",
+    timeTitle: "태어난 시간과 장소",
+    next: "다음",
+    submit: "풀이 보기",
+    birthDate: "생년월일",
+    calendar: "달력 기준",
+    solar: "양력",
+    lunar: "음력",
+    leap: "윤달에 태어났어요",
+    gender: "성별",
+    female: "여성",
+    male: "남성",
+    birthTime: "태어난 시간",
+    unknown: "태어난 시간을 몰라요",
+    unknownNote: "시간이 필요한 풀이는 제외할게.",
+    region: "태어난 곳",
+    regionPlaceholder: "태어난 도시 검색",
+    regionNote: "출생지로 태어난 시각을 보정해요.",
+    regionError: "태어난 도시를 검색한 뒤 목록에서 선택해 주세요.",
+    searching: "지역을 찾고 있어요…",
+    noRegions: "다른 도시 이름으로 다시 찾아볼까요?",
+    selectedRegion: "선택한 지역",
+    dateError: "생년월일이 실제 있는 날짜인지 확인해 주세요. 예: 19970918",
+    timeError: "시간을 00:00부터 23:59 사이로 입력해 주세요.",
+    retry: "입력을 확인하고 다시 해볼까요?",
+    loadingTitle: "사주 읽는 중",
+    loadingTopic: "읽는 중",
+    todayTakeaway: "오늘의 한마디",
+    topicNav: "궁금한 풀이",
+    analysisNote: "분석 노트",
+    basisFacts: "명식 근거",
+    basisReportedFacts: "제공된 해석 근거",
+    basisReading: "해석 기준",
+    share: "카드 만들기",
+    edit: "출생 정보 수정",
+    periodMore: "오늘과 요즘의 흐름도 궁금해요",
+    unknownResult: "출생시간 미상 · 시간에 따른 풀이는 제외했어요.",
+    notes: "풀이 참고사항",
+    empty: "이 이야기는 아직 준비하지 못했어요. 다른 주제를 먼저 읽어보세요.",
+    deepButton: "전체 풀이 펼치기",
+    shareTitle: "공유 카드",
+    close: "닫기",
+    changeFace: "카드 표정 바꾸기",
+    save: "이미지 저장",
+    send: "공유하기",
+    copy: "문구 복사",
+    preparing: "카드에 표정을 담고 있어요…",
+    shareError: "카드를 만들지 못했어요. 다시 시도해 주세요.",
+    shareFailed: "공유창을 열지 못했어요. 이미지로 저장해 보내주세요.",
+    copied: "풀이 문구를 복사했어요.",
+    copyFailed: "복사가 안 되면 아래 문구를 직접 선택해 주세요.",
+  },
+  en: {
+    home: "Home",
+    back: "Go back",
+    faces: "Choose a face",
+    resultLanguageNote:
+      "Choose the reading language when entering birth information.",
+    heroTitle: ["Your chart.", "Your story."],
+    chooseTopic: "Choose a reading",
+    birthTitle: "Birth details",
+    timeTitle: "Birth time & place",
+    next: "Next",
+    submit: "Get my reading",
+    birthDate: "Birth date",
+    calendar: "Calendar",
+    solar: "Solar",
+    lunar: "Lunar",
+    leap: "Born in a lunar leap month",
+    gender: "Sex",
+    female: "Female",
+    male: "Male",
+    birthTime: "Birth time",
+    unknown: "I don't know my birth time",
+    unknownNote:
+      "That's okay. I'll leave out readings that depend on birth time.",
+    region: "Birth place",
+    regionPlaceholder: "Search your birth city",
+    regionNote: "Your birth city is used to adjust your birth time.",
+    regionError: "Search your birth city and choose it from the list.",
+    searching: "Finding your city…",
+    noRegions: "Try a different city name.",
+    selectedRegion: "Selected city",
+    dateError: "Check that your birth date is valid. Example: 19970918",
+    timeError: "Enter a time between 00:00 and 23:59.",
+    retry: "Let's check your information and try again.",
+    loadingTitle: "Reading your chart",
+    loadingTopic: "Reading",
+    todayTakeaway: "Today's takeaway",
+    topicNav: "Reading topics",
+    analysisNote: "Analysis note",
+    basisFacts: "Chart basis",
+    basisReportedFacts: "Basis supplied with the reading",
+    basisReading: "Interpretive rationale",
+    share: "Make a card",
+    edit: "Edit birth information",
+    periodMore: "What about today and the current flow?",
+    unknownResult: "Birth time unknown · Time-dependent readings are left out.",
+    notes: "Reading notes",
+    empty: "This topic isn't ready yet. Try another one first.",
+    deepButton: "Read the full story",
+    shareTitle: "Share card",
+    close: "Close",
+    changeFace: "Change the card's face",
+    save: "Save image",
+    send: "Share",
+    copy: "Copy text",
+    preparing: "Making your card…",
+    shareError: "Couldn't make your card. Please try again.",
+    shareFailed: "Couldn't open sharing. Save the image and send it instead.",
+    copied: "Reading text copied.",
+    copyFailed: "You can select and copy the text below.",
+  },
+} as const;
+
+export type ReadingTopicKey = FreePreviewCardKey | "today";
+
+export const readingTopics: Array<{
+  key: ReadingTopicKey;
+  expression: DokkaebiExpression;
+  label: Record<Locale, string>;
+}> = [
+  {
+    key: "today",
+    expression: "surprised",
+    label: { ko: "오늘의 운세", en: "Today's fortune" },
+  },
+  {
+    key: "love",
+    expression: "shy",
+    label: { ko: "연애운", en: "Love fortune" },
+  },
+  {
+    key: "work_money",
+    expression: "unimpressed",
+    label: { ko: "직장 · 금전운", en: "Work & money" },
+  },
+  {
+    key: "core",
+    expression: "smirk",
+    label: { ko: "내 성격", en: "Personality" },
+  },
+  {
+    key: "luck_flow",
+    expression: "surprised",
+    label: { ko: "대운 흐름", en: "Luck-cycle reading" },
+  },
+];
+
+// Self-description is supporting result content, not an entry hook.
+// Concrete future-event questions require their own reviewed reading rules.
+export const entryTopics = readingTopics.filter((topic) => topic.key !== "core");
+
+export const experienceExpressions = {
+  welcome: "smirk",
+  birth: "smile",
+  time: "surprised",
+  error: "cry",
+  waiting: ["sleepy", "surprised", "smile"],
+} as const;

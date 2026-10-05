@@ -4,6 +4,7 @@ import type { Locale } from "../../../shared/copy";
 type PeriodFlowCardsProps = {
   locale: Locale;
   flows: PeriodFlows;
+  showMonthWindow?: boolean;
 };
 
 const flowCopy: Record<
@@ -36,10 +37,12 @@ function PeriodFlowCard({
   flow,
   locale,
   title,
+  periodLabel,
 }: {
   flow: PeriodFlow;
   locale: Locale;
   title: string;
+  periodLabel?: string;
 }) {
   const copy = flowCopy[locale];
 
@@ -48,7 +51,7 @@ function PeriodFlowCard({
       <div className="periodFlowCardTitle">
         <span className="periodFlowKind">{title}</span>
         <h4>{flow.headline}</h4>
-        <p>{flow.period_label}</p>
+        <p>{periodLabel ?? flow.period_label}</p>
       </div>
 
       <p className="periodFlowSummary">{flow.summary}</p>
@@ -78,15 +81,62 @@ function PeriodFlowCard({
   );
 }
 
-export function PeriodFlowCards({ locale, flows }: PeriodFlowCardsProps) {
+function formatMonthWindow(
+  flow: PeriodFlow,
+  locale: Locale,
+): string | undefined {
+  const formatDate = (value: string) => {
+    const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+    if (!match) return undefined;
+    const [, year, month, day] = match;
+    if (locale === "ko") return `${Number(month)}월 ${Number(day)}일`;
+    return new Intl.DateTimeFormat("en", {
+      month: "short",
+      day: "numeric",
+      timeZone: "UTC",
+    }).format(new Date(Date.UTC(Number(year), Number(month) - 1, Number(day))));
+  };
+  // Preserve dates already localized by the API instead of converting them in the browser's timezone.
+  const start = formatDate(flow.period_start);
+  const end = formatDate(flow.period_end);
+  if (!start || !end) return undefined;
+  return locale === "ko"
+    ? `적용 기간: ${start}부터 ${end}까지`
+    : `Applies from ${start} to ${end}`;
+}
+
+export function PeriodFlowCards({
+  locale,
+  flows,
+  showMonthWindow = false,
+}: PeriodFlowCardsProps) {
   const copy = flowCopy[locale];
 
   return (
     <section className="periodFlowBlock" aria-labelledby="period-flow-title">
-      <h3 id="period-flow-title">{copy.title}</h3>
+      <h3 id="period-flow-title">
+        {showMonthWindow
+          ? locale === "ko"
+            ? "오늘과 요즘의 흐름"
+            : "Today and the current flow"
+          : copy.title}
+      </h3>
       <div className="periodFlowGrid">
         <PeriodFlowCard flow={flows.today} locale={locale} title={copy.today} />
-        <PeriodFlowCard flow={flows.month} locale={locale} title={copy.month} />
+        <PeriodFlowCard
+          flow={flows.month}
+          locale={locale}
+          title={
+            showMonthWindow
+              ? locale === "ko"
+                ? "지금의 월간 흐름"
+                : "Current monthly flow"
+              : copy.month
+          }
+          periodLabel={
+            showMonthWindow ? formatMonthWindow(flows.month, locale) : undefined
+          }
+        />
       </div>
     </section>
   );

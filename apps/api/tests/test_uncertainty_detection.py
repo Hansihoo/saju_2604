@@ -116,7 +116,7 @@ class UncertaintyDetectionTests(unittest.TestCase):
             {"start": "1994-10-13 00:00:00", "end": "1994-10-13 23:59:59"},
         )
         self.assertTrue(
-            any("internal placeholder" in item for item in response.result.limitations)
+            any("출생시간이 없어" in item and "날짜 경계" in item for item in response.result.limitations)
         )
         self.assertFalse(response.result.hour_pillar_enabled)
         self.assertFalse(response.manse.luck_cycles_enabled)

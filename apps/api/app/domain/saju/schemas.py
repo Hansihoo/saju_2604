@@ -10,6 +10,7 @@ from app.domain.saju.interpretation import (
     FreePreviewReport,
     InterpretationReport,
     LLMProvider,
+    ReadingBasisExplanation,
     SajuDetailPreparedReport,
     SajuDetailRenderedReport,
     SajuDetailType,
@@ -352,6 +353,7 @@ class PeriodFlow(BaseModel):
     basis: str
     notes: List[str]
     current_luck_cycle: Optional[PeriodFlowCycle] = None
+    basis_explanation: Optional[ReadingBasisExplanation] = None
 
 
 class PeriodFlows(BaseModel):

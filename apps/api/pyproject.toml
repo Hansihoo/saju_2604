@@ -28,5 +28,6 @@ include = ["app*"]
   "data/lunar_reference/*.jsonl",
   "data/lunar_reference/*.json",
   "data/solar_terms_reference/*.jsonl",
-  "data/solar_terms_reference/*.json"
+  "data/solar_terms_reference/*.json",
+  "data/reading_knowledge/*.json"
 ]

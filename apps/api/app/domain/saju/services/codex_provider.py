@@ -66,6 +66,8 @@ def _codex_command(output_path: Path) -> list[str]:
     ]
     if settings.codex_model:
         command.extend(["--model", settings.codex_model])
+    if settings.codex_reasoning_effort:
+        command.extend(["-c", f'model_reasoning_effort="{settings.codex_reasoning_effort}"'])
     if settings.codex_profile:
         command.extend(["--profile", settings.codex_profile])
     command.append("-")
