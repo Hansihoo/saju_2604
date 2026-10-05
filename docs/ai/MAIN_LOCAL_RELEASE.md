@@ -28,7 +28,13 @@ model-switch hold; it does not change the production OpenAI API default.
 | Project CLI catalog, no model generation | GPT-6.1 Sol and xhigh available; CLI 0.160.0 |
 | Local runtime health | Web 5173 and API 8000 running; provider endpoint confirms codex |
 | Requested live Codex saju generation | HTTP 200; actual provider/model codex/gpt-6.1-sol; one successful attempt; response schema passed; 277.141s |
-| Remote main | New local main created; commit/push pending |
+| Remote main | Local main committed at 53f736e; push blocked by GitHub HTTP 403 for theo-s-han |
+
+Remote publication is incomplete. GitHub rejected the authenticated push to
+`Hansihoo/saju_2604`; no force push, credential change or alternate publication
+was attempted. The user has been asked to prepare a login with repository write
+access or grant the current account write access. The local code and running app
+remain available while that external prerequisite is unresolved.
 
 The HTTP failure remains `known_issue.valid_lunar_day30`: the valid lunar date
 1990-02-30 is rejected by Gregorian-shaped request validation. It predates this
