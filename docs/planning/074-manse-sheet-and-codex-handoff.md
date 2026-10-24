@@ -25,4 +25,10 @@
 - fallback 사용자 시나리오는456 PASS/3 WARN/기존 `known_issue.valid_lunar_day30` 1 FAIL이다. 실패를 이번 시트의 문제나 전체 성공으로 바꾸지 않는다. 기존 공개 응답 내부점수 노출/전체 풀이 내용 FAIL·미지원 종합/시기·상용 키누락도 이번 표시로 해결되지 않는다.
 - 기존 비활성 서비스 metadata/로그를 registered evidence에 보존하고 fallback 검증 후 `pnpm dev:codex`로 전환했다. Codex 로그인/CLI준비 정상, gpt-6.1-sol/xhigh 설정, API8000/Web5173 정상이다. actual provider endpoint는 codex/fallback_only=false다. 실제 모델 추론은 사용자가 새 입력에서 테스트하며 이번 회귀 검증의 모델호출은0이다.
 
-검증자료와 격리 빌드/브라우저 캡처는 등록된 `.dev-runtime/manse-ready-20261024-01a16679`에, 가상 결과4개는 개별 등록된 `.dev-runtime/local-results` 파일에 보존한다. API suite가 반환한 자체 임시 보고서는 완료 뒤 자동 제거되어 missing으로 장부에 기록했다. 실행중 테스트 환경과 결과는 정리 요청 전까지 유지한다. 원격 반영은 검증 완료 코드를 커밋한 뒤 진행한다.
+검증자료와 격리 빌드/브라우저 캡처는 등록된 `.dev-runtime/manse-ready-20261024-01a16679`에, 가상 결과4개는 개별 등록된 `.dev-runtime/local-results` 파일에 보존한다. API suite가 반환한 자체 임시 보고서는 완료 뒤 자동 제거되어 missing으로 장부에 기록했다. 실행중 테스트 환경과 결과는 정리 요청 전까지 유지한다.
+
+## 원격 반영과 사용자 테스트
+
+누적156파일을 `[UI] 사주 풀이와 만세력 조회·Codex 실행 반영` 커밋 `d74666d4fcd5d695cb8ff824c098fdebae1c2c3c`로 `origin/main`에 푸시했다. 원격 refs/heads/main과 로컬HEAD가 같은 해시임을 확인했다. 인증/로컬 env/실제 결과 스냅샷/임시 산출물은 커밋하지 않았다. 이것은 저장소 동기화이며 상용 API 키 복구나 배포의 실제 생성 검증이 아니다.
+
+사용자는 `http://127.0.0.1:5173`에서 출생정보를 입력해 새 풀이를 실행한다. 원국이 달라질 수 있는 입력은 기존 보류를 유지한다. 풀이 뒤 **만세력 보기**를 누르면 같은 응답의 계산값이 시트에 표시된다. 로그인·현재 provider와 서비스 health는 정상이나 실제 Codex 모델 가용성/생성 결과는 새 입력의 응답으로 판단해야 한다. 저장된 가상4결과는 fallback/deterministic 고정본이므로 Codex 새 생성 결과로 취급하지 않는다.
