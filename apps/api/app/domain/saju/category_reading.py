@@ -17,6 +17,7 @@ from app.domain.saju.services.build_chart_characteristics import build_chart_cha
 from app.domain.saju.reading_publication import publish_chapter, PUBLICATION_VERSION
 from app.domain.saju.distinctive_reading import build_distinctive_reading
 from app.domain.saju.natal_structure import build_natal_structure, catalog as natal_catalog
+from app.domain.saju.reading_detail import build_reading_details, VERSIONS as DETAIL_VERSIONS
 
 
 CATEGORIES = (
@@ -97,6 +98,7 @@ def create_category_reading(*, payload, trace_id: str, service_name: str, calcul
     characteristics = build_chart_characteristics(base=base, locale=payload.locale)
     distinctive = build_distinctive_reading(base=base, locale=payload.locale)
     natal = build_natal_structure(base=base, locale=payload.locale)
+    reading_details = build_reading_details(natal=natal, distinctive=distinctive, information=information, locale=payload.locale)
     # Factual calculation questions remain available through /saju/basic.
     # The initial reading offers deeper questions only for eligible themes.
     basic.question_flow.questions = [q for q in basic.question_flow.questions if q.id.startswith("features.")]
@@ -158,8 +160,9 @@ def create_category_reading(*, payload, trace_id: str, service_name: str, calcul
                 " · ".join(comparison.chart[k] for k in ("year", "month", "day", "time"))
                 for comparison in characteristics.comparisons)
         section.publication = publish_chapter(section=section, report=report, locale=payload.locale,
-                                              calculation_memo=comparison_memo, distinctive=distinctive, natal=natal)
-        if model_publication or (category == "core" and natal.status in {"available", "conditional"}):
+                                              calculation_memo=comparison_memo, distinctive=distinctive, natal=natal,
+                                              details=reading_details)
+        if model_publication or any(b.category == category for b in reading_details) or (category == "core" and natal.status in {"available", "conditional"}):
             # The compatibility body must agree with the actual published main.
             section.body = "\n\n".join(("### " + b.title + "\n\n" if b.title else "") + b.text
                                         for b in section.publication.blocks)
@@ -167,7 +170,7 @@ def create_category_reading(*, payload, trace_id: str, service_name: str, calcul
         sections.append(section)
     return SajuCategoryResponse(**model_to_dict(basic), category_reading=CategoryReading(
         sections=sections, reading_information=information, characteristics=characteristics, distinctive_reading=distinctive,
-        natal_structure=natal,
+        natal_structure=natal, reading_details=reading_details,
         provider=report.provider if report else "deterministic", source_context={
             **_writing_context(report),
             "interpretation_rules_changed": False, "critical_hold": critical,
@@ -185,6 +188,8 @@ def create_category_reading(*, payload, trace_id: str, service_name: str, calcul
             "characteristics_status": characteristics.status,
             "characteristics_rules_changed": True,
             "publication_version": PUBLICATION_VERSION,
+            "reading_detail_versions": DETAIL_VERSIONS,
+            "reading_detail_scope": "supplied_meanings_not_fortune_verdict",
             "publication_is_not_new_judgment": True,
             "natal_structure_rules_changed": True,
             "natal_structure_scope": natal.scope,

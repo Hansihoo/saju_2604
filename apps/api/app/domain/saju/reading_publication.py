@@ -9,7 +9,7 @@ from app.domain.saju.question_schemas import PublishedChapter, PublishedReadingB
 from app.domain.saju.reading_information import load_information_catalog
 
 
-PUBLICATION_VERSION = "reading-publication-2026-10-23.1"
+PUBLICATION_VERSION = "reading-publication-2026-10-24.2"
 PLAIN_TERMS = {
     "일간": "사주를 읽는 기준 글자", "십성": "글자 사이의 관계", "지장간": "안쪽에 든 글자",
     "재성": "돈과 보상의 표시", "관성": "책임과 평가의 표시", "인성": "배움과 도움의 표시",
@@ -99,8 +99,18 @@ def model_main_parts(body, locale):
     return main, memo
 
 
-def publish_chapter(*, section, report, locale, calculation_memo="", distinctive=None, natal=None):
+def publish_chapter(*, section, report, locale, calculation_memo="", distinctive=None, natal=None, details=None):
     ko = locale == "ko"
+    from app.domain.saju.reading_detail import detail_memo
+    chapter_details = [b for b in details or [] if b.category == section.id]
+    extra_blocks = []
+    for index, b in enumerate(chapter_details):
+        prefix = (("선택한 명식을 기준으로 보면, " if ko else "Under the selected chart, ")
+                  if index == 0 and b.provisional and section.id in {"wealth", "career"} else "")
+        extra_blocks.append(PublishedReadingBlock(id=b.id, title=b.title,
+            kind="structural_reading" if section.id == "core" else "traditional_theme" if section.id == "love" else "calculation_summary",
+            text=prefix + b.text))
+    extra_memo = detail_memo(chapter_details)
     opening = []
     if section.id == "core" and natal is not None and natal.status in {"available", "conditional"}:
         # The existing selected conclusion owns the metaphor and its evidence.
@@ -117,7 +127,7 @@ def publish_chapter(*, section, report, locale, calculation_memo="", distinctive
             and section.status != "blocked_calculation"):
         # Only this validated, server-selected expression contract can replace
         # deterministic prose. Legacy arbitrary provider text keeps its guards.
-        main, extra_memo = model_main_parts(section.body, locale)
+        main, model_memo = model_main_parts(section.body, locale)
         blocks = opening + [PublishedReadingBlock(id=f"model.{index}",
             kind="structural_reading" if section.id == "core" else
                  "calculation_summary" if section.id == "wealth" else "interpretation", text=part)
@@ -129,7 +139,7 @@ def publish_chapter(*, section, report, locale, calculation_memo="", distinctive
             scope="natal_structure" if section.id == "core" else
                   "calculation_information" if section.id == "wealth" else "supported_reading_excerpt",
             blocks=blocks,
-            memo_body="\n\n".join(p for p in [section.memo_body, *applied_memos, calculation_memo, *extra_memo] if p),
+            memo_body="\n\n".join(p for p in [section.memo_body, *applied_memos, calculation_memo, extra_memo, *model_memo] if p),
             notice=("돈과 관련된 구조의 뜻을 읽은 내용이야. 수입·축적·손실의 길흉 판정은 포함하지 않았어." if ko else
                     "This explains money-related chart meanings, without an earning, saving or loss verdict.") if section.id == "wealth" else "")
     if section.id == "core" and natal is not None and natal.status in {"available", "conditional"}:
@@ -152,8 +162,8 @@ def publish_chapter(*, section, report, locale, calculation_memo="", distinctive
                         kind="traditional_theme", text=context))
         return PublishedChapter(version=PUBLICATION_VERSION,
             scope="conditional_natal_structure" if natal.status == "conditional" else "natal_structure",
-            blocks=blocks,
-            memo_body="\n\n".join(memo), notice=natal.assumption)
+            blocks=blocks + extra_blocks,
+            memo_body="\n\n".join(memo + [extra_memo] if extra_memo else memo), notice=natal.assumption)
     # The legacy memo already appends information-only memos. Reconstruct that
     # tail once with its complete fact/definition text instead of repeating it.
     information_tail = "\n\n".join(f"### {item.title}\n{item.memo_body}" for item in section.information)
@@ -182,7 +192,7 @@ def publish_chapter(*, section, report, locale, calculation_memo="", distinctive
         # The active core rule catalog still supplies element/personality themes.
         # Preserve the legacy response, but do not publish rejected themes as
         # natal fortune, including inside a supposedly technical memo.
-        if section.id != "core":
+        if section.id != "core" and not (section.id == "wealth" and chapter_details):
             body = section.body
             # The money body is already factual, not a wealth verdict.
             body = re.sub(r"(?m)^#{1,6}\s+(쉽게 풀어보면|조언|Plain reading|Advice)\s*\n?", "", body)
@@ -235,6 +245,9 @@ def publish_chapter(*, section, report, locale, calculation_memo="", distinctive
                     title=(("지금 지나가는 구간" if item.id == "cycle.current" else "다음 구간") if ko else
                            ("Current period" if item.id == "cycle.current" else "Next period")) if item.id != "cycle.comparison" else item.title,
                     text=plain_wording(item.body, locale)))
+    blocks.extend(extra_blocks)
+    if extra_memo:
+        memo.append(extra_memo)
     if not blocks:
         message = ("계산 기준이 달라지는 부분이 있어 이 분야의 종합 풀이는 보류했어." if ko else
                    "This chapter's interpretation is withheld because the calculation is uncertain.") if section.status == "blocked_calculation" else (

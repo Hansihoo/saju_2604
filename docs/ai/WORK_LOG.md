@@ -2,6 +2,7 @@
 
 | 업무 명 | 설명 | 진행상황 | 특이사항 |
 | --- | --- | --- | --- |
+| 구체적인 상세 풀이 보강 | 표시 누락·생성 보류·종합 판단 공백을 함께 설명하고 관계·위치·공통점/차이를 연결 | Needs review | 076: 같은 경계 본문899→2667/상세10개, 정상writer/promptv21 공급. API585/type/build/web22/별도Chromium12+실제답3 PASS; fallback456/3WARN/기존음력30일FAIL1. 독립r1 codePASS/contentFAIL: 문구·메뉴·실제3답met, 전체partial/금전·직업·기간 결론 부족. critical/원본 사실/모델0 유지, Codex API 재적용·새 결과 준비; 원본 실패·검토·환경 보존. |
 | 다섯 분야 표시 누락 수정 | 날짜 경계 입력에서 특징·연애만 보이던 숨김 조건 제거 | Done | 075 서버/이전저장응답 UI 모두5분야 표시, 원래본문·메모·계산보류 유지. 관련API34/웹type·build/helper14·실제저장응답12화면PASS. 격리fallback456PASS/3WARN/기존음력30일FAIL1·helper종료, liveCodex API재적용 후5visible·deterministic/not_called확인·생성0. 최초EN검사예상문구오류/r0보존. 이전074검증누락인정; 실제금전/직업종합풀이복구·내용승인아님. |
 | 만세력 시트 반영·원격 동기화·Codex 테스트 | 선택한 하단 시트 구현과 누적 변경 원격 반영, 로컬 테스트 환경 준비 | Done | 누적156파일 d74666d origin/main push·원격hash일치. 실제API계산값/정상·미상·경계/KO·EN/390·320·1280의12화면PASS·초점/스크롤복원·POST0. API580/웹22/type/build PASS, fallback456PASS/3WARN/기존음력30일FAIL1. Codex Sol6.1/xhigh API8000/Web5173 정상·사용자새입력준비, 실제생성/내용승인0. IAB 신뢰오류는별도Chromium검증과구별; 환경/가상결과 보존. |
 | 만세력 버튼 UX/UI 시안 | 결과의 만세력 보기 버튼과 하단 시트·본문 펼침·전용 화면 비교 | Done | 하단 시트 추천. 가상 명식의 원국/오행 전환·십성/지장간 접기·열기/닫기,736/390/320폭9조합PASS. 다크/시각검토·실제Malgun Gothic/Batang 확인. 초기 검사도구의 닫힌details 오판/렌더overwrite/CDP 범위 보정 후 재확인. 사용자 선택/제품 반영 미진행; 계산/모델/제품 소스 변경 없음. |

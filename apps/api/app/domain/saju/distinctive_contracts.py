@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 class DistinctiveVersions(BaseModel):
     knowledge: str = "distinctive-knowledge-2026-10-09.1"
     rules: str = "distinctive-rules-2026-10-09.2"
-    copy_version: str = Field(default="distinctive-copy-2026-10-10.2", alias="copy")
+    copy_version: str = Field(default="distinctive-copy-2026-10-24.1", alias="copy")
     format: str = "distinctive-reading-v1"
 
 

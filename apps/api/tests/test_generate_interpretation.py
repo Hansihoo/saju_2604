@@ -479,7 +479,7 @@ class GenerateInterpretationTests(unittest.TestCase):
     def test_prompt_spec_keeps_version_and_payload_rules_together(self) -> None:
         prompt_spec = get_interpretation_report_prompt()
 
-        self.assertEqual(prompt_spec.version, "saju-report-v20")
+        self.assertEqual(prompt_spec.version, "saju-report-v21")
         self.assertIn("Use only the provided facts and signals.", prompt_spec.narrative_rules)
         self.assertIn("무조건", prompt_spec.validation_banned_phrases)
         self.assertIn("일간", prompt_spec.core_analysis_technical_terms)

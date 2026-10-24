@@ -91,8 +91,8 @@ class InterpretationPromptSpec:
 
 
 INTERPRETATION_REPORT_PROMPT = InterpretationPromptSpec(
-    # v20 aligns exact titles/fact IDs and supplies selected initial-publication judgments.
-    version="saju-report-v20",
+    # v21 asks for concrete connections using the supplied detailed explanations.
+    version="saju-report-v21",
     developer_prompt=DEVELOPER_PROMPT,
     repair_prompt=REPAIR_PROMPT,
     narrative_rules=NARRATIVE_RULES,

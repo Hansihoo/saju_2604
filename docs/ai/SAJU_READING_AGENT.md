@@ -1,5 +1,7 @@
 # Saju reading agent contract
 
+2026-10-24 [076 상세 해설](../planning/076-specific-reading-explanations.md): 서버 `reading_details`는 기존 사실과 분류 뜻의 연결을 보강한다. knowledge.1/selection.2/copy.2를 독립 기록하며, 모든 블록의 fact/rule/conditions를 접힌 메모에 남긴다. 검증된 alternate profile만 비교하고 critical 전체 보류와 미상 차단은 유지한다. 정상 writer도 같은 자료를 받고, 검증된 model 본문에는 결정론 문단을 중복 첨부하지 않는다. writer/publication은2026-10-24.2, 표현 prompt는v21이다. 태극귀인 답의 시작·끝 보호라는 전통 뜻을 기존 출처 범위에서 명확히 했으며 distinctive/question copy만 갱신했다. 실제 조력자·완성 보장으로 확대하지 않는다. 개인별 돈·직업·기간 종합 판단은 여전히 별도 미구현이다.
+
 2026-10-24 [075 표시 누락 수정](../planning/075-five-category-visibility-repair.md): 다섯 public chapter는 날짜 경계/미상에서도 모두 표시한다. 보조 주제가 없다는 이유로 분야 자체를 숨기지 않는다. 원래 publication/계산 보류/모델 미호출과 지원 경계는 유지하며, 금전·직업 장에 보류 문구가 보이는 것을 실제 종합 풀이 완성으로 기록하지 않는다.
 
 2026-10-23 한 줄 특징 요청은 제품 JSON `characteristic_one_line.1`을 따른다. 서버가 선택한 `primary_with_support.one_line`을 core publication 첫 블록으로 게시하고 상세 본문과 원본 근거를 유지한다. 짧은 자연 비유는 기존 월 관계 주제의 표현이며 새 능력·성격·성공/종합 길흉 판정이 아니다. 조건부 명식은 문장에도 가정을 명시하고 계산 보류에는 생성하지 않는다. natal copy와 publication만 독립 갱신하며 knowledge/rules/selection/계산/공급자 계약은 유지한다.

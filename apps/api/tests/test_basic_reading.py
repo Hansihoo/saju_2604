@@ -281,7 +281,7 @@ class BasicReadingHttpTests(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(set(section["fact_ids"]) <= known)
         self.assertEqual(reading["versions"]["copy"], "basic-reading-copy-2026-10-08.7")
         self.assertEqual(reading["versions"]["format"], "basic-overview-v2")
-        self.assertEqual(basic["question_flow"]["versions"]["copy"], "question-copy-2026-10-10.5")
+        self.assertEqual(basic["question_flow"]["versions"]["copy"], "question-copy-2026-10-24.1")
         self.assertEqual(basic["pipeline_status"]["llm_formatting"], "skipped")
 
 

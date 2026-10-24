@@ -1,5 +1,7 @@
 # Codex Runbook
 
+2026-10-24 [076 상세 해설](planning/076-specific-reading-explanations.md): 관계·위치·두 날짜 기준의 공통/차이와 현재/다음 주제의 상세 자료를 추가했다. `pnpm dev:codex -ApiOnly`로 기존 Sol6.1/xhigh 설정에 재적용했다. 고정 local-result는 자동 갱신되지 않으며 새 상세 확인본은 `http://127.0.0.1:5173/local-result/07b8100f99c04419806bce688bce834d`다. 이 입력은 critical 때문에 deterministic/not_called이며 실제 모델 생성본으로 부르지 않는다. 정상 Codex 생성은 처음 화면에서 새로 입력한다. 상세899→2667과 화면12+실제답3/API585 PASS는 전체 내용 승인이 아니다. 독립 main은 금전·직업·기간 결론 부족으로 partial/FAIL이며 실제3답은 met이다.
+
 2026-10-24 [074 만세력·Codex 테스트](planning/074-manse-sheet-and-codex-handoff.md): `pnpm dev:codex`로 기존 로그인/gpt-6.1-sol/xhigh를 사용하며 웹은 `http://127.0.0.1:5173`이다. 출생 입력 → 새 풀이 → **만세력 보기**에서 실제 원국/오행/접힌 십성·지장간을 확인한다. 미상 시주는 비우고 날짜 경계의 잠정 상태를 유지한다. 버튼은 기존 결과만 열며 새 모델 호출이 없다. 새 풀이 생성은 사용자가 직접 시작한다. 실행 준비/health와 실제 모델 생성 성공은 구별한다. 저장된 local-result는 원본 공급자/문구가 고정되어 있으므로 Codex 새 생성 테스트에는 처음 화면에서 다시 입력한다.
 
 2026-10-23 [073 Codex 전환 이력](planning/073-api-key-source-recovery.md#2026-10-23-codex-전환-전후-이력-확인): 원대화의10/5 Codex 요청 뒤 로컬 프로필 전환은 확인했다. 다만 API `.env.local`은 기존 파일 부재를 확인한 후 새로 추가한 기록이며 키 파일 덮어쓰기 증거는 없다. 현재 Production은 공식 재조회에서도8/25의8fd02a67이다. 로컬전환과 상용 키누락의 인과관계, 과거 프로세스 환경의 키 전달 여부는 미확정이다. 새 모델/POST/제품/env/배포변경 없음, 복구는 계속Blocked다.

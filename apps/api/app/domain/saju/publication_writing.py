@@ -8,9 +8,10 @@ import re
 from app.domain.saju.natal_structure import build_natal_structure, catalog as natal_catalog
 from app.domain.saju.distinctive_reading import build_distinctive_reading, catalog as theme_catalog
 from app.domain.saju.pydantic_compat import model_to_dict
+from app.domain.saju.reading_detail import build_reading_details, VERSIONS as DETAIL_VERSIONS
 
 
-WRITING_VERSION = "published-reading-writing-2026-10-11.1"
+WRITING_VERSION = "published-reading-writing-2026-10-24.2"
 MIN_MAIN_CHARS = 4412
 SECTION_KEYS = ("core_analysis", "love", "wealth", "career", "luck_flow")
 
@@ -74,6 +75,11 @@ def build_publication_writing(*, base, payload):
             if item.id in {"cycle.current", "cycle.next", "cycle.comparison"}:
                 add("luck_flow", item.body, item.fact_ids, ["supplied_cycle_theme_comparison"])
 
+    details = build_reading_details(natal=natal, distinctive=distinctive, information=payload.reading_information, locale=locale)
+    category_keys = {"core": "core_analysis", "love": "love", "wealth": "wealth", "career": "career", "luck_flow": "luck_flow"}
+    for block in details:
+        add(category_keys[block.category], block.text, block.fact_ids, block.rule_ids)
+
     if any(not chapter["basis"] or not chapter["fact_ids"] for chapter in chapters.values()):
         return None
 
@@ -86,7 +92,7 @@ def build_publication_writing(*, base, payload):
         "event_timing_supported": False,
         "expert_review": "not_completed",
         "chapters": chapters,
-        "facts": natal.facts + distinctive.facts,
+        "facts": natal.facts + distinctive.facts + ([model_to_dict(f) for f in payload.reading_information.facts] if payload.reading_information else []),
         "source_versions": {"natal": model_to_dict(natal.versions),
-                            "distinctive": model_to_dict(distinctive.versions)},
+                            "distinctive": model_to_dict(distinctive.versions), "detail": DETAIL_VERSIONS},
     }

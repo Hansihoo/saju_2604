@@ -10,6 +10,7 @@ from app.domain.saju.reading_information_contracts import ReadingInformation, Re
 from app.domain.saju.chart_characteristics import ChartCharacteristics
 from app.domain.saju.distinctive_contracts import DistinctiveReading
 from app.domain.saju.natal_structure_contracts import NatalStructureReading
+from app.domain.saju.reading_detail import ReadingDetailBlock
 
 
 QuestionId = Literal["chart.pillars", "luck.current_next", "period.this_year", "stars.dohwa", "wealth.locations",
@@ -21,7 +22,7 @@ class QuestionVersions(BaseModel):
     facts: str = "question-facts-2026-10-09.1"
     knowledge: str = "question-knowledge-2026-10-09.1"
     rules: str = "question-rules-2026-10-10.2"
-    copy_version: str = Field(default="question-copy-2026-10-10.5", alias="copy")
+    copy_version: str = Field(default="question-copy-2026-10-24.1", alias="copy")
     format: str = "basic-question-reading-v3"
 
 
@@ -128,7 +129,8 @@ class CategoryReading(BaseModel):
     sections: List[CategoryReadingSection]
     provider: Literal["openai", "codex", "fallback", "deterministic"]
     format: str = "category-reading-v1"
-    copy_version: str = "category-reading-copy-2026-10-24.1"
+    copy_version: str = "category-reading-copy-2026-10-24.2"
+    reading_details: List[ReadingDetailBlock] = Field(default_factory=list)
     reading_information: ReadingInformation = Field(default_factory=ReadingInformation)
     characteristics: Optional[ChartCharacteristics] = None
     distinctive_reading: Optional[DistinctiveReading] = None

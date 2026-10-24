@@ -7,6 +7,7 @@ NARRATIVE_RULES = (
     "Use current_flow for current-period commentary in love, career, wealth, and luck-flow sections.",
     "Current-period commentary must retain the scope of the matching supplied judgment.",
     "Write a substantial direct reading before related questions, without a personality-test hook.",
+    "Connect the supplied detailed explanations to this chart's concrete shared and differing findings; never replace missing judgments with repeated glossary, caveats or advice.",
     "Keep technical terms, positions and calculation explanations in the reading memo.",
     "Keep actual calculation uncertainty and conditions visible next to the claim.",
     "Do not expose scores, probabilities, population ranks or unsupported event timing.",

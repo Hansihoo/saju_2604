@@ -125,6 +125,12 @@ class InitialWriterIntegrationTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(ctx["whole_chart_synthesis_supported"])
         self.assertTrue(all(chapter["basis"] and chapter["fact_ids"] for chapter in ctx["chapters"].values()))
         self.assertEqual(ctx["chapters"]["wealth"]["scope"], "calculated_money_symbols_and_meaning_no_wealth_verdict")
+        self.assertIn("detail", ctx["source_versions"])
+        self.assertTrue(any("wealth_meaning_locations" in b["rule_ids"]
+                            for b in ctx["chapters"]["wealth"]["basis"]))
+        supplied_ids = {f["id"] for f in ctx["facts"]}
+        supplied_ids.update(f.id for section in payload.reading_plan.sections.values() for f in section.facts)
+        self.assertTrue(all(set(ch["fact_ids"]) <= supplied_ids for ch in ctx["chapters"].values()))
         self.assertIsNone(response.json()["result"]["interpretation"].get("publication_writing_version"))
 
     async def test_critical_request_still_never_calls_a_writer(self):
