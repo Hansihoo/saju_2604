@@ -479,10 +479,18 @@ class GenerateInterpretationTests(unittest.TestCase):
     def test_prompt_spec_keeps_version_and_payload_rules_together(self) -> None:
         prompt_spec = get_interpretation_report_prompt()
 
-        self.assertEqual(prompt_spec.version, "saju-report-v16")
+        self.assertEqual(prompt_spec.version, "saju-report-v20")
         self.assertIn("Use only the provided facts and signals.", prompt_spec.narrative_rules)
         self.assertIn("무조건", prompt_spec.validation_banned_phrases)
         self.assertIn("일간", prompt_spec.core_analysis_technical_terms)
+
+    def test_candid_voice_preserves_conditional_and_critical_boundaries(self) -> None:
+        prompt = get_interpretation_report_prompt().developer_prompt
+        self.assertIn("일만 늘고 대우는 그대로라면, 이 부분은 불리해", prompt)
+        self.assertIn("a possible burden is not a finding", prompt)
+        self.assertIn("no whole-chart verdict rule is supplied", prompt)
+        self.assertIn("Keep critical holds", prompt)
+        self.assertIn("not proof of actual relationship failure", prompt)
 
     def test_validator_blocks_numeric_relative_wording(self) -> None:
         payload = make_payload()

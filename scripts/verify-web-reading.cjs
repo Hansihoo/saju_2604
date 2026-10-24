@@ -21,7 +21,8 @@ const { isValidBirthDate } = loadHelper("features/service/experience/validateBir
 const { getApiErrorMessage } = loadHelper("shared/api/errorMessage.ts");
 const { getPrimaryReadingNotice, getReadingNotices, getShareLimitation } = loadHelper("features/service/experience/readingNotices.ts");
 const { getReadingBasis } = loadHelper("features/service/experience/readingBasis.ts");
-const { entryTopics } = loadHelper("features/service/experience/experienceCopy.ts");
+const { includedReadingTopics, entryPresentationVersion, experienceCopy } = loadHelper("features/service/experience/experienceCopy.ts");
+const { matchesQuestionResponse, questionShareContent } = loadHelper("features/service/experience/questionModel.ts");
 const contentKnowledge = JSON.parse(fs.readFileSync(path.resolve(__dirname, "../docs/ai/PRODUCT_CONTENT_KNOWLEDGE.json"), "utf8"));
 function entryPolicyViolations(topics) {
   const guard = contentKnowledge.entry_guard;
@@ -43,9 +44,36 @@ function check(name, verify) {
   console.log(`PASS ${name}`);
 }
 
+check("question responses cannot cross question or version boundaries", () => {
+  const versions = { facts: "facts-v1", rules: "rules-v1", copy: "copy-v1", format: "question-v1" };
+  const answer = { question_id: "stars.dohwa", response_mode: "question", versions };
+  assert.equal(matchesQuestionResponse(answer, "stars.dohwa", versions), true);
+  assert.equal(matchesQuestionResponse(answer, "wealth.locations", versions), false);
+  for (const key of Object.keys(versions)) {
+    assert.equal(matchesQuestionResponse({ ...answer, versions: { ...versions, [key]: "stale" } }, "stars.dohwa", versions), false);
+  }
+});
+check("question sharing preserves the chosen answer and all supplied limits", () => {
+  const answer = { question: "내 사주에 도화가 있어?", answer: "도화 판정 0곳이야.", notices: ["방법에 따른 판정이야.", "실제 만남 확률은 아니야."] };
+  for (const locale of ["ko", "en"]) {
+    const shared = questionShareContent(answer, locale);
+    assert.equal(shared.title, answer.question);
+    assert.equal(shared.takeaway, answer.answer);
+    for (const notice of answer.notices) assert.ok(shared.limitation.includes(notice));
+    assert.equal(questionShareContent({ ...answer, notices: [] }, locale).limitation, undefined);
+  }
+});
+
 check("entry respects the recorded future-interest editorial policy", () => {
   assert.equal(contentKnowledge.schema_version, "product-content-knowledge-v1");
-  assert.deepEqual(entryPolicyViolations(entryTopics), []);
+  assert.deepEqual(entryPolicyViolations(includedReadingTopics), []);
+  const presentation = contentKnowledge.entry_presentation;
+  assert.equal(entryPresentationVersion, presentation.version);
+  assert.equal(presentation.mode, "single_action");
+  assert.equal(presentation.topics_usage, "informational_below_action");
+  assert.deepEqual(includedReadingTopics.map((topic) => topic.key), presentation.included_topic_ids);
+  for (const locale of ["ko", "en"])
+    assert.equal(experienceCopy[locale].submit, presentation.primary_action[locale]);
 });
 check("reintroduced personality topics and rejected KO/EN hooks fail the entry guard", () => {
   assert.ok(entryPolicyViolations([{ key: "core", label: { ko: "내 사주", en: "My chart" } }]).length);

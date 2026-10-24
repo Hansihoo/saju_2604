@@ -3,6 +3,9 @@
   "private": true,
   "packageManager": "pnpm@9.0.0",
   "scripts": {
+    "dev:openai": "powershell -File ./scripts/start-dev-openai.ps1",
+    "check:llm:openai": "powershell -File ./scripts/start-dev-openai.ps1 -CheckOnly",
+    "check:llm:codex": "powershell -File ./scripts/start-dev-codex.ps1 -CheckOnly",
     "dev:codex": "powershell -ExecutionPolicy Bypass -File ./scripts/start-dev-codex.ps1",
     "dev": "powershell -ExecutionPolicy Bypass -File ./scripts/dev.ps1",
     "dev:bg:start": "powershell -ExecutionPolicy Bypass -File ./scripts/start-dev-background.ps1",
@@ -19,6 +22,7 @@
     "test:accuracy": "powershell -ExecutionPolicy Bypass -File ./scripts/accuracy-safety-check.ps1",
     "verify:user-story": "powershell -File ./scripts/verify-user-story.ps1",
     "verify:codex-agents": "powershell -File ./scripts/verify-codex-agents.ps1",
+    "verify:question-flow": "powershell -File ./scripts/verify-question-flow.ps1",
     "ensure:skyfield": "powershell -ExecutionPolicy Bypass -File ./scripts/ensure-skyfield-ephemeris.ps1",
     "verify:kasi": "powershell -ExecutionPolicy Bypass -File ./scripts/kasi-live-spot-check.ps1"
   },

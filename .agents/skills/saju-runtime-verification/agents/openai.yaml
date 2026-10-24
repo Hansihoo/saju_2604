@@ -1,0 +1,6 @@
+interface:
+  display_name: "사주 런타임 검증"
+  short_description: "실제 풀이의 이해도·궁금증 충족·추가 질문과 선택 답을 독립 검토"
+  default_prompt: "$saju-runtime-verification 스킬로 실제 사주 본문과 추가 질문·선택 답까지 런타임 검증해줘."
+policy:
+  allow_implicit_invocation: true

@@ -94,6 +94,7 @@ class InterpretationDiagnostics(BaseModel):
 
 class InterpretationReport(InterpretationLLMOutput):
     reading_sections: Dict[str, ReadingStructure] = Field(default_factory=dict)
+    publication_writing_version: Optional[str] = None
     schema_version: Literal["m2-llm-v5"] = "m2-llm-v5"
     provider: LLMProvider
     model: Optional[str] = None

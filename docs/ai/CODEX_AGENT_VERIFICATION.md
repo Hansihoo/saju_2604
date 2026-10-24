@@ -1,5 +1,29 @@
 # Independent Codex verification jobs
 
+2026-10-10 [063](../planning/063-reading-conclusions-and-followup-coverage.md): runtime-capture.3과 runtime prompts.5/question prompts2026-10-10.1은 실제 서버 `followups`와 질문 v3 reading/memo 역할을 투영한다. 독자에게는 기본 본문만, 근거 역할에는 접힌 기술 자료와 원본을 공급한다. 답한 의미를 UI/캡처에서 임의로 재선택하지 않는다. 실제 적용 conclusion selection과 question meaning coverage 정책도 동결한다. 새 버전/hash의 job으로 독립 재검토하며 과거062 검토를 최신 결과로 재평가하지 않는다.
+
+063의 r0은 rubric.1 원본 job으로 완료·보존했다. 후속 rubric.2는060 C05와 일치하도록 실제 확인된 이름의 개인 질문을 허용하며 본문 신살 소개를 강제하지 않는다. 존재·조건은 근거 역할, 화면의 의미 연결과 새 정보 기대는 독자 역할이 평가한다. 8개 기준/FAIL·HOLD/계약v1은 유지한다. r1은 수정된 실제 캡처와 새 rubric/hash의 독립 역할로 검토하며 r0 판정과 수정 의도를 공급하지 않는다.
+
+2026-10-10 [062](../planning/062-five-chart-runtime-reinforcement.md): capture.2는 birth-only `--inputs`를 허용하고 prompt.4는 지정한 자기 역할 job 하나의 최초 자료 로딩만 허용한다. 큰 자료는 main+모든 연결 답의 cohort로 나누며 원본 hash/case를 보존한다. evidence job은 비공개 이전 템플릿만 제외하고 모든 facts/실제 적용 규칙을 유지하며 `projection_scope`를 기록한다. rubric.1과 계약v1은 그대로다. 도구 접근을 기술적으로 차단하지 않아 `input_blind_only`로 보고한다.
+
+2026-10-10 [061](../planning/061-runtime-content-verification-skill.md): 새 프로젝트 [런타임 검증 스킬](../../.agents/skills/saju-runtime-verification/SKILL.md)은 기존 역할 job과 별도의 `runtime-reading-review-v1`을 사용한다. 단일 [평가 기준](../../apps/api/app/tools/data/runtime_reading_rubric.json)은 쉬운 문구/궁금증 충족/후속 흥미/실제 답까지 필수 검토한다. `capture_runtime_reading`만 API를 호출하고 `runtime_reading_reviews`는 frozen 계약·JSON·표준 라이브러리만 사용한다. reader/evidence는 독립 실행하며 누락/fixture HOLD, 실제 인용·모든 사례/기준·새 job/hash·메뉴 선택을 강제한다. 기존 역할 및 과거 FAIL/PASS/보류는 보존한다. 실행 방법은 스킬의 workflow를 따른다.
+
+2026-10-09 [055](../planning/055-supported-distinctive-themes-and-questions.md): 새 `traditional_theme` 실제 visible block만 제한된 규칙 적용으로 표시한다. 원본 distinctive facts/eligible matches/독립 카탈로그/대안 파생 source와 scope를 job policy에 공급한다. 이것이 전체 원국 종합이나 전문가 승인이라는 뜻은 아니다. 질문 답변의 `sections`는 실제 UI에서 접힌 메모이므로 검토에서도 memo_sections로 분리하고, primary 가정/보조 주제 한계는 밖에 남긴다. 기본 본문4+실제 개인 질문3을 새 snapshot/hash로 검토하며 코드 통과와 효용/실사용 흥미를 분리한다. 감독관이 발견한 대안 자료의 이전 십성/오행 복사 문제는 해당 주제 결과와 별도로 사실 무결성 실패로 보존한다.
+
+2026-10-09 [053](../planning/053-published-reading-and-folded-memos.md): verify_category_reading은 publication의 실제 blocks/notice를 주 본문으로 동결하고 memo_body만 접힌 자료로 투영한다. 숨은 legacy characteristics가 interpretation_rules_applied/vocabulary_only를 뒤집지 않으며 실제 visible block 종류를 따른다. 원본 source/policy와 역할 독립/hash/효용 기준은 유지한다. 과거 스냅샷의 검토를 최신 효용 승인으로 재사용하지 않는다. 아래051 설명은 당시 표시의 기록이다.
+
+051의 공통 특징은 새 `characteristics` 응답을 실제 UI 순서로 투영한다. 질문자에게 본문 장점/부담/비중과 실제 밖에 보이는 가정을 공급하며, 메모와 후보별 파생 결과는 답변자/감독관에게 원본 facts/정책과 함께 공급한다. 같은 critical 사례 안에서도 기존 full-report의 보류와 새 특징 범위의 조건부 해석을 구별한다. 단순 배지/분량 증가를 효용 PASS로 보지 않고 기존 QF-004 기준을 유지한다. 새 규칙이 적용되면 vocabulary-only를 사실과 맞게 표시하되, 효용 판정은 각 역할이 별도로 한다. 새 snapshot/job/hash로 검토하며 과거 FAIL을 보존한다.
+
+검토 투영에는 카탈로그만 넣지 않는다. 실제 그룹 조건·비중·선정 함수 원문과 지장간 원본/한자·월지 본기표, 원본/정규화 십성 100쌍을 동결한다. 후보별 원본 facts와 독립 파생을 재현하는 데 필요한 자료다. r4의 원본표/선정 정의 부족 HOLD는 보존하고 r5에서 다시 검토한다. 이 구현 참조는 전문가 승인 규칙이라는 뜻이 아니다.
+
+051 최종 r5는 code PASS, 답변자 PASS, 질문자/감독관 및 합계 FAIL이다. 자료 부족으로 인한 사실 검토 HOLD는 해소됐으며 한국어 정상/경계의 새 핵심 특징 효용은 인정됐다. 영문 구조 용어 가독성 HOLD, 미상 입력 개인 결론 부재, 전체 분야와 미래 시기 미충족은 남아 있다. 이전 FAIL을 없애거나 실제 흥미/전문가/예측 정확도 인증으로 보고하지 않는다.
+
+초기 분류 표시048은 `verify_category_reading`으로 실제 fallback 응답4개와 category 전용 notice를 동결한다. 전체 보고서의 선택된 facts/원본 입력뿐 아니라 추가 금전 위치를 만드는 basic_reading의 pillar/hidden_stems/파생 관계 원본도 projection에 포함한다. 원본 누락 때문에 생긴 사실성 HOLD를 실제 사실 오류로 단정하지 않고 새 snapshot/job/hash로 보강한다. r5 세 역할/합계의 효용 FAIL은 유지하며, UI 동작 PASS·사실 대응 PASS가 일반 조언 중심 본문을 승인하지 않는다. 제공 정보만 분리한 content-only/input-blind 검토로, 실제 사용자 흥미나 도구까지 차단한 완전 맹검을 주장하지 않는다.
+
+2026-10-09 최신 효용 검토는 [047](../planning/047-reading-utility-recovery.md)의 prompt/rubric `2026-10-09.1`, review/report v2다. 기본 본문 r4의 과거 PASS는 실제 사용자 효용 거절로 재평가한다. 질문자는 모든 사례의 readability/usefulness/정보 유형/얻은 정보/실제 보이는 인용/이유를 제출한다. 사례 누락·중복·잘못된 인덱스·가짜/메모 인용은 거부한다. `code_status`와 `content_usefulness`를 분리하며 용어·방법뿐인 기본 본문은 역할 모두 PASS여도 효용 FAIL로 합계에 반영한다. 선택한 계산 사실 질문의 직접 답은 별도 평가한다. 기존 agent 경로도 QF-004/제품 정책과 prompt/rubric `2026-10-09.1`을 동기화했다. 구버전 작업을 새 검증에 재사용하지 않는다.
+
+이전 2026-10-08 [046](../planning/046-plain-reading-and-folded-evidence.md)의 prompt/rubric `.5`는 역사다. 질문자는 실제 보이는 쉬운 sections와 외부 한계만 받으며, 답변자·감독관은 접힌 memo_sections와 원본 사실/정책도 대조하는 경계는 유지한다. 시간 미상의 일주 불확실성은 양쪽에서 잠정 범위로 표시해야 한다. 검증한 중복 answer.facts는 case.facts에 한 번만 보내고 전체 원본 snapshot/hash는 보존한다. 큰 job은 헤더와 각 사례의 답/사실을 나누어 읽고, 모든 사례를 확인하지 못하면 HOLD로 남긴다. 기존 실패·보류·PASS를 덮어쓰지 않고 새 job/hash로 검토한다.
+
 검증 작업은 에이전트 하나가 저장된 입력만으로 완료할 수 있는 단위다. 사용자·답변·감독 역할은 서로 호출하지 않는다. 질문과 계산 snapshot을 먼저 고정한 뒤 선택한 역할을 단독 실행하거나 코드 실행기로 조합한다. 현재 제품의 자유 질의 기능을 구현한 것은 아니며 답변 초안은 `contract_trial`이다.
 
 ## Module ownership and dependencies
@@ -126,3 +150,8 @@ pnpm verify:user-story -SkipBuild -SkipTests
 ```
 
 실행 출력은 요청 없이 삭제하지 않는다. 향후 수정자는 `docs/PROJECT_STATUS.md`, `docs/ai/WORK_LOG.md`, 계획 037과 이 문서를 같은 작업에서 갱신한다.
+# 기본 사주 후 질문 흐름의 추가 검증
+
+2026-10-08: 계산 사실 질문의 새 형식은 기존 4역할 AnswerDraft에 끼워 넣지 않는다. [043](../planning/043-basic-question-reading.md)에 `verify_question_flow`의 실제 fallback ASGI snapshot과 `question_flow_reviews`의 독립 질문자/답변자/감독관 저장 job, 별도 prompt/rubric/hash/evaluate 계약을 기록했다. 이 경로는 모델 호출 transport를 갖지 않고 Codex가 각 역할 job을 처리한다. 기존 fixture/live 검증기와 import 경계를 유지한다. 원본 경로와 값이 다른 snapshot은 prepare에서 거부하며 원본 전체 snapshot은 보존한다. 검토용 job에는 해당 질문의 사실 경로와 계산 한계만 투영한다. PASS·HOLD·FAIL 및 실제 사용자 흥미/예측 정확도 한계는 두 경로 모두 유지한다.
+
+같은 날 [044](../planning/044-useful-basic-reading.md)의 기본 본문도 동결 검토 대상에 추가했다. `pnpm verify:question-flow -Output <new-absolute-path> -ReviewScope basic`은 전체 API 검사를 실행하되 새 기본 본문 사례만 semantic job에 담는다. 독립 prompt/rubric는 `.3`이며 선택 전의 개인별 정보/이해도와 미래 시기 충족을 분리한다. 본문 fact_ids/source_path/메모와 supplied critical·unknown 한계를 검토한다. 단순 길이·참조 검사 통과로 유익성 PASS를 자동 부여하지 않는다.

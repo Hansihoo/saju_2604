@@ -1,11 +1,12 @@
 """Structured payload models passed from the engine to the interpretation layer."""
 
-from typing import Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
 from app.domain.saju.localization import OutputLocale
 from app.domain.saju.reading_knowledge import ReadingPlan
+from app.domain.saju.reading_information_contracts import ReadingInformation
 from app.domain.saju.schemas import ElementKey
 
 
@@ -226,3 +227,5 @@ class InterpretationPayload(BaseModel):
     narrative_rules: List[str]
     prompt_seed: Optional[str] = None
     reading_plan: Optional[ReadingPlan] = None
+    reading_information: Optional[ReadingInformation] = None
+    publication_writing: Optional[Dict[str, Any]] = None

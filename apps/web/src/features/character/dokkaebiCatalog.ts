@@ -3,6 +3,7 @@ import type { Locale } from "../../shared/copy";
 export const dokkaebiExpressions = [
   { id: "smile", label: { ko: "방긋", en: "Smile" } },
   { id: "smirk", label: { ko: "능청", en: "Smirk" } },
+  { id: "shrug", label: { ko: "으쓱", en: "Shrug" } },
   { id: "laugh", label: { ko: "폭소", en: "Laugh" } },
   { id: "surprised", label: { ko: "깜짝", en: "Surprised" } },
   { id: "shy", label: { ko: "수줍", en: "Shy" } },

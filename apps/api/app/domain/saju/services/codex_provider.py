@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any, Dict, Sequence
 
 from app.config import settings
+from app.domain.saju.services.structured_output_schema import strict_output_schema
 
 
 @dataclass(frozen=True)
@@ -44,14 +45,15 @@ def _excerpt(text: str, limit: int = 320) -> str:
     return compact[:limit]
 
 
-def _codex_executable_prefix() -> list[str]:
-    if os.name == "nt" and settings.codex_node_command and settings.codex_js_path:
-        if Path(settings.codex_node_command).exists() and Path(settings.codex_js_path).exists():
-            return [settings.codex_node_command, settings.codex_js_path]
-    return [settings.codex_command]
+def _codex_executable_prefix(configuration=None) -> list[str]:
+    configuration = configuration or settings
+    if os.name == "nt" and configuration.codex_node_command and configuration.codex_js_path:
+        if Path(configuration.codex_node_command).exists() and Path(configuration.codex_js_path).exists():
+            return [configuration.codex_node_command, configuration.codex_js_path]
+    return [configuration.codex_command]
 
 
-def _codex_command(output_path: Path) -> list[str]:
+def _codex_command(output_path: Path, schema_path: Path | None = None) -> list[str]:
     command = [
         *_codex_executable_prefix(),
         "exec",
@@ -64,6 +66,8 @@ def _codex_command(output_path: Path) -> list[str]:
         "--output-last-message",
         str(output_path),
     ]
+    if schema_path is not None:
+        command.extend(["--output-schema", str(schema_path)])
     if settings.codex_model:
         command.extend(["--model", settings.codex_model])
     if settings.codex_reasoning_effort:
@@ -108,6 +112,8 @@ def call_codex_json(
     schema_name: str,
     extra_instructions: Sequence[str] = (),
 ) -> CodexProviderResult:
+    if settings.is_production:
+        raise CodexProviderError("codex_local_only", "Codex CLI is a local test provider; use OpenAI API in production.")
     prompt = "\n\n".join(
         [
             developer_prompt.strip(),
@@ -124,10 +130,12 @@ def call_codex_json(
     with tempfile.TemporaryDirectory(prefix="saju-codex-") as temp_dir:
         temp_path = Path(temp_dir)
         output_path = temp_path / f"{schema_name}.output.json"
+        schema_path = temp_path / "output.schema.json"
+        schema_path.write_text(json.dumps(strict_output_schema(output_schema), ensure_ascii=False), encoding="utf-8")
 
         try:
             completed = subprocess.run(
-                _codex_command(output_path),
+                _codex_command(output_path, schema_path),
                 input=prompt,
                 capture_output=True,
                 encoding="utf-8",

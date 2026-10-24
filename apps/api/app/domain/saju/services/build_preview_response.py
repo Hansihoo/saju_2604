@@ -2,7 +2,7 @@
 
 from dataclasses import asdict
 from datetime import datetime
-from typing import List, Literal, Optional, Tuple
+from typing import Callable, List, Literal, Optional, Tuple
 
 from app.config import settings
 from app.diagnostics import log_stage
@@ -50,7 +50,7 @@ from app.domain.saju.time_correction import (
 
 
 SUCCESSFUL_LLM_PROVIDERS = frozenset({"openai", "codex"})
-ReportRenderMode = Literal["all", "free_preview", "interpretation", "none"]
+ReportRenderMode = Literal["all", "free_preview", "interpretation", "initial_reading", "none"]
 PUBLIC_SCORING_FIELDS = (
     "balance_score",
     "charm_score",
@@ -151,6 +151,7 @@ def build_preview_response(
     birth_time_context: Optional[BirthTimeContext] = None,
     report_mode: ReportRenderMode = "all",
     as_of: Optional[datetime] = None,
+    on_progress: Optional[Callable[[str], None]] = None,
 ) -> SajuPreviewResponse:
     """파이프라인 결과들을 모아 최종 preview API 응답으로 조립한다."""
     birth_time_policy = resolve_birth_time_policy(payload)
@@ -404,7 +405,23 @@ def build_preview_response(
     if report_mode == "none":
         return base_response
 
+    # Initial long-form presentation does not broaden interpretation eligibility.
+    # Keep the catalog's critical hold; do not send ambiguous facts to a model.
+    if report_mode == "initial_reading" and any(flag.severity == "critical" for flag in uncertainty_summary):
+        if on_progress is not None:
+            on_progress("writing")
+        return base_response
+
     interpretation_payload = build_interpretation_payload(request=payload, response=base_response, as_of=as_of)
+    if report_mode == "initial_reading":
+        from app.domain.saju.publication_writing import build_publication_writing
+        interpretation_payload.publication_writing = build_publication_writing(
+            base=base_response, payload=interpretation_payload,
+        )
+    # All chart/period facts are ready. Only now can the UI mark calculation done.
+    # This boundary also prevents a disconnected request from starting generation.
+    if on_progress is not None:
+        on_progress("writing")
     free_preview = None
     free_preview_status = "skipped"
     if report_mode in {"all", "free_preview"}:
@@ -416,7 +433,7 @@ def build_preview_response(
 
     interpretation = None
     llm_status = "skipped"
-    if report_mode in {"all", "interpretation"}:
+    if report_mode in {"all", "interpretation", "initial_reading"}:
         interpretation = generate_interpretation_report(
             payload=interpretation_payload,
             trace_id=trace_id,

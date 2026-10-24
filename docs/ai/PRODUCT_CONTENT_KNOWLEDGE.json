@@ -1,6 +1,377 @@
 {
   "schema_version": "product-content-knowledge-v1",
-  "policy_version": "product-interest-2026-10-05.1",
+  "manse_sheet_presentation": {
+    "version": "manse-sheet-2026-10-24.1",
+    "source": "만세력 버튼 시안 중 하단 시트 선택 및 원격 반영·Codex 테스트 요청",
+    "layout": "내 사주팔자 옆의 만세력 보기 버튼 → 하단 시트 → 닫으면 읽던 위치로 복귀",
+    "data": "기존 서버의 원국·십성·지장간·겉글자 오행과 입력/계산 안내를 표시한다.",
+    "guard": "클라이언트 판단/내부 점수/가상 데이터/미상 시주를 추가하지 않는다. 원본 잠정 상태와 계산 보류를 유지한다.",
+    "plan": "docs/planning/074-manse-sheet-and-codex-handoff.md"
+  },
+  "characteristic_one_line": {
+    "version": "characteristic-one-line-2026-10-23.1",
+    "source": "직접 사용자 요청: 내 사주 특징을 알려줄 때 한 줄로 표현 할 수 있게 해줘 당신은 어디서든 꽃을 피어내는 사주를 가졌습니다 처럼",
+    "placement": "core publication의 첫 문장, 상세 풀이 유지",
+    "style": "확인된 중심 주제를 짧고 기억하기 쉬운 비유 한 문장으로 표현한다.",
+    "boundary": "기존 primary_with_support 결론의 월 관계를 요약한다. 성공 보장·성격 유형·희소성·종합 길흉을 새로 판정하지 않는다. 조건부 명식은 문장에 조건을 남기며 계산 보류에는 생성하지 않는다.",
+    "status": "implemented_contract_checks_pass_live_ui_unverified"
+  },
+  "reading_method_review": {
+    "version": "reading-method-review-2026-10-10.2",
+    "status": "six_roles_consolidated_runtime_not_implemented",
+    "source": {
+      "kind": "direct_user_feedback",
+      "date": "2026-10-10",
+      "quotes": [
+        "즉 전문용어 나오는 곳과 풀이하는곳을 분리해.",
+        "2번은 근본적인 원인을 해결하는게 아니야. 이 사주는 하나의 예시의 뿐이야 근본적인 문제를 찾아",
+        "다시 사주풀이방법을 바꿔야겠어.",
+        "고려해야될 내용들을 계속 수집했짢아. 그걸 먼저 나열해서 정리하자",
+        "서로 겹치는 내용이라서 문제가 되는 것 같아. 너가 보고 정리해줘"
+      ]
+    },
+    "requirements_document": "docs/planning/060-reading-method-requirements.md",
+    "canonical_rules": [
+      {
+        "id": "C01",
+        "role": "판단",
+        "document_anchor": "c01-판단",
+        "absorbed_requirements": [
+          "R03",
+          "R05",
+          "R06",
+          "R21",
+          "R22",
+          "R23"
+        ]
+      },
+      {
+        "id": "C02",
+        "role": "분야별 내용",
+        "document_anchor": "c02-분야별-내용",
+        "absorbed_requirements": [
+          "R01",
+          "R07",
+          "R09",
+          "R10",
+          "R11",
+          "R12"
+        ]
+      },
+      {
+        "id": "C03",
+        "role": "본문",
+        "document_anchor": "c03-본문",
+        "absorbed_requirements": [
+          "R02",
+          "R04",
+          "R16",
+          "R17",
+          "R18"
+        ]
+      },
+      {
+        "id": "C04",
+        "role": "근거",
+        "document_anchor": "c04-근거",
+        "absorbed_requirements": [
+          "R15"
+        ]
+      },
+      {
+        "id": "C05",
+        "role": "추가 질문",
+        "document_anchor": "c05-추가-질문",
+        "absorbed_requirements": [
+          "R08",
+          "R13",
+          "R14",
+          "R20"
+        ]
+      },
+      {
+        "id": "C06",
+        "role": "검증",
+        "document_anchor": "c06-검증",
+        "absorbed_requirements": [
+          "R19",
+          "R24"
+        ]
+      }
+    ],
+    "precedence": "현재 작성 기준의 본문은060의 C01~C06에만 둔다. JSON과 agent 문서는 역할/버전/위치를 참조하며 중복 본문을 복사하지 않는다. R01~R24와 과거 작성 예시는 출처 추적용이며 별도 지시로 중복 적용하지 않는다. 최신 사용자 요구와060이 과거 작성 예시보다 우선하되 계산033·지원 보류·모듈 경계·역할 실행 계약은 유지한다.",
+    "verified_current_gaps": [
+      "natal_structure는 개별 조건별 고정 문단을 선택하고 publication은 그대로 게시한다. 이 경로에 문단별 결론과 조건을 통합해 설명하는 과정이 없다.",
+      "062에서 추상어 중심의 고정 문단과 질문 연결을 보강했다. 조건별 문단을 종합하는 판단 과정과 분야/시기 답의 공백은 남아 있으며 독립 재검토로 구별한다.",
+      "분류/사실 연결/금지어 중심의 기술 검증은 문장 의미·문단 논리·개인별 효용을 입증하지 못한다. 전체 종합 판정도 미완료다."
+    ],
+    "runtime_boundary": "작성 요구의 중복과 역할을 정리한다. 계산/지식/판정/문구/프롬프트/UI/역할 prompt와 rubric/provider는 변경하지 않는다. 새로운 미래 사건 답·전체 강약/용신 판정·critical 보류 해제·전문가 승인·효용 PASS를 만들지 않는다."
+  },
+  "chart_header_presentation": {
+    "version": "chart-header-presentation-2026-10-10.1",
+    "source": {
+      "kind": "direct_user_feedback",
+      "date": "2026-10-10",
+      "quote": "사용자는 내 사주를 알고 싶어하지 이 사이트의 설명서를 읽고 싶지 않아해. 내 사주팔자 아래 사주팔자를 쓰고 아래 불필요한 문구는 제거해. 각 다국어에 맞춰 한자 밑에 어떻게 읽어야되는지 알려주고"
+    },
+    "titles": {
+      "ko": "내 사주팔자",
+      "en": "My birth chart"
+    },
+    "pillars": "한자 아래 지원 언어별 독음을 표시한다. 기존 formatManseText의 KO 독음/EN 한국어 로마자 표를 재사용한다. 미상 시주는 대시만 표시하며 독음을 만들지 않는다.",
+    "notices": "소개 문장과 반복된 계산 기준/날짜 관례/가정/보류/범위 안내를 기본 본문에서 제거하고 해당 장 또는 첫 장의 기본 접힘 풀이 메모에 보존한다. 질문 답변과 호환 기본 풀이에도 적용한다.",
+    "precedence": "이 최신 명시 요청은 과거의 안내 항상 노출 지침보다 우선한다. 계산 사실/보류/미상 차단/질문과 공유의 한계 데이터는 유지한다. 본문 결론의 실제 조건은 지우지 않는다.",
+    "plan": "docs/planning/059-chart-heading-and-quiet-notes.md"
+  },
+  "whole_chart_reading": {
+    "version": "whole-chart-reading-contract-2026-10-10.5",
+    "status": "bounded_natal_structure_implemented_final_judgment_pending",
+    "source": {
+      "kind": "direct_user_feedback",
+      "date": "2026-10-10",
+      "quote": "이런식으로 알려줘. 지금은 내 사주의 일부 특징만 말하고 있어."
+    },
+    "goal": "일부 신살의 설명을 넘어 전체 명식의 기조와 복/부담, 분야별 의미와 지원된 흐름을 충분하게 설명한다.",
+    "question_hook_role": "태극귀인은 질문을 유도하는 장치일 뿐이다. 전체 풀이의 중심이나 본문 분량을 채우는 소재로 삼지 않는다. 본문은 전체 명식의 의미로 완결하고, 실제 확인된 특징을 ‘내 사주에 있는 태극귀인은 내 삶에 어떤 영향을 미칠까?’처럼 개인 질문으로 연결한다.",
+    "main_and_hooks": "본문의 핵심 판단과 호기심 질문의 선정은 구별한다. 신살을 발견했어도 종합 핵심이 아니라면 본문에 독립 제목/소개 문단을 강제하지 않는다. 질문이 없어도 본문만으로 충분한 개인 풀이가 남아야 한다.",
+    "sequence": [
+      "전체 명식 구조와 검토된 강약/격국 판정",
+      "유리/불리한 작용과 정도의 근거 및 반대 조건",
+      "돈·일·인연에 대한 지원된 의미",
+      "검토된 기간별 상호작용",
+      "실제 발견된 보조 표시가 더하는 뜻과 개인 후속 질문"
+    ],
+    "analysis_requirements": "일간·계절·월령·뿌리/도움·기운의 유출/제약·합충·특수 구조를 함께 검토한다. 각 결론은 facts/출처/규칙/반대 단서/범위/독립 버전을 갖춘다.",
+    "presentation": "본문은 쉬운 개인별 풀이, 전문명/계산자료/대안은 기본 접힘 풀이 메모. 반복된 계산 불확실성/보류 안내도 chart_header_presentation 최신 정책에 따라 메모에 보존한다. 본문 결론의 실제 조건은 유지하며 목차나 신살 개수를 채우지 않는다.",
+    "example_policy": "사용자의 예시는 설명 깊이의 참고다. 예시의 신약/오행 비율/용신/직업 적합성은 계산 사실이나 판정 규칙으로 복사하지 않는다.",
+    "forbidden_inferences": [
+      "겉글자에 없는 오행을 지장간까지 전혀 없다고 판단하기",
+      "겉글자 비율이나 내부 점수를 신강/신약·용신 판정으로 사용하기",
+      "재성 부재/약함을 실제 돈 관리 능력이나 사업 부적합으로 단정하기",
+      "신약을 정신력/체력/인간의 우열로 설명하기",
+      "오행 개수로 결단력/창의성/직책 적합성을 확정하기",
+      "다섯 오행이 고르면 보통/좋은 사주라는 모집단 비교 만들기",
+      "같은 결과에서 인성이 약하다/강하다를 근거 없이 모순되게 쓰기",
+      "부족한 오행 세 개를 조후/통관/억부용신으로 일괄 배분하기"
+    ],
+    "runtime_gap": "058 natal_structure는 canonical 일간 관계/월지 본기/같은 오행 지장간 뿌리/인성 지원/재성 위치/실제 식상·관성 공존을 독립 facts와 규칙으로 읽는다. analyze_saju의 단순 개수/점수는 소비하지 않는다. 합충·제화·특수 구조/신강·신약·격국·최종 용신/기간 상호작용의 전체 판정기는 여전히 없다. 보조 신살이나 LLM 문장화는 이를 대신하지 않는다.",
+    "boundary": "제한된 명식 구조 풀이와 화면은058로 구현했다. 전체 종합 길흉·강도/시기/전문가·실증 검증은 미완료다. 기존 critical 전체 보류·콘텐츠FAIL은 유지하고 알려진 날짜 관례 쌍만 가정 표시와 독립 대안 재파생으로 제한해 제공한다.",
+    "plan": "docs/planning/058-natal-structure-before-symbol-hooks.md",
+    "implementation": {
+      "module": "app.domain.saju.natal_structure",
+      "catalog": "apps/api/app/domain/saju/data/natal_structure_catalog.json",
+      "versions": {
+        "knowledge": "natal-structure-knowledge-2026-10-10.1",
+        "rules": "natal-structure-rules-2026-10-10.1",
+        "copy": "natal-structure-copy-2026-10-10.3",
+        "selection": "natal-conclusion-selection-2026-10-10.1"
+      },
+      "publication": "reading-publication-2026-10-10.3",
+      "main_scope": "bounded_natal_relations_not_global_verdict",
+      "star_role": "실제 검출된 개인 질문. 본문 태극 소개 강제 금지.",
+      "reinforcement_plan": "docs/planning/062-five-chart-runtime-reinforcement.md",
+      "question_context": "본문에 이미 적용된 전통 특징의 짧은 읽기 맥락만 연결한다. 신살별 독립 소개나 전체 풀이 대체는 하지 않는다.",
+      "application_plan": "docs/planning/063-reading-conclusions-and-followup-coverage.md",
+      "conclusion_scope": "기존 월의 관계와 뿌리/지원 조건을 연결한 결론을 게시하고 원본 분석을 메모에 보존한다. 재성 위치만으로 core 결론을 만들지 않는다. whole_chart_synthesis_supported는 false이며 전체 강약/분야/기간 종합 판정의 공백은 유지한다."
+    }
+  },
+  "distinctive_chart_reading": {
+    "version": "reader-centered-chart-features-2026-10-10.7",
+    "status": "bounded_supplementary_themes_implemented_full_synthesis_pending",
+    "source": {
+      "kind": "direct_user_feedback",
+      "date": "2026-10-09",
+      "quote": "내 사주의 특징이 다른 사람과 다르게 어떤 부분이 다르고 그 중에 크게 좋은것과 안좋은 것이 있으면 말해달라는거지 목차로 나눠서 관리해달라는게 아니야. 독자시점에 맞춰서 작성해줘."
+    },
+    "precedence": "core 내용 작성의 최신 보정이다. 기존 목차/표시 구현 이력은 보존하되 목차 채우기나 발견 항목 나열을 목적에 두지 않는다.",
+    "goal": "독자가 이 사주의 두드러지는 특징과 그것이 뜻하는 큰 복/부담, 작용 정도와 필요한 조건을 이해한다.",
+    "selection": "명식 전체에서 지원된 핵심 결론을 골라 연결된 문단으로 쓴다. 발견된 신살 모두를 나열하지 않으며 좋은 점/나쁜 점의 개수나 고정 문단 수를 강제하지 않는다. 같은 의미의 표시는 독립 근거로 중복 세지 않는다.",
+    "reader_answers": [
+      "이 사주에서 가장 눈에 띄는 점은 무엇인가?",
+      "내 인연·돈·자리·도움·막힘에는 어떤 의미인가?",
+      "얼마나 크게 작용하고 무엇이 완화하거나 반대로 작용하는가?",
+      "함께 있는 조건 때문에 단순한 설명과 무엇이 달라지는가?"
+    ],
+    "distinctiveness": "계산된 명식 조건 때문에 다른 결론을 선택한다는 뜻이다. 비교 표본 없이 희귀함·남들보다 우수함·확률·순위를 만들지 않는다.",
+    "degree": "성립/상호작용/반대 단서와 완화 조건을 다루는 검토된 규칙에서 받아 설명한다. 출현/개수/이름의 유명세/편집 비중은 강도나 큰 길흉의 근거가 아니다.",
+    "body": "개인별 결론을 먼저 말하고 사용자에게 뜻하는 복/부담과 조건을 풀어준다. 용어 사전·성격 테스트·읽는 방법·일반 숙제로 대신하지 않는다.",
+    "memo": "선택된 유명 특징의 이름은 실제 존재와 뜻을 소개할 때 본문에 쓴다. 한자/계산 위치/규칙/관법과 반복된 계산/보류 안내는 chart_header_presentation 최신 정책에 따라 작은 기본 접힘 풀이 메모에 보존한다. 본문 결론의 실제 조건은 유지한다.",
+    "feature_discovery": {
+      "version": "feature-discovery-before-question-2026-10-10.4",
+      "source": "태극귀인은 질문을 유도하는 장치일뿐이야",
+      "sequence": "본문은 전체 명식의 기조와 복/부담을 충분히 설명한다. 실제 확인된 특징은 존재를 명시하는 개인 질문으로 연결한다. 보조 표시의 설명이 본문 종합을 대신하지 않는다.",
+      "salience": "존재만 선언하는 소제목이나 신살마다 본문 소개 문단을 강제하지 않는다. 전체 핵심과 관련될 때만 자연스럽게 언급한다. 질문은 ‘내 사주에 있는 태극귀인은 내 삶에 어떤 영향을 미칠까?’처럼 실제 존재를 알리며 개인의 의미를 묻는다.",
+      "gate": "존재를 확인하는 유효 fact/match와 관련 의미를 답하는 규칙이 함께 성립해야 한다. 없는 특징은 본문/질문 모두 생략한다.",
+      "boundary": "함께 존재하는 뜻의 구별은 강화/취소나 실제 운명 변화의 판정이 아니다. 태극은 기존 始終相保 뜻을 설명하며 큰 복/성공/구원자/시기를 새로 주장하지 않는다.",
+      "plan": "docs/planning/057-whole-chart-reading-contract.md"
+    },
+    "follow_up": {
+      "goal": "이미 발견된 특징이 이 사주에서 어떤 의미인지 더 깊게 답한다. 본문에서 답한 존재 여부를 다시 묻거나 모든 발견 항목을 나열하지 않는다.",
+      "examples": [
+        "내 사주에 있는 도화는 연애에서 어떻게 작용할까?",
+        "내 사주에 있는 태극귀인은 내 삶에 어떤 영향을 미칠까?"
+      ],
+      "publication_gate": "실제 존재와 관련 의미/조건을 답하는 규칙이 함께 성립할 때만 공개한다. 055의 features.*는 별도 답변이며 기존 stars.dohwa 위치 답변을 재명명하지 않는다. 태극은 유효 match와 배움/고독 주제가 함께 있어야 공개하며, 큰 복의 성립 판정은 지원하지 않는다."
+    },
+    "verification": "용어/개수를 가려도 개인별 복/부담 결론이 남는가? 다른 명식 조건에서 결론이 달라지는가? 강도와 반대 단서를 추적할 수 있는가? 질문이 약속한 더 깊은 의미를 실제 답하는가?",
+    "boundary": "055는 검증된 계산 조건에 한정한 두 보조 주제와 세 의미 질문을 구현한다. 원국 종합/큰 길흉/시기/실사용 흥미/전문가 승인은 여전히 미완료이며053의 과거 효용 FAIL과 기존 critical 전체 보류를 유지한다.",
+    "implementation": {
+      "knowledge": "distinctive-knowledge-2026-10-09.1",
+      "rules": "distinctive-rules-2026-10-09.2",
+      "copy": "distinctive-copy-2026-10-09.5",
+      "format": "distinctive-reading-v1",
+      "eligibility": "정확한 관법, 실제 enabled match, 적용 위치/공망/충 조건을 확인한다. 원본 facts와 실제 적용 eligible_matches를 구별하며 점수·중복으로 강도를 만들지 않는다."
+    },
+    "plan": "docs/planning/055-supported-distinctive-themes-and-questions.md"
+  },
+  "publication_presentation": {
+    "version": "reading-publication-2026-10-09.4",
+    "status": "presentation_implemented_content_needs_review",
+    "source": {
+      "kind": "direct_user_request",
+      "date": "2026-10-09",
+      "quote": "그 방식으로 다시 만들어줘. 상용화버전으로 만들어야해. 어려운 전문용어는 펼치기로 숨기기 하는것 잊지말고"
+    },
+    "order": [
+      "core",
+      "love",
+      "wealth",
+      "career",
+      "luck_flow"
+    ],
+    "display": "사주팔자 다음 다섯 장의 본문과 해당 장의 지원 질문. 전문 용어/한자/위치/방법은 작은 기본 접힘 풀이 메모. 실제 불확실성과 조건은 본문에 유지.",
+    "contract": "CategoryReadingSection.publication에 server-owned blocks/memo_body/scope를 추가한다. 레거시 응답은 보존하고 frontend는 공급된 결과만 렌더링한다.",
+    "voice": "promptv19: 결론 우선·친근한 반말·조건부 불리함을 솔직하게. 성격/환경 조언으로 운세를 대체하거나 일반 숙제로 분량을 채우지 않는다.",
+    "scope": "전통 정의·계산 설명·기존 판정을 구별한다. 숨긴 특징이 개인별 풀이 효용을 통과시키지 못한다. 원국 종합/재물 길흉/만남·취업 시기 규칙은 여전히 미완료.",
+    "verification": "실제 publication 본문을 독립 세 역할 job에 투영. 코드 PASS·접힘 구현은 콘텐츠 효용/실사용 흥미/전문가 정확도 승인이 아니다.",
+    "plan": "docs/planning/053-published-reading-and-folded-memos.md"
+  },
+  "reading_outline_design": {
+    "version": "fortune-reading-outline-2026-10-09.2",
+    "status": "presentation_implemented_substantive_rules_pending",
+    "source": {
+      "kind": "direct_user_request",
+      "date": "2026-10-09",
+      "quote": "이걸 참고해서 우리도 어떻게 말할지 다시한번 체계를 잡자 목차를 만들어줘. 결국 목차에 맞춰서 할거잖아"
+    },
+    "goal": "원하는 미래에 관한 관심을 타고난 분야별 복/불리함과 실제 기간별 풀이로 이어간다. 질문을 누르기 전에도 개인별 결론을 얻는다.",
+    "chart_header": "사주팔자",
+    "sections": [
+      {
+        "id": "core",
+        "title": "내 사주의 특징",
+        "contents": [
+          "가장 두드러지는 타고난 복",
+          "불리하게 작용하는 구조와 완화 조건",
+          "무엇이 강하게 드러나고 무엇은 조건부인지"
+        ],
+        "question_examples": [
+          "내 사주의 복은 언제 더 잘 드러나?",
+          "지금 대운이 내 약한 부분을 보완해줘?"
+        ]
+      },
+      {
+        "id": "love",
+        "title": "연애·결혼운",
+        "contents": [
+          "인연과 관계에 관한 원국의 유불리",
+          "현재와 앞으로의 관계 흐름",
+          "새 인연과 교제 중 상황에 맞는 추가 풀이"
+        ],
+        "question_examples": [
+          "인연이 들어오는 흐름은 언제 강해져?",
+          "지금 관계에서 변화가 커지는 시기는 언제야?"
+        ],
+        "context": "상황 미응답은 추측하지 않고, 선택 질문에 필요한 상황만 받는다. 본인 명식으로 상대 속마음이나 결혼·이별 결과를 확정하지 않는다."
+      },
+      {
+        "id": "wealth",
+        "title": "금전운",
+        "contents": [
+          "돈을 얻는 흐름",
+          "돈이 모이는 힘과 손실에 취약한 조건",
+          "타고난 구조와 기간 변화의 차이"
+        ],
+        "question_examples": [
+          "지금보다 돈의 흐름이 나아지는 때는 언제야?",
+          "지금 대운과 다음 대운 중 재물운은 어느 쪽이 나아?"
+        ]
+      },
+      {
+        "id": "career",
+        "title": "직장·직업운",
+        "contents": [
+          "일자리·자리·기회에 관한 원국의 유불리",
+          "책임·평가·보상의 구별",
+          "구직·재직 상황별 현재와 다음 흐름"
+        ],
+        "question_examples": [
+          "취업운은 언제부터 풀려?",
+          "일이 늘어나는 때와 대우가 좋아지는 때는 같아?"
+        ],
+        "context": "구직과 재직을 구별한다. 책임 증가를 채용·승진·보상 증가로 바꾸지 않는다."
+      },
+      {
+        "id": "luck_flow",
+        "title": "지금부터 달라질 운",
+        "contents": [
+          "현재 대운이 원국에 주는 도움과 부담",
+          "다음 대운에서 달라지는 조건",
+          "올해 흐름과 장기 흐름의 겹침·충돌"
+        ],
+        "question_examples": [
+          "지금 대운과 다음 대운 중 어느 쪽이 나아?",
+          "내 흐름이 달라지는 때는 언제야?"
+        ]
+      }
+    ],
+    "chapter_composition": [
+      "개인별 한 줄 결론",
+      "그 결론이 사용자에게 뜻하는 충분한 풀이",
+      "지원되는 경우 기간별 변화와 비교",
+      "관련 지원 질문 2~3개 이하",
+      "기본 접힘 풀이 메모"
+    ],
+    "composition_boundary": "고정 문단 수나 모든 역할 채우기를 강제하지 않는다. 핵심 결론과 필요한 조건은 본문에 남긴다. 같은 정보를 여러 장에 반복하거나 조언·숙제로 분량을 채우지 않는다.",
+    "present_signals": "도화·귀인·역마 등은 실제 계산/규칙에서 확인된 경우 관련 장에 설명한다. 발견된 용어만으로 복·불운·사건 시기를 판정하지 않으며 빈 전용 장을 만들지 않는다.",
+    "voice": "친근하고 솔직한 반말. 결론을 먼저 말하고 생활 비유는 짧게 사용한다. 불리함을 미화하거나 사용자를 조롱하지 않는다. 성격·타입·환경 적응 설명으로 운세를 대신하지 않는다.",
+    "secondary_features": "오늘의 운세는 별도 짧은 재방문 콘텐츠, 공유는 검토된 본문 한 문장과 캐릭터 표정이다. 핵심 목차에 일일 운세·공유·지수 장을 추가해 본문을 늘리지 않는다.",
+    "publication_gate": "질문 문구는 콘텐츠 목표의 예시이며 현재 클릭 가능한 질문 목록이 아니다. 분야별 종합 길흉·강도·만남/취업 시기·기간 우열은 필요한 사실과 검토된 규칙을 갖춘 뒤 공개한다. 기존 needs_rule_review·critical·시간 미상 제한을 유지하며 확률·인구 순위·평생 불행을 생성하지 않는다.",
+    "verification": "각 장에서 방법·개수·용어 설명을 빼도 개인별 결론이 남는지, 관련 질문이 본문 다음 궁금증인지, 실제 상황/사실/규칙과 맞는지 확인한다. 목차 검토·코드 통과는 콘텐츠 효용·실사용 흥미·예측 정확도 승인과 구별한다.",
+    "plan": "docs/planning/038-interest-led-reading-experience.md"
+  },
+  "category_reading_presentation": {
+    "version": "category-reading-presentation-2026-10-09.2",
+    "source": {
+      "kind": "direct_user_feedback",
+      "date": "2026-10-09",
+      "quote": "그래 초기에는 그런식으로 작업해주고 각 분류에 따른 질의를 각 분류아래에다가 추가하는걸로하자"
+    },
+    "order": [
+      "core",
+      "love",
+      "wealth",
+      "career",
+      "luck_flow"
+    ],
+    "decision": "기존 전체 풀이를 질문 선택 전에 먼저 읽고 각 분류 아래에서 실제 지원 질문을 선택한다. 기술 설명은 분류별 작은 기본 접힘 풀이 메모로 표시한다.",
+    "boundary": "화면과 기존 생성 경로 연결의 구현이다. 초기 일반 조언을 검토 없이 유익한 풀이로 승인하지 않는다. 금전은 활성 판정 규칙이 없어 실제 글자 위치만 본문에 제공하며 소비 성향·수입 판정은 보류한다. critical 안내는 실제 해석 보류 상태에 맞춰 표시한다. 미지원 만남/취업 날짜·확률/순위 금지를 유지한다.",
+    "plan": "docs/planning/048-category-reading-and-questions.md"
+  },
+  "reading_presentation": {
+    "version": "plain-reading-presentation-2026-10-08.1",
+    "source": {
+      "kind": "direct_user_feedback",
+      "date": "2026-10-08",
+      "quote": "너무 어렵게 써서 뭔소리인지 모르겠어 근거자료는 펼치기로 숨기고 풀이한 내용을 보기 좋게 보여줘"
+    },
+    "main": "쉬운 제목과 문단으로 개인별 계산 구간·주제의 공통점/차이·금전 표시·도화의 방법 차이를 설명한다. 낯선 용어는 역할부터 풀고 같은 일반 설명을 반복하지 않는다.",
+    "memo": "한자·십성·정밀 경계·지장간·판정 방법·오행 개수는 작은 기본 접힘 풀이 메모에 보존한다. 본문과 같은 사실 참조를 사용한다.",
+    "always_visible": "시간 미상으로 태어난 날의 글자를 확정하지 못하는 한계, 경계의 날짜 기준 차이, 사건 시기/수입의 비예측 범위는 접지 않는다.",
+    "boundary": "쉬운 문구로 변경하는 것은 신규 사건 예측/확률/전문가 승인/실제 흥미 검증이 아니다. 도화는 프로젝트 연애 풀이에서 참고하는 표시로 설명한다.",
+    "plan": "docs/planning/046-plain-reading-and-folded-evidence.md"
+  },
+  "policy_version": "product-interest-2026-10-09.1",
   "scope": "project_editorial_policy",
   "source": {
     "kind": "direct_user_feedback",
@@ -12,46 +383,560 @@
       "id": "QF-001",
       "problem": "기존 엔진이 답하기 쉬운 성향 질문으로 사용자가 원하는 미래 정보를 대체했다.",
       "decision": "앞으로의 인연·취업·직장 변화와 시기를 주력 관심사로 삼는다. 성격·연애 타입은 첫 진입의 흥미 장치로 사용하지 않는다.",
-      "applies_to": ["planning", "entry", "question_titles", "follow_up_recommendations"],
+      "applies_to": [
+        "planning",
+        "entry",
+        "question_titles",
+        "follow_up_recommendations"
+      ],
       "exception": "기존 성격 풀이를 보조 결과에 유지할 수 있다. 모든 사용자가 자신의 성격을 안다는 일반적 사실로 확대하지 않는다."
     },
     {
       "id": "QF-002",
       "problem": "미지원 시기 질문에 제한 문장을 붙인 뒤 기존 성향 풀이를 이어서 질문에 답한 것처럼 보이게 했다.",
       "decision": "선택 질문을 유지하고 부족한 기간 사실·규칙·자료를 명시한다. 기존 성향의 answer/scene/tradeoff/action/분석 노트/다음 질문을 복사해 대신 답하지 않는다.",
-      "applies_to": ["answer_spec", "verification_answer", "supervisor_question_fit"],
+      "applies_to": [
+        "answer_spec",
+        "verification_answer",
+        "supervisor_question_fit"
+      ],
       "exception": "정직한 지원 한계 안내는 질문을 충족한 답이나 흥미 검증 통과를 뜻하지 않는다."
     },
     {
       "id": "QF-003",
       "problem": "제목과 말투만 바꾸는 작업을 새 정보나 시기 풀이의 구현으로 취급할 위험이 있다.",
       "decision": "원하는 답 정의 → 기간별 계산 사실 → 출처·조건·예외를 갖춘 해석 규칙 검토 → 지원 조건 확인 → 질문 공개 순서를 지킨다.",
-      "applies_to": ["knowledge_changes", "release_review", "completion_reporting"],
+      "applies_to": [
+        "knowledge_changes",
+        "release_review",
+        "completion_reporting"
+      ],
       "exception": "사용자 흥미를 높이기 위해 날짜·확률·순위·전문가 승인 주장을 만들어내지 않는다."
+    },
+    {
+      "id": "QF-004",
+      "problem": "개인별 계산값과 쉬운 용어 설명을 유용한 사주풀이로 평가했지만, 사용자에게 어떤 의미인지 결론이 없었다.",
+      "decision": "읽기 쉬움·사실 일치와 효용을 별도로 평가한다. 기본 본문에서 분류·개수·방법·한계 설명을 빼고 남는 개인별 풀이 결론이 없으면 효용 FAIL이다. 직접 선택한 계산 사실 질문의 답은 기본 풀이의 완성으로 확대하지 않는다.",
+      "applies_to": [
+        "basic_reading",
+        "result_copy",
+        "questioner_review",
+        "supervisor_review",
+        "completion_reporting"
+      ],
+      "exception": "유익성 실패를 고치기 위해 없는 해석 규칙이나 미지원 미래 사건을 만들지 않는다. critical 전체 보류를 해제하는 결정도 아니다."
     }
   ],
   "priority_questions": [
-    {"id": "love.meeting_window", "title": "인연은 언제쯤 들어올까?", "status": "needs_rule_review"},
-    {"id": "career.entry_window", "title": "취업운은 언제쯤 풀릴까?", "status": "needs_rule_review"}
+    {
+      "id": "love.meeting_window",
+      "title": "인연은 언제쯤 들어올까?",
+      "status": "needs_rule_review"
+    },
+    {
+      "id": "career.entry_window",
+      "title": "취업운은 언제쯤 풀릴까?",
+      "status": "needs_rule_review"
+    }
   ],
   "entry_guard": {
-    "forbidden_topic_ids": ["core"],
+    "forbidden_topic_ids": [
+      "core"
+    ],
     "forbidden_patterns": {
-      "ko": ["성격|성향|타입|스타일|유형", "나도\\s*모르는\\s*내\\s*모습"],
-      "en": ["\\b(?:personality|temperament|style|type)\\b", "\\bwhat\\s+am\\s+i\\s+like\\b"]
+      "ko": [
+        "성격|성향|타입|스타일|유형",
+        "나도\\s*모르는\\s*내\\s*모습"
+      ],
+      "en": [
+        "\\b(?:personality|temperament|style|type)\\b",
+        "\\bwhat\\s+am\\s+i\\s+like\\b"
+      ]
     },
     "rejected_examples": {
-      "ko": ["연애할 때 난 어떤 타입?", "돈 버는 스타일, 따로 있을까?", "나도 모르는 내 모습은?", "나한테 편한 사람은 어떤 타입일까?"],
-      "en": ["What's my type in love?", "What's my money-making style?", "What am I like in a relationship?"]
+      "ko": [
+        "연애할 때 난 어떤 타입?",
+        "돈 버는 스타일, 따로 있을까?",
+        "나도 모르는 내 모습은?",
+        "나한테 편한 사람은 어떤 타입일까?"
+      ],
+      "en": [
+        "What's my type in love?",
+        "What's my money-making style?",
+        "What am I like in a relationship?"
+      ]
     },
-    "current_safe_labels": ["오늘의 운세", "연애운", "직장 · 금전운", "대운 흐름"]
+    "current_safe_labels": [
+      "사주팔자",
+      "대운",
+      "도화",
+      "재성"
+    ]
+  },
+  "entry_presentation": {
+    "version": "entry-presentation-2026-10-09.1",
+    "mode": "single_action",
+    "primary_action": {
+      "ko": "운세 보기",
+      "en": "Get my reading"
+    },
+    "topics_usage": "informational_below_action",
+    "included_topic_ids": [
+      "basic_chart",
+      "love_reading",
+      "wealth_reading",
+      "career_reading",
+      "luck_cycles"
+    ],
+    "default_result_topic": "basic_chart",
+    "source": {
+      "kind": "direct_user_feedback",
+      "date": "2026-10-07",
+      "quote": "운세 선택해봤자 모든 운세 다 보여주잖아. 그냥 선택하지 말고 운세보기 하고 아래 이런게 있다고 말하는게 맞잔항"
+    },
+    "decision": "한 개 시작 버튼으로 출생 정보를 입력하고 명식과 기존 전체 풀이 다섯 분류를 먼저 표시한다. 지원되는 계산 사실 질문을 각 분류 아래에서 선택하면 해당 답만 요청한다. 계산 불확실성이 critical이면 해석은 보류한다.",
+    "exception": "실제 주제별 요청/결과가 구현되기 전까지 선택형 진입을 되돌리지 않는다. 미지원 미래 시기나 성격/타입 흥미 문구를 안내 목록에 넣지 않는다."
+  },
+  "chart_presentation": {
+    "version": "chart-presentation-2026-10-08.1",
+    "heading": {
+      "ko": "사주팔자",
+      "en": "Your birth chart"
+    },
+    "basic_chart_expression": "shrug",
+    "elements": "visible_character_counts_not_weighted_strength",
+    "decision": "오행은 겉글자의 개수로 명시한다. 지장간을 제외한 0을 전체 기운의 부재로 읽거나 단순 개수로 강약을 단정하지 않는다. 기본 명식 제목의 으쓱 표정은 장식이며 계산 정확도 표시가 아니다.",
+    "source": {
+      "kind": "direct_user_feedback",
+      "date": "2026-10-08",
+      "quote": "목 화 토 금 수 이건 해석에 따라 달라질 수 있는 것 아니야?"
+    },
+    "planning_document": "docs/planning/045-chart-heading-and-element-counts.md"
   },
   "unsupported_guard": {
-    "empty_fields": ["scene", "tradeoff", "next_question"],
+    "empty_fields": [
+      "scene",
+      "tradeoff",
+      "next_question"
+    ],
     "empty_analysis_note_and_claim_refs": true,
     "reject_selected_answer_or_action_copy": true,
     "allow_action": "필요한 입력·규칙·자료의 확인 안내. 기존 성향 판정에 따른 조언을 복사하지 않는다."
   },
-  "versioning": "제품 편집 정책은 명리 knowledge/rule/copy version과 별도로 관리한다. 정책을 바꾸면 이 policy_version과 역할 prompt/rubric version을 갱신한다.",
-  "limits": "알려진 문구·복사·구조 회귀만 자동 검출한다. 새로운 표현의 의미, 전문가 규칙 검토, 실제 사용자 흥미는 별도 검토한다."
+  "love_context_design": {
+    "version": "love-context-design-2026-10-07.1",
+    "status": "documented_not_runtime_implemented",
+    "source": {
+      "kind": "direct_user_feedback",
+      "date": "2026-10-07",
+      "quote": "애인없어서 내 연애 운을 봤더니 서로에게 관심을 표현하라고 나오고 다 의미없는 말이면서 재미도없어"
+    },
+    "problem": "연애 상황과 원하는 질문을 받지 않은 상태에서 관계 성향 풀이를 새 인연의 답으로 제시했다.",
+    "initial_contexts": [
+      "seeking_new_connection",
+      "in_relationship"
+    ],
+    "unanswered_context": "unanswered",
+    "decision": "맥락과 원하는 답, 필요한 기간 사실과 규칙을 먼저 구분한다. 새 만남이 궁금한 사용자에게 연인이 있다는 전제의 장면·연락/배려 조언을 답으로 대신 주지 않는다. 관계 성향은 보조 지원 범위이며 만남/관계 변화 시기의 구현으로 보고하지 않는다.",
+    "rejected_answer_example": "서로에게 관심을 표현하면서도 각자의 시간을 존중할 수 있는지 살펴보세요.",
+    "example_scope": "새 인연 질문의 직접 답으로 거부한 예시다. 모든 교제 중 대화 조언을 금지한 것은 아니다.",
+    "requirements": [
+      "explicit_user_context",
+      "question_capability_per_intent",
+      "reviewed_period_facts_and_rules",
+      "context_consistent_detail_memo_and_share"
+    ],
+    "planning_document": "docs/planning/042-context-aware-love-readings.md",
+    "limits": "현재 런타임/역할 평가 기준에 신규 상황 판정을 구현한 것이 아니다. 시기 미지원 상태를 유지하고 구현 시 계약·정책·역할 버전과 검증을 함께 갱신한다."
+  },
+  "reading_content_review": {
+    "version": "reading-content-review-2026-10-09.1",
+    "status": "diagnosed_not_runtime_restored",
+    "source": {
+      "kind": "direct_user_feedback",
+      "date": "2026-10-07",
+      "quote": "모든 항목이 다 재미없어. 왜 이렇게 변했어. 가장 초기에 만들었던 그 내용들이 더 유익해"
+    },
+    "scope": "all_reading_topics",
+    "basic_body_feedback": {
+      "version": "basic-body-feedback-2026-10-08.1",
+      "implementation_status": "body_implemented_but_user_rejected_utility",
+      "verification_result": "copy.2 기본 본문/기존 질문36·ASGI137검사·모바일 KO390/KO320/EN320 통과. r1 미상 메모 자료 불일치 수정 후 r2 질문자/답변자/감독관 PASS. 실제 흥미/예측 정확도 미검증, 설명서 문체는 후속 사용자 검토 필요.",
+      "date": "2026-10-08",
+      "quote": "질문 나올땨 본문도 유용한 정보가 있어야지",
+      "problem": "기본 결과를 명식·개수와 질문 메뉴로만 축소해 질문 선택 전에는 읽을 정보가 부족했다.",
+      "decision": "질문 목록 위에 항상 보이는 개인별 기본 본문을 제공한다. 현재·다음 대운의 기간과 용어 차이, 올해와 일간의 관계, 겉/지장간 재성 위치, 도화 방법별 결과를 실제 값과 짧은 의미 설명으로 연결한다. 메모는 계산 근거만 작은 기본 접힘으로 제공한다.",
+      "verification": [
+        "본문을 읽고 질문 없이 얻는 개인별 정보",
+        "개별 사실과 본문·메모의 일치",
+        "용어 나열과 일반 숙제 반복 방지",
+        "시간 미상·critical 범위 보존",
+        "본문 표시 후 질문 선택과 복귀"
+      ],
+      "limits": "유익한 기본 정보와 미래 만남·취업 시기 충족은 별도다. 용어 배경을 사건 날짜·확률·좋은 대우·실제 수입으로 바꾸거나 성격/타입 훅으로 대체하지 않는다.",
+      "implementation_document": "docs/planning/044-useful-basic-reading.md",
+      "follow_up": "2026-10-09 실제 사용자 효용 거절은 아래 utility_feedback을 따른다. 기존 기술/역할 PASS 이력은 보존하며 풀이 완성으로 인정하지 않는다."
+    },
+    "utility_feedback": {
+      "version": "reading-utility-feedback-2026-10-09.1",
+      "source": {
+        "kind": "direct_user_feedback",
+        "date": "2026-10-09",
+        "quote": "실질저긍로 도움되는 말은 없고 어떻게 보여줄게. 라는 식의 내용이 다 야"
+      },
+      "problem": "basic_reading은 모든 입력에서 vocabulary_only=true, interpretation_rules_applied=false다. 개인별 날짜·위치와 일반 주제 설명을 유용한 해석 결론으로 오인했다. 기존 역할 전역 verdict와 자유 문장 findings만으로는 사례별 효용 누락을 막지 못했다.",
+      "rejected_patterns": [
+        "어떤 주제로 읽는지 설명한다",
+        "현재와 다음 구간의 분류 이름만 비교한다",
+        "재성 개수나 도화 기준을 설명하고 읽어야 한다로 끝낸다",
+        "분량·말투·캐릭터 변경으로 유용한 풀이 완성을 주장한다"
+      ],
+      "required_information": [
+        "사용자의 관심 질문에 대한 지원된 개인별 결론",
+        "그 결론을 구별하는 복수의 실제 사실과 적용 규칙",
+        "기회·부담·보상 등 서로 다른 결론과 반대 단서의 구별",
+        "지원된 경우 같은 사람의 기간 비교"
+      ],
+      "review_gate": "질문자가 사례마다 readability/usefulness/information_kind/새 정보/보이는 본문 인용/이유를 작성한다. 방법·일반 조언·한계만 있거나 기본 본문이 사실 설명뿐이면 효용 FAIL. vocabulary-only 본문에는 역할 모두 PASS여도 효용 PASS를 부여하지 않는다. 사례 누락·중복·숨은 메모/가짜 인용과 미지원 미래 충족 주장을 거부한다.",
+      "runtime_status": "검증 기준 보강 완료. 실제 개인별 종합 해석/기간 상호작용 규칙은 아직 구현하지 않았다. 기존 기본 본문은 효용 실패 상태이며 코드 검사는 정상이다.",
+      "verification_result": "verifier67/관련60 체크포인트·실제 ASGI4 본문/145검사·web helper14 통과. 새 독립 세 역할/합계 FAIL; 네 사례 모두 readability PASS/usefulness FAIL, code_status PASS. 실패 증거와 과거 PASS 보존. fallback456 PASS/3 WARN/기존 음력30일 FAIL 유지. 실제 풀이 복구 완료 아님.",
+      "preserved_limits": "계산 정책·critical 카탈로그 전체 보류·시간 미상·출처/전문가 미검토·미지원 시기 상태를 유지한다. 조건부 명식 지원에는 별도 의존/가정/비교 계약과 결정이 필요하다.",
+      "implementation_document": "docs/planning/047-reading-utility-recovery.md"
+    },
+    "timing_answer_feedback": {
+      "date": "2026-10-08",
+      "quote": "그럼 왜 알려주는거야? 라고 밖에 생각 안돼. 연인을 만날 확률이 올라가는 시기를 원할꺼야",
+      "rejected_passage": "다만 이것을 2024~2034년에 연인을 만난다는 예언으로 바꾸지는 않을게. 만남 시기를 좁히려면 해마다 들어오는 글자와 원국의 관계까지 별도로 검토해야 해.",
+      "problem": "넓은 대운 기간과 재성 존재를 설명한 뒤 검토 필요로 끝냈다. 사용자가 원하는 시점 비교에 답하지 못했으며, 사실 설명과 한계 안내의 분량을 늘리는 것으로 해결되지 않는다.",
+      "wanted_answer": [
+        "같은 사람의 기간들을 비교한 주목할 시기",
+        "다른 기간과 구별되는 사실과 적용 규칙",
+        "기간을 읽는 해석의 한계와 반대 단서"
+      ],
+      "content_order": "지원되는 경우 시기 비교의 직접 답을 먼저, 개인별 이유를 다음에 제시한다. 10년 대운은 배경이며 이를 만남 시점이나 기회 상승 기간으로 그대로 제시하지 않는다. 근거의 전문 설명은 작은 풀이 메모에 둔다.",
+      "runtime_gap": "love.meeting_window는 여전히 needs_rule_review다. 기존 월운 사실/일반 조언과 대운 favorable_periods 휴리스틱은 검토된 만남 시기 비교 규칙이 아니다.",
+      "preserved_limits": "목표의 확률 표현을 관측된 사건 확률로 받아들이지 않는다. 기존 점수·도화 개수·재성 하나를 수치 확률이나 유리한 만남 날짜로 변환하지 않는다. 미지원 상태를 메모에 숨기거나 지표 이름만 바꿔 지원 답변처럼 제시하지 않는다.",
+      "status": "feedback_recorded_timing_not_implemented"
+    },
+    "comparison": {
+      "historical_revisions": [
+        "03075d9",
+        "8fd02a6"
+      ],
+      "narrowing_revision": "53f736e",
+      "evidence_kind": "repository_source_comparison",
+      "limits": "사용자가 읽었던 초기 원문과 이번 원문을 같은 입력으로 재생성해 비교한 것이 아니다. 초기 해석의 정확도나 전문가 승인을 확인한 것도 아니다."
+    },
+    "verified_causes": [
+      "기존 prompt는 일·수입 구조·지출과 현재/다음 대운을 함께 다뤘지만 새 reading_plan은 주제별 한 feature와 한 규칙으로 주요 결론을 제한한다.",
+      "fallback은 _fact_aware_cards로 만든 카드의 제목·핵심 문장·본문을 apply_reading_plan의 카탈로그 문장으로 덮어쓴다.",
+      "모델 경로도 reading_plan의 질문/범위를 우선하고 다른 결론을 추가하지 말라는 prompt를 받는다. fallback 덮어쓰기와 모델 경로의 제약은 서로 다르다.",
+      "모든 카드의 scene/tradeoff/action 강제와 생활 조언 중심의 규칙은 사용자가 궁금한 정보 대신 반복적인 예시·주의·숙제를 앞세운다.",
+      "주 결과 화면의 전체 개요는 core에서만 보이고 core_diagnoses는 표시되지 않는다. 본문에 필요한 정보까지 보조 설명/전체 풀이로 밀어내면 실제 데이터의 차이를 읽기 어렵다."
+    ],
+    "recovery_direction": "말투만 더 세게 바꾸지 않는다. 초기 내용의 정보 범위를 회복하는 방향으로 주제별 실제 사실과 해석 범위를 재검토한다. 일/수입/지출 및 현재/다음 대운의 차이처럼 지원 가능한 핵심 설명은 본문에 두고 근거의 전문 설명은 작은 풀이 메모에 둔다. 연애는 사용자 상황을 고려한다.",
+    "preserved_limits": "성격/타입 진입 훅, 미지원 만남/취업 시기, 확률·순위·임의 점수는 복원하지 않는다. 출처·불확실성·계산 정책과 기존 기본 접힘 메모를 유지한다. 모든 과거 문장을 검토 없이 되돌리는 결정이 아니다.",
+    "verification_gap": "구조·출처 일치 검사는 정보의 유익함/흥미 검증이 아니다. 복구 구현 시 동일 입력의 이전/새 출력, 주제별 정보 범위, 반복 조언, 사용자 질문 적합성을 별도 비교해야 한다. 이번에는 코드/카탈로그/role 판정 변경이나 모델 호출 없이 원인을 기록했다."
+  },
+  "information_design": {
+    "version": "information-design-2026-10-08.2",
+    "status": "planning_not_runtime_implemented",
+    "source": {
+      "kind": "direct_user_request",
+      "date": "2026-10-08",
+      "quote": "어떤 정보를 보여줄지 어떻게 흥미를 유발할지 정리해서 알려줘"
+    },
+    "primary_value": "앞으로 무엇을 주목하고 언제 움직일지에 대한 개인별 답을 얻는다. 설명의 길이와 캐릭터의 강한 말투를 정보 충족으로 대신하지 않는다.",
+    "target_content": [
+      {
+        "id": "love_new_connection",
+        "wanted": "같은 사람의 기간을 비교한 만남 관련 주목 시기와 구별되는 근거",
+        "requires": "reviewed_relationship_timing_rules_and_context"
+      },
+      {
+        "id": "love_current_relationship",
+        "wanted": "현재 관계를 살펴볼 본인 명식의 기간별 주제와 상대 정보 없이 판단할 수 있는 범위",
+        "requires": "reviewed_context_specific_rules; no_partner_mind_or_outcome_claim"
+      },
+      {
+        "id": "career_seeking",
+        "wanted": "구직 활동에서 주목할 기간과 어떤 단서가 달라지는지",
+        "requires": "reviewed_job_entry_rules_and_goal"
+      },
+      {
+        "id": "career_employed",
+        "wanted": "책임·평가·보상을 구분한 기간별 해석",
+        "requires": "reviewed_recognition_and_compensation_rules"
+      },
+      {
+        "id": "wealth",
+        "wanted": "수입·관리·지출의 해석 단서를 구별하고 원국/기간에서 무엇이 달라지는지",
+        "requires": "reviewed_wealth_scope; no_actual_income_or_investment_return_prediction"
+      },
+      {
+        "id": "today",
+        "wanted": "오늘 계산된 흐름의 한줄 설명과 우선 점검할 일",
+        "requires": "existing_period_facts_and_scope_preserved"
+      },
+      {
+        "id": "long_term_context",
+        "wanted": "현재/다음 대운의 계산된 기간과 해석 주제 차이",
+        "requires": "confirmed_cycles_and_reviewed_scope; not_a_meeting_or_job_date"
+      }
+    ],
+    "reading_order": [
+      "supported_direct_answer",
+      "period_and_same_person_comparison_if_supported",
+      "individual_facts_and_reading",
+      "claim_limits_and_counter_signals_where_needed",
+      "contextual_action_separate_from_prediction",
+      "optional_quiet_reading_memo"
+    ],
+    "reading_depth": "상단은 짧게 핵심 답과 기간을 이해한다. 주제 본문은 정보가 있는 만큼 충분히 쓰고 항상 표시한다. 전문 근거만 기본 접힘 풀이 메모에 둔다. 고정 문단 수/일반 조언으로 분량을 채우지 않는다. 이는 새 출력 형식의 구현이 아니다.",
+    "interest_hypotheses": [
+      "현재와 다음 기간의 차이",
+      "여러 실제 단서가 연결된 개인별 설명",
+      "사용자 상황에 맞는 질문과 답",
+      "친근한 도깨비의 짧은 반응과 표현",
+      "검토된 한 문장을 고르는 공유",
+      "실제 기간/판정이 바뀔 때의 재방문"
+    ],
+    "index": "039의 별도 해석 지수 설계. 산식/규칙/척도 검토 후 제공하며 실제 확률·인구 순위·기존 내부 점수의 재노출로 만들지 않는다.",
+    "entry": "한 개 운세 보기 CTA와 두 단계 출생 입력 후 기본 명식을 표시하고 실제 지원되는 계산 사실 질문을 고른다. 상황이 필요하지 않은 질문에 설문을 추가하지 않는다. 미지원 만남·취업 질문을 클릭 가능한 관심 장치로 공개하지 않는다.",
+    "question_reading_flow": {
+      "version": "base-then-question-runtime-2026-10-08.2",
+      "source_quote": "기본 사주를 보여준 후 질문을 사용자에게 보여주게 하고 사용자가 선택하면 맞춰서 사주풀이 가능해?",
+      "status": "implemented_fact_questions_validated_content_review_pending",
+      "steps": [
+        "single_action_and_birth_input",
+        "server_calculated_basic_chart_and_fact_summary",
+        "supported_questions_from_backend",
+        "only_needed_user_context",
+        "question_specific_judgment_and_wording",
+        "memo_share_and_next_supported_question"
+      ],
+      "basic_scope": "명식과 질문 메뉴 사이에 개인별 본문을 항상 보여준다. 현재·다음 정밀 대운의 기간과 용어 차이, 올해의 개인별 십성, 겉/지장간 재성 위치, 도화 방법별 결과를 연결해 읽을 정보를 제공한다. 숫자·한자만 나열하거나 일반적인 행동 숙제로 채우지 않는다. 성격/타입 진입 훅으로 되돌리지 않는다. 같은 계산 결과를 모델 없이 재사용하며 선택 질문의 상세 답을 미리 모두 생성하는 방식과 구분한다.",
+      "question_scope": "각 질문은 ID·문구·필요한 상황·지원 조건·필요한 사실/규칙·비교 기간·허용 답을 정의한다. 같은 주제 안의 다른 질문도 별도 판정/응답이며 동일 topic 본문을 제목만 바꿔 반환하지 않는다.",
+      "reuse": "report_mode=none의 계산 경로와 기존 detail prepare/render, TTL/LRU cache를 참고한다. 현재 상세 유형3개는 새 질문 전체의 지원 근거가 아니다. 질문 결과는 새 버전의 추가 계약이며 기존 topic 카드/loader/API를 전역 변경하지 않는다.",
+      "cache": "서버가 검증한 원본 입력과 실제 사실을 사용한다. 질문/상황/대상 기간/locale/계산·규칙·문구·모델 버전이 다른 결과는 구별한다. client 사실이나 input_hash를 권한/진실성의 증거로 신뢰하지 않는다. 입력 변경·캐시 만료·서버 재시작 시 기존 입력으로 안전하게 재준비한다. 출생정보를 URL/공유에 넣거나 새 영구 저장을 기본 도입하지 않는다.",
+      "generation": "현재 네 가지 계산 사실 질문은 모델 없이 선택한 답만 만든다. 기본 계산과 질문 답은 서버의 120초/48항목 캐시를 각각 사용한다. 클라이언트는 이전 요청을 취소하고 질문·버전이 다른 응답을 표시하지 않으며 실패를 자동 재호출하지 않는다. 향후 모델 문장화를 추가하면 별도 예산/횟수/진행 계약과 검증을 갖춘다.",
+      "implemented_question_ids": [
+        "luck.current_next",
+        "stars.dohwa",
+        "wealth.locations",
+        "period.this_year"
+      ],
+      "implementation_document": "docs/planning/043-basic-question-reading.md",
+      "limits": "기본 명식과 네 가지 계산 사실/용어 질문을 구현했다. 연애 상황·사건 시기·운세 지수의 신규 판정은 아직 미구현이다. meeting_window와 취업 시기의 규칙 검토/미지원 상태를 유지한다. 새 형식은 기존 해석 4역할과 별도이며 실제 흥미·예측 정확도는 기술 검사로 인증하지 않는다."
+    },
+    "sharing": "지원된 핵심 문장·필요한 주제/기간·캐릭터 표정. 같은 입력의 전체 설명을 줄여 공유한다. 이름/출생정보/메모/전체 명식은 기본 공유 대상이 아니며 다른 사람과 운의 우열을 비교하지 않는다.",
+    "verification": "구조 확인과 별도로 요청한 답/시기가 실제 지원되는지, 상황과 맞는지, 새 정보를 얻었는지, 기간/사실과 문구가 일치하는지, 기억/공유/재방문 의도가 있는지 평가한다. 실사용자 흥미는 아직 검증되지 않은 가설이다.",
+    "planning_document": "docs/planning/038-interest-led-reading-experience.md",
+    "limits": "계획 정리이며 신규 timing/index/context/share 계약 또는 의미 판정의 구현/승인이 아니다. 기존 실행 정책과 한계 표시를 유지하고 구현 시 관련 버전·회귀를 갱신한다."
+  },
+  "versioning": "제품 편집 정책은 명리 knowledge/rule/copy version과 별도로 관리한다. 의미/지원 판정 정책을 바꾸면 policy_version과 역할 prompt/rubric version을 갱신한다. 동일 풀이의 진입 UI 표현만 바뀔 때는 entry_presentation.version을 독립 갱신하고 화면/문서 일치를 검사한다.",
+  "limits": "알려진 문구·복사·구조 회귀만 자동 검출한다. 새로운 표현의 의미, 전문가 규칙 검토, 실제 사용자 흥미는 별도 검토한다.",
+  "present_signal_information": {
+    "version": "present-signal-presentation-2026-10-09.1",
+    "source": {
+      "kind": "direct_user_feedback",
+      "date": "2026-10-09",
+      "quote": "사주에 도화처럼 유명하고 특정한 항목이 있을때 그것에 대해 알려주도록 하고, 없다면 말하지 말도록해."
+    },
+    "decision": "실제 active/활성 match가 있는 카탈로그 항목의 위치와 전통적 뜻만 자동 설명한다. 빈 목록과 미발견 자동 도화 질문은 숨긴다. 계산 엔진과 Codex 문장화를 구분한다.",
+    "detail": "함지/왕지/목욕/홍염은 분리하고 연지/일지 중복은 위치 합집합과 원래 key/method로 보존한다. 위치 태그는 별개 신살이 아니다. 짝 항목은 실제 두 위치를 표시한다. 겉/안쪽 관계 글자와 정밀 대운 경계를 같은 원본에서 공급한다.",
+    "boundary": "critical은 잠정 계산 정보와 용어 설명을 표시하며 개인 해석 보류는 유지한다. 시간 미상은 시주/대운 제외. 발견 표시로 실제 매력/능력/귀인 등장/관계 상태/사고/질병/수입/사건 확률을 추론하지 않는다. 정보 증가와 종합 개인풀이 효용은 별도다.",
+    "main": "개인별 실제 정보를 먼저 표시하고 용어 옆에 쉬운 뜻을 붙인다. 초기 fallback의 일반 scene/action은 숨기되 원본 보고서와 판정 방향은 보존한다.",
+    "memo": "판정법/원래 match/글자/정밀 경계는 작은 기본 접힘 풀이 메모에 보존한다.",
+    "plan": "docs/planning/049-present-signals-and-reading-information.md"
+  },
+  "reading_voice": {
+    "version": "candid-reading-voice-2026-10-09.1",
+    "source": {
+      "kind": "direct_user_feedback",
+      "date": "2026-10-09",
+      "quote": "좋아 이 상태에서 재미있고 쉽게 풀이해야해. 그리고 사주가 나쁘면 나쁘다고 말해야하고"
+    },
+    "decision": "쉽게 결론부터 말하고 짧은 생활 비유로 재미를 더한다. 기존 조건부 부담은 조건과 불리한 점을 직접 말하며 장점/성장 기회/위로로 자동 포장하지 않는다.",
+    "negative_terms": "원진의 감정 긴장과 고진/과숙의 고독/거리 같은 기존 전통 의미는 긍정적 매력으로 바꾸지 않는다. 실제 갈등이나 관계 실패 판정과 구별한다.",
+    "boundary": "현재 종합 길흉 규칙이 없으므로 신살 하나/이름/개수, 오행 개수나 휴리스틱 점수에서 나쁜 사주를 새로 판정하지 않는다. 조건부 부담과 확인된 개인 상태를 구별한다. critical/미지원 시기 보류를 유지한다.",
+    "verification": "이해도/솔직함/재미/개인별 효용을 따로 검토하며 말투 개선만으로 종합 풀이 효용이나 전문가 정확도를 통과 처리하지 않는다.",
+    "plan": "docs/planning/050-candid-and-playful-reading.md",
+    "adverse_meaning_preservation": "쉬운 설명으로 바꾸면서 원본 usage_summary/usage_keywords에 있는 불편한 의미를 빼지 않는다. 화개 고독, 공망 지연/약화, 귀문관 집착은 전통 용어 설명에 보존하며 실제 개인의 불행/질환으로 단정하지 않는다."
+  },
+  "fortune_reading_feedback": {
+    "version": "fortune-reading-direction-2026-10-09.1",
+    "source": {
+      "kind": "direct_user_feedback",
+      "date": "2026-10-09",
+      "quote": "사주의 장단점을 이렇게 표현하는게 맞아? 어떤 운을 타고 났고 어떤 불행을 타고 났다 어떤 흐름이 있다이런식인 것 아냐? 내 성격 테스트 같은 심리 테스트 느낌이야"
+    },
+    "diagnosis": "051의 십성 두 그룹 조건부 장점/환경 조언과 편집상 비중은 사용자가 원하는 타고난 복과 불리한 구조, 시기별 운의 유불리를 답하지 못한다. 실제 사용자 거절은 과거 좁은 에이전트 효용 PASS와 별도로 보존한다.",
+    "primary_questions": [
+      "원국에서 어떤 분야의 복이나 기회가 받쳐주는가?",
+      "어떤 분야의 손실·지연·관계 마찰을 전통적으로 경계하며 이를 완화하는 구조가 있는가?",
+      "대운·세운이 원국의 유리한 조건을 돕거나 불리한 조건을 키우는 구간은 어떻게 다른가?"
+    ],
+    "avoid": [
+      "성격·학습·업무 스타일 또는 환경 적응 조언으로 운세 결론을 대신하기",
+      "편집상 풀이 비중을 타고난 복이나 불운의 강도로 소개하기",
+      "재성·관성 존재만으로 재물복·배우자복·승진운을 판정하기",
+      "성향 문장을 운세 말투로 고쳐 새로운 사건 판정을 구현한 것처럼 보고하기"
+    ],
+    "required_reasoning": "분야별 원국 조건·성립/예외·반대 단서와 기간 상호작용을 출처/학파/규칙 버전으로 관리한 후 결론을 문장화한다. 현재 051 규칙을 이 계약의 구현으로 인정하지 않는다.",
+    "boundary": "전통적 길흉 해석과 실제 사건 확인·실증 예측을 구별한다. 불리한 해석은 직접 말하되 평생의 불행·사고·이별 등을 확정하지 않는다. 미지원 기간 비교를 성향으로 대체하지 않고 기존 계산/critical/시기 보류를 유지한다.",
+    "plan": "docs/planning/051-general-chart-characteristics.md"
+  },
+  "characteristics_presentation": {
+    "version": "general-characteristics-presentation-2026-10-09.2",
+    "acceptance": "rejected_by_user_as_personality_style",
+    "follow_up": "fortune_reading_feedback",
+    "scope": "All supported charts; no person-specific birth-date branches.",
+    "main": [
+      "Separate conditional advantages and burdens",
+      "Editorial reading emphasis and its stated scope",
+      "Visible selected-convention assumption when applicable"
+    ],
+    "folded": [
+      "Technical characters and positions",
+      "Rule and emphasis criteria",
+      "Alternative chart interpretation and item/emphasis differences"
+    ],
+    "avoid": [
+      "Forced positive-negative balance",
+      "Averaging opposite signals into neutral",
+      "Counting stars as ability or harm intensity",
+      "Inventing missing grades or reference populations"
+    ],
+    "guards": "Known midnight-convention differences only in new conditional characteristics scope; legacy full-report hold remains; unknown time and other critical data remain blocked.",
+    "review": "Project editorial policy; expert and empirical validation incomplete."
+  },
+  "runtime_verification": {
+    "version": "runtime-reading-verification-2026-10-10.4",
+    "status": "project_skill_and_independent_jobs_implemented",
+    "source": {
+      "kind": "direct_user_feedback",
+      "date": "2026-10-10",
+      "quotes": [
+        "제대로, 쉽게 이해할 수 있는 문구인가?",
+        "궁금증을 채울 수 있는 내용인가?",
+        "추가 질문에 대해서 흥미를 유발하면서 추가 질문을 유도할 수 있게 되어있나?",
+        "내부 프로젝트 스킬로 만들어서 런타임 검증요청하면 이 이런시긍로 검증되도록 해줘"
+      ]
+    },
+    "skill": ".agents/skills/saju-runtime-verification/SKILL.md",
+    "plan": "docs/planning/061-runtime-content-verification-skill.md",
+    "rubric": "apps/api/app/tools/data/runtime_reading_rubric.json",
+    "rubric_version": "runtime-reading-rubric-2026-10-10.2",
+    "prompt_version": "runtime-reading-prompts-2026-10-10.5",
+    "contract_version": "runtime-reading-review-v1",
+    "canonical_reading_requirements": "docs/planning/060-reading-method-requirements.md",
+    "boundary": "Review contract and eight criteria retained. Rubric.2 aligns C05: an actually confirmed named feature may be introduced by its personal question without forcing a star introduction into the main prose. Evidence checks actual existence; reader checks visible connection and expected new information. Actual server followups and reading/memo roles are shared by UI, capture and role projections. Original calculation, natal knowledge/rule conditions, provider and critical guards remain unchanged. Derived visible/hidden relations now use the same existing canonical adapter with original labels retained. Code PASS does not certify content, prediction accuracy or real-user satisfaction.",
+    "capture_version": "runtime-capture-2026-10-10.3",
+    "reinforcement_plan": "docs/planning/062-five-chart-runtime-reinforcement.md",
+    "application_plan": "docs/planning/063-reading-conclusions-and-followup-coverage.md"
+  },
+  "reading_conclusions_and_followup_coverage": {
+    "version": "reading-conclusion-application-2026-10-10.2",
+    "source": {
+      "kind": "direct_user_request",
+      "date": "2026-10-10",
+      "quote": "지금까지 내용 반영해줘"
+    },
+    "plan": "docs/planning/063-reading-conclusions-and-followup-coverage.md",
+    "canonical_requirements": "docs/planning/060-reading-method-requirements.md#여섯-역할",
+    "conclusions": "Existing month/support analysis feeds selected conclusions with applied conditions, source block IDs, rule IDs and fact IDs. Complete analysis remains in memos. Wealth locations alone are excluded from core conclusions; full synthesis remains unsupported.",
+    "answer_roles": "basic-question-reading-v3 marks plain explanation sections as reading and technical sections as memo; missing kinds in legacy responses retain folded presentation.",
+    "recommendations": "Server-owned question-recommendation-2026-10-10.1 compares question meaning requirements with actual answer meaning coverage. Already answered meanings are omitted; UI and capture consume the same response followups.",
+    "versions": {
+      "question_rules": "question-rules-2026-10-10.2",
+      "question_copy": "question-copy-2026-10-10.5",
+      "category_copy": "category-reading-copy-2026-10-10.6",
+      "question_projection": "question-flow-review-prompts-2026-10-10.1",
+      "information_rules": "reading-information-rules-2026-10-10.1",
+      "information_copy": "reading-information-copy-2026-10-10.3"
+    },
+    "relation_reconciliation": "Visible and hidden stem descriptions both compare the selected day stem with each target using the existing canonical adapter. Original reported labels and calculation fields are preserved, mismatches are disclosed in the memo and derivations. This does not resolve uncertain birth time, change the primary calendar or release critical holds.",
+    "retained_gaps": "Selected connections are bounded natal relationships, not a final whole-chart/field/period judgment. General advice and category counts do not satisfy personal curiosity. Preserve content FAIL, browser HOLD and expert/real-user validation gaps.",
+    "verification_status": "Bounded implementation and fresh independent five-cohort review complete; product content Needs review. All five cohorts code PASS/content FAIL, 10 role contracts and 16 case reviews valid. Browser HOLD.",
+    "final_results": {
+      "main_clarity": "PASS3/FAIL2; abstract support wording remains",
+      "main_curiosity": "PASS1/FAIL4; overall fulfillment partial4/unmet1; missing input distinguished from missing synthesis",
+      "main_followup_interest": "Actual menus PASS2; empty menus HOLD3",
+      "actual_answers": "Question fit, clarity and curiosity PASS3/3 with fulfillment met; remaining study-to-Taegeuk menu PASS, already supplied Taegeuk-to-study meaning removed",
+      "evidence": "Facts, reasoning and note consistency PASS for all final main and followup cases; raw relation labels retained and distinguished from canonical derivations",
+      "technical": "Final affected API105, web type/build/helpers14 and skill PASS; fallback456 PASS/3 WARN/known lunar30 FAIL1; live deterministic questions4 HTTP200; product generator calls0",
+      "scope": "Actual fallback ASGI capture content; no new live Codex main generation, browser approval, expert approval or real-user satisfaction claim"
+    }
+  },
+  "five_chart_runtime_reinforcement": {
+    "version": "five-chart-runtime-reinforcement-2026-10-10.1",
+    "source": {
+      "kind": "direct_user_request",
+      "date": "2026-10-10",
+      "quote": "5개의 사주 임의로 만들어서 런타임 검증 및 보강해줘"
+    },
+    "plan": "docs/planning/062-five-chart-runtime-reinforcement.md",
+    "scope": "Seeded synthetic birth inputs5; normal3, unknown-time1, day-boundary1; actual fallback main5 and public followup3. Independent reader/evidence cohorts, frozen r0/r1 and at most two repair rounds.",
+    "copy_versions": {
+      "natal": "natal-structure-copy-2026-10-10.2",
+      "distinctive": "distinctive-copy-2026-10-10.2",
+      "category": "category-reading-copy-2026-10-10.4",
+      "question": "question-copy-2026-10-10.2",
+      "publication": "reading-publication-2026-10-10.2",
+      "information": "reading-information-copy-2026-10-10.2",
+      "legacy_reading": "dokkaebi-2026-10-10.1"
+    },
+    "retained_gaps": "Whole-chart synthesis and reviewed field/period interaction rules remain incomplete; remaining followup menus can repeat meaning already supplied by an actual answer. Expert/empirical approval and real-user interest are unvalidated. Preserve independent content FAIL and UI HOLD.",
+    "repair_rounds": 2,
+    "final_round_scope": "Existing love-output sentence made explicit; competition/sharing names identify people/roles/resources; provisional information titles/body/memos retain the selected-chart assumption when opened independently. No new natal-period interaction, timing or event rules.",
+    "completion_scope": "Five-input verification and two repair rounds complete; product content remains unapproved. All15 cohort evaluations have code PASS/content FAIL, all30 role contracts valid.",
+    "final_results": {
+      "main_clarity": "PASS5/5; baseline PASS1/5",
+      "main_curiosity": "FAIL5/5; missing time input is distinct from missing synthesis",
+      "main_followup_interest": "PASS2; HOLD3 with no menu",
+      "actual_followup_answers": "Question fit, clarity, curiosity and promised answer PASS3/3",
+      "remaining_menu_overlap": "FAIL: Taegeuk answer already supplies the distinction offered by the remaining study/relationship question",
+      "facts_reasoning_notes": "PASS for all final main/followup cases; r1 unknown-time memo inconsistency resolved",
+      "empty_menu_delivery": "Case5 evidence role HOLD; preserve independent verdict rather than treating no menu as delivered answers",
+      "browser": "HOLD; trusted browser connection unavailable"
+    },
+    "final_review_provenance": "R2 normal1-3 and all3 followups retain original jobs from snapshot-r2-with-scoped-notes; critical4-5 use fresh v2 jobs from snapshot-r2-scoped-final after a Korean particle correction. Full projected-case equality for both roles is recorded; original job hashes are not reassigned. Evidence preserved under the thread-registered ignored root."
+  },
+  "substantive_reading_feedback": {
+    "version": "substantive-reading-feedback-2026-10-11.4",
+    "source": {
+      "kind": "direct_user_feedback",
+      "date": "2026-10-11",
+      "quote": "너무 짧고 도움이 별 이야기가 없어"
+    },
+    "requirements_document": "docs/planning/060-reading-method-requirements.md",
+    "implementation_document": "docs/planning/064-substantive-reading-recovery.md",
+    "boundary": "기존의 의미와 반대 조건을 절단하지 않고 설명한다. 금전 분류 뜻·기간 주제 비교를 전체 재물운/기간 우열 판정으로 승격하지 않는다. 종합 판단/시기 공백과 내용 FAIL은 유지한다.",
+    "main_reading_depth": {
+      "version": "main-reading-depth-2026-10-11.3",
+      "source_quote": "사주풀이 양이 지금보다 4개배 이상을 되어야해",
+      "source_date": "2026-10-11",
+      "baseline_result_id": "03e3ab65676443c1beb4955c8a763ddb",
+      "metric": "Sum publication.blocks[].text characters across the five chapters, excluding heading/availability_notice blocks, whitespace and Markdown characters * # `. Folded memos and notices are excluded.",
+      "baseline_characters": 1103,
+      "minimum_multiplier": 4,
+      "minimum_main_characters": 4412,
+      "quality_boundary": "항상 보이는 풀이 본문에 적용한다. 반복·용어 사전·접힌 근거·서비스 한계 안내를 늘려 분량을 채우지 않는다. 개인별 결론·의미·실제 조건과 지원된 변화의 깊이를 함께 검증한다. 계산 critical 보류나 미지원 판단을 분량 목표 때문에 해제하지 않는다.",
+      "delivery_status": "Needs review",
+      "model_audit": "Baseline03e3ab65 is model0 fallback; prior7e3ea8ec live Codex failed validation. 065 exact title/actual-ID contract and publication fixes produced one successful same-input user-requested Codex Sol6.1/xhigh result a196da3547344cecb49e89bff1c85133. Actual visible main5240 characters (4.75x baseline1103) passed4412 minimum and served unchanged/no-store/HTTP200. Independent reader clarity/menu/actual answer PASS, main curiosity FAIL/fulfillment partial: repeated distinctions and limits lack personal money/career conclusions. Whole-chart/domain/period judgment engine remains incomplete. Commercial GPT-5.4 API generation is unrun (local key absent/Vercel env403); browser visual verification HOLD.",
+      "implementation_document": "docs/planning/065-model-reading-publication.md"
+    },
+    "versions": {
+      "natal_copy": "natal-structure-copy-2026-10-11.1",
+      "selection": "natal-conclusion-selection-2026-10-11.1",
+      "publication": "reading-publication-2026-10-11.2",
+      "model_writing": "published-reading-writing-2026-10-11.1",
+      "prompt": "saju-report-v20",
+      "category_copy": "category-reading-copy-2026-10-11.1",
+      "legacy_copy": "dokkaebi-2026-10-10.1",
+      "information_rules": "reading-information-rules-2026-10-11.1",
+      "information_copy": "reading-information-copy-2026-10-11.1"
+    }
+  }
 }

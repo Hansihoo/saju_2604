@@ -6,12 +6,16 @@ import {
   SajuPreviewRequest,
   SajuPreviewResponse,
 } from "../../shared/api/contracts";
-import { createSajuPreview, searchRegionSuggestions } from "../../shared/api/saju";
+import { createSajuBasic, createSajuReading, createSajuPreview, searchRegionSuggestions } from "../../shared/api/saju";
+import type { PreviewProgress } from "../../shared/api/previewProgress";
 import { Locale, getCopy } from "../../shared/copy";
 
 type UseSajuInputFormOptions = {
   locale: Locale;
   debug: boolean;
+  progressive?: boolean;
+  basicFirst?: boolean;
+  readingFirst?: boolean;
   onSuccess: (result: SajuPreviewResponse) => void;
   onErrorResult?: () => void;
   initialValues?: Partial<{
@@ -26,6 +30,9 @@ type UseSajuInputFormOptions = {
 export function useSajuInputForm({
   locale,
   debug,
+  progressive = false,
+  basicFirst = false,
+  readingFirst = false,
   onSuccess,
   onErrorResult,
   initialValues,
@@ -51,6 +58,10 @@ export function useSajuInputForm({
   const [lastSubmittedPayload, setLastSubmittedPayload] = useState<SajuPreviewRequest | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<PreviewProgress>({ stage: "sending", lastSignalAt: null, transport: "stream" });
+  const requestRef = useRef<AbortController | null>(null);
+
+  useEffect(() => () => { requestRef.current?.abort(); }, []);
 
   const regionBoxRef = useRef<HTMLDivElement | null>(null);
   const knownBirthTimeRef = useRef(initialValues?.birthTime ?? "");
@@ -178,6 +189,7 @@ export function useSajuInputForm({
   }
 
   async function submit() {
+    if (requestRef.current) return;
     if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) {
       setError(texts.birthDateInvalid);
       return;
@@ -195,6 +207,9 @@ export function useSajuInputForm({
 
     setLoading(true);
     setError(null);
+    setProgress({ stage: "sending", lastSignalAt: null, transport: "stream" });
+    const controller = new AbortController();
+    requestRef.current = controller;
 
     try {
       const payload: SajuPreviewRequest = {
@@ -210,13 +225,25 @@ export function useSajuInputForm({
         debug,
       };
       setLastSubmittedPayload(payload);
-      const response = await createSajuPreview(payload);
-      onSuccess(response);
+      const readingOptions = {
+        signal: controller.signal,
+        onProgress: progressive ? (next) => {
+          if (!controller.signal.aborted) setProgress(next);
+        } : undefined,
+      } satisfies { signal: AbortSignal; onProgress?: (next: PreviewProgress) => void };
+      const response = readingFirst ? await createSajuReading(payload, readingOptions)
+        : basicFirst ? await createSajuBasic(payload, { signal: controller.signal })
+        : await createSajuPreview(payload, readingOptions);
+      if (!controller.signal.aborted) onSuccess(response);
     } catch (requestError) {
+      if (controller.signal.aborted) return;
       setError(requestError instanceof Error ? requestError.message : texts.noResult);
       onErrorResult?.();
     } finally {
-      setLoading(false);
+      if (requestRef.current === controller) {
+        requestRef.current = null;
+        setLoading(false);
+      }
     }
   }
 
@@ -236,6 +263,7 @@ export function useSajuInputForm({
     isLunarLeapMonth,
     lastSubmittedPayload,
     loading,
+    progress,
     error,
     regionBoxRef,
     setBirthDate: handleBirthDateChange,

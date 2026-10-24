@@ -11,6 +11,8 @@ import {
 } from "./contracts";
 import type { Locale } from "../copy";
 import { getApiErrorMessage } from "./errorMessage";
+import { requestProgressPreview, type PreviewProgress } from "./previewProgress";
+import type { SajuBasicResponse, SajuQuestionResponse } from "./questionContracts";
 
 export type {
   ApiHealth,
@@ -55,16 +57,62 @@ export async function searchRegionSuggestions(query: string): Promise<RegionSugg
 
 export async function createSajuPreview(
   payload: SajuPreviewRequest,
+  options?: { onProgress?: (progress: PreviewProgress) => void; signal?: AbortSignal },
 ): Promise<SajuPreviewResponse> {
+  if (options?.onProgress) return requestProgressPreview({
+    baseUrl: API_BASE_URL, payload, onProgress: options.onProgress, signal: options.signal,
+  });
   const response = await fetch(`${API_BASE_URL}/saju/preview`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
+    signal: options?.signal,
   });
 
   return parseJsonResponse<SajuPreviewResponse>(response, payload.locale);
+}
+
+export async function createSajuBasic(
+  payload: SajuPreviewRequest,
+  options?: { signal?: AbortSignal },
+): Promise<SajuBasicResponse> {
+  const response = await fetch(`${API_BASE_URL}/saju/basic`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    signal: options?.signal,
+  });
+  return parseJsonResponse<SajuBasicResponse>(response, payload.locale);
+}
+
+export async function createSajuReading(
+  payload: SajuPreviewRequest,
+  options?: { signal?: AbortSignal; onProgress?: (progress: PreviewProgress) => void },
+): Promise<SajuBasicResponse> {
+  if (options?.onProgress) return requestProgressPreview({
+    baseUrl: API_BASE_URL, payload, endpoint: "/saju/reading", onProgress: options.onProgress,
+    signal: options.signal,
+  }) as Promise<SajuBasicResponse>;
+  return parseJsonResponse<SajuBasicResponse>(await fetch(`${API_BASE_URL}/saju/reading`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload), signal: options?.signal,
+  }), payload.locale);
+}
+
+export async function createSajuQuestion(
+  payload: SajuPreviewRequest,
+  questionId: string,
+  options?: { signal?: AbortSignal; context?: string | null },
+): Promise<SajuQuestionResponse> {
+  const response = await fetch(`${API_BASE_URL}/saju/question`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ input: payload, question_id: questionId, context: options?.context ?? null }),
+    signal: options?.signal,
+  });
+  return parseJsonResponse<SajuQuestionResponse>(response, payload.locale);
 }
 
 export async function createSajuFreeDetail(

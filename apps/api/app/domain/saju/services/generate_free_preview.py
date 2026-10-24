@@ -25,6 +25,7 @@ from app.domain.saju.llm_payload import InterpretationPayload
 from app.domain.saju.localization import TEN_GOD_ENGLISH, contains_hangul, contains_hanja, localize_ten_god
 from app.domain.saju.prompts.free_preview_report import get_free_preview_report_prompt
 from app.domain.saju.services.codex_provider import CodexProviderError, call_codex_json
+from app.domain.saju.services.structured_output_schema import make_openai_json_schema_strict as _make_openai_json_schema_strict
 from app.domain.saju.services.build_reading_plan import apply_reading_plan, build_reading_plan, unsupported_claim_issues, validate_reading_structure
 
 try:
@@ -40,19 +41,6 @@ MIN_CARD_PREVIEW_CHARS = 120
 MAX_CARD_PREVIEW_CHARS = 1400
 OUTPUT_EXCERPT_LIMIT = 280
 ERROR_MESSAGE_LIMIT = 280
-SCHEMA_NOISE_KEYS = {
-    "default",
-    "examples",
-    "minLength",
-    "maxLength",
-    "pattern",
-    "format",
-    "minimum",
-    "maximum",
-    "multipleOf",
-    "minItems",
-    "maxItems",
-}
 CARD_KEYS = ("core", "work_money", "love", "luck_flow")
 DIAGNOSIS_KEYS = ("strongest_point", "repeating_pattern", "current_task")
 INTERNAL_VALUE_PATTERNS = (
@@ -96,28 +84,6 @@ def _model_json_schema(model_class: Any) -> Dict[str, Any]:
     if hasattr(model_class, "model_json_schema"):
         return model_class.model_json_schema()
     return model_class.schema()
-
-
-def _make_openai_json_schema_strict(name: str, schema: Dict[str, Any]) -> Dict[str, Any]:
-    strict_schema = json.loads(json.dumps(schema))
-
-    def visit(node: Any) -> None:
-        if isinstance(node, dict):
-            for key in list(node.keys()):
-                if key in SCHEMA_NOISE_KEYS:
-                    node.pop(key, None)
-            if node.get("type") == "object":
-                node["additionalProperties"] = False
-                if "properties" in node:
-                    node["required"] = list(node["properties"].keys())
-            for value in node.values():
-                visit(value)
-        elif isinstance(node, list):
-            for item in node:
-                visit(item)
-
-    visit(strict_schema)
-    return {"type": "json_schema", "name": name, "strict": True, "schema": strict_schema}
 
 
 def _clean_excerpt(text: str, *, limit: int = OUTPUT_EXCERPT_LIMIT) -> str:

@@ -9,8 +9,8 @@ from pydantic import BaseModel, Field
 Role = Literal["answer", "user", "supervisor"]
 Status = Literal["PASS", "WARN", "HOLD", "FAIL", "ERROR"]
 Grade = Literal["pass", "fail", "uncertain"]
-PROMPT_VERSION = "agent-jobs-2026-10-05.2"
-RUBRIC_VERSION = "reading-review-2026-10-05.2"
+PROMPT_VERSION = "agent-jobs-2026-10-09.1"
+RUBRIC_VERSION = "reading-review-2026-10-09.1"
 
 
 class Contract(BaseModel):

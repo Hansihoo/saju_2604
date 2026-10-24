@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import copy
 import hashlib
 import json
 import re
@@ -27,6 +26,7 @@ from app.domain.saju.llm_payload import InterpretationPayload
 from app.domain.saju.pydantic_compat import model_to_dict, model_validate_compat
 from app.domain.saju.schemas import SajuPreviewRequest
 from app.domain.saju.services.codex_provider import CodexProviderError, call_codex_json
+from app.domain.saju.services.structured_output_schema import make_openai_json_schema_strict as _make_openai_json_schema_strict
 from app.domain.saju.services.build_interpretation_payload import build_interpretation_payload
 from app.domain.saju.services.preview_orchestrator import create_saju_preview_response
 
@@ -150,38 +150,6 @@ def _model_json_schema(model_class: Any) -> Dict[str, Any]:
     if hasattr(model_class, "model_json_schema"):
         return model_class.model_json_schema()
     return model_class.schema()
-
-
-def _make_openai_json_schema_strict(name: str, schema: Dict[str, Any]) -> Dict[str, Any]:
-    strict_schema = copy.deepcopy(schema)
-
-    def tighten(node: Dict[str, Any]) -> None:
-        if node.get("type") == "object":
-            node.setdefault("additionalProperties", False)
-            properties = node.get("properties")
-            if isinstance(properties, dict):
-                for child in properties.values():
-                    if isinstance(child, dict):
-                        tighten(child)
-                node["required"] = list(properties.keys())
-        if node.get("type") == "array":
-            items = node.get("items")
-            if isinstance(items, dict):
-                tighten(items)
-        for key in ("anyOf", "oneOf", "allOf"):
-            variants = node.get(key)
-            if isinstance(variants, list):
-                for variant in variants:
-                    if isinstance(variant, dict):
-                        tighten(variant)
-        defs = node.get("$defs") or node.get("definitions")
-        if isinstance(defs, dict):
-            for definition in defs.values():
-                if isinstance(definition, dict):
-                    tighten(definition)
-
-    tighten(strict_schema)
-    return {"type": "json_schema", "name": name, "strict": True, "schema": strict_schema}
 
 
 def _join(values: Sequence[str], fallback: str) -> str:

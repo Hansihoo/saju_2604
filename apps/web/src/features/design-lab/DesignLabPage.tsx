@@ -1,4 +1,5 @@
 import { currentResultFixture, type DesignArticle, type DesignFixture } from "./currentResultFixture";
+import { WaitingPreview } from "./WaitingPreview";
 
 type DesignLabPageProps = {
   onNavigateToService: () => void;
@@ -12,6 +13,8 @@ const toneLabel: Record<DesignArticle["tone"], string> = {
 };
 
 export function DesignLabPage({ onNavigateToService }: DesignLabPageProps) {
+  if (import.meta.env.DEV && new URLSearchParams(window.location.search).get("view") === "waiting")
+    return <WaitingPreview onExit={onNavigateToService} />;
   return (
     <main className="design-lab document-lab">
       <header className="design-lab-header document-lab-header">

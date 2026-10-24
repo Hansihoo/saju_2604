@@ -1,0 +1,145 @@
+{
+  "knowledge_version": "distinctive-knowledge-2026-10-09.1",
+  "rules_version": "distinctive-rules-2026-10-09.2",
+  "copy_version": "distinctive-copy-2026-10-10.2",
+  "scope": "project_traditional_symbol_themes",
+  "expert_review": "not_completed",
+  "sources": {
+    "mingli-wenchang": {
+      "title": "命理探源: 文昌貴人",
+      "url": "https://shuyuan.zhiming.life/read/命理探源/8",
+      "scope": "Current day-stem table including 庚→亥; not the different 文昌 table in 三命通會."
+    },
+    "sanming-hwagae": {
+      "title": "三命通會: 論將星華蓋",
+      "url": "https://www.shidianguji.com/zh/book/SK1610/chapter/1m8rrfw2pczlr",
+      "scope": "Arts/learning and solitude themes; not rank, examination success or guaranteed isolation."
+    },
+    "sanming-taegeuk": {
+      "title": "三命通會 卷三: 論太極貴",
+      "url": "https://zh.wikisource.org/wiki/三命通會_(四庫全書本)/卷03",
+      "scope": "始終相保; fulfilled auspicious structures have further conditions. Not a promise of a helper person."
+    },
+    "project-attention-friction": {
+      "title": "Project common-KR star policy",
+      "path": "app/domain/saju/services/calculate_special_stars.py",
+      "scope": "왕지 attention and Korean 원진 friction are separately calculated supplementary themes. They are not classical 咸池/元辰 equivalents or established causal combination effects."
+    }
+  },
+  "rules": [
+    {
+      "id": "study_with_solitude",
+      "category": "core",
+      "requirements": [
+        "active validated 문창 with a current-method match outside void and clash",
+        "active validated 화개 involving the day pillar outside void and clash"
+      ],
+      "sources": [
+        "mingli-wenchang",
+        "sanming-hwagae"
+      ],
+      "boundary": "Present two coexisting traditional themes; do not multiply their strength, infer talent/personality, examinations, money or a career outcome.",
+      "ko": {
+        "title": "배움의 복에, 고독의 몫도 함께 있어",
+        "body": "네 사주의 좋은 쪽은 **배움과 글에 붙는 복**이야. 익히고 기록해서 남기는 일에 좋은 뜻이 있어.\n\n반면 **고독과 사람 사이의 거리**는 아쉬운 쪽이야. 배움에 붙는 복이 있어도, 사람과 가까이 지내는 부분까지 편하게 풀린다는 뜻은 아니야. 좋은 뜻과 함께 관계에서의 거리감도 읽히는 사주야."
+      },
+      "en": {
+        "title": "Learning has a favorable theme, with a solitude theme alongside it",
+        "body": "A favorable traditional theme in your chart concerns **learning and writing**: studying, recording and preserving what is learned.\n\nThe less comfortable side concerns **solitude and distance from others**. A learning blessing does not also establish ease in close relationships. Your chart carries this distance theme alongside its favorable meaning."
+      },
+      "questions": [
+        "features.taegeuk",
+        "features.study_solitude"
+      ],
+      "introductions": [
+        {
+          "question_id": "features.taegeuk",
+          "fact_id": "distinctive.star.taegeuk-gwiin",
+          "ko": "여기에 **일의 시작과 끝을 지켜주는 복**도 함께 읽혀. 네 사주에 있는 **태극귀인**의 전통적인 뜻이야. 배움·글에 붙는 복과 별개로, 일을 시작하고 마무리하는 과정에도 좋은 뜻이 있다는 거야.",
+          "en": "Alongside that, your chart carries a favorable theme of **protection across beginnings and endings**. This is the traditional meaning of **the Taiji Noble present in your chart**. It concerns beginning and completing an undertaking, distinct from the learning and writing theme."
+        }
+      ],
+      "reading_context": {
+        "ko": "이 사주에는 **배움·기록에 좋은 뜻을 가진 특징과, 사람 사이의 거리감을 뜻하는 특징도 함께 있어.** 두 특징의 자세한 의미는 아래 질문에서 이어서 볼 수 있어.",
+        "en": "This chart also carries **a favorable learning/writing theme alongside a separate theme of distance from others**. The questions below explore these distinct meanings."
+      }
+    },
+    {
+      "id": "attention_with_friction",
+      "category": "love",
+      "requirements": [
+        "active validated 왕지도화 by the common-KR method",
+        "active validated 원진 common-KR pair involving the day pillar"
+      ],
+      "sources": [
+        "project-attention-friction"
+      ],
+      "boundary": "Coexisting supplementary attention/friction themes only; no classical 함지 claim, causal composite effect, current partner assumption, favorable meeting window, failure or probability.",
+      "ko": {
+        "title": "호감을 받는 쪽과, 관계가 편한 쪽은 달라",
+        "body": "네 사주에는 **도화가 있어.** 사람의 관심과 호감을 받는 좋은 뜻이야. 그런데 **가까운 사이에서 엇갈리는 부담**도 함께 읽혀. 그래서 연애운을 통째로 좋다고 하기보다, 호감과 관계의 편안함을 나눠 읽는 사주야.\n\n아쉬운 쪽은 관계의 엇갈림이야. 마음이 가까워져도 기대가 다르거나 오해가 끼는 부담을 뜻해. 다만 지금 그런 관계에 있다는 말도, 앞으로 연애가 실패한다는 말도 아니야.\n\n관심의 표시는 있지만, 그것만으로 만남이 많다거나 연애운이 아주 강하다고 높여 읽지는 않아."
+      },
+      "en": {
+        "title": "Attention and an easy relationship are different themes here",
+        "body": "Your chart contains **a Peach Blossom symbol**, carrying a favorable attention and attraction theme. It also contains **a separate friction theme involving the close-relationship position**. Attraction and ease within a relationship therefore need separate readings.\n\nThe less favorable theme concerns mismatched expectations or misunderstanding in a close connection. It does not establish a current partner, an existing problem or a future breakup. The attention symbol alone does not establish many meetings or exceptionally strong love luck."
+      },
+      "questions": [
+        "features.dohwa"
+      ]
+    }
+  ],
+  "questions": {
+    "features.taegeuk": {
+      "category": "core",
+      "requires_star": "star.taegeuk",
+      "ko": {
+        "title": "내 사주의 태극귀인은 어떤 복을 뜻할까?",
+        "description": "배움의 복과 시작·마무리에 붙는 복은 어떻게 다를까?",
+        "answer": "**배움의 복은 공부하고 기록하는 분야에, 태극귀인의 복은 일을 시작하고 끝맺는 과정에 붙는 뜻이야.** 네 사주에는 이 두 특징이 함께 확인돼.\n\n그래서 배움과 기록에 관한 좋은 뜻에 더해, 시작과 마무리에도 좋은 뜻이 있다고 읽어. 두 표시가 서로를 강화한다고 계산한 것은 아니야.\n\n사람 사이의 거리감이라는 별도 특징도 남아 있어. 이 복이 있다는 이유로 인간관계까지 모두 편해진다고 보지는 않아.",
+        "detail_title": "네 사주에서는 어디까지 읽을까?",
+        "detail": "태극귀인은 확인됐지만, 큰 복을 판정하는 데 필요한 다른 조건까지 성립했다고 계산한 것은 아니야. 그래서 귀인이 있다는 사실을 ‘평생 편하게 풀린다’는 결론으로 바꾸지 않아."
+      },
+      "en": {
+        "title": "What blessing does the Taiji Noble in my chart represent?",
+        "description": "How does its beginning-and-ending theme differ from the learning theme?",
+        "answer": "**The learning blessing concerns study and writing; the Taiji Noble blessing concerns beginning and completing an undertaking.** Both are matched in your chart.\n\nThese are distinct favorable themes, not a calculated amplification of each other. The separate distance/solitude theme remains; neither establishes ease in every relationship.",
+        "detail_title": "How far does this reading go?",
+        "detail": "The symbol is present, but the additional conditions for a major auspicious structure have not been established. Its presence is not a verdict that your whole life will unfold easily."
+      }
+    },
+    "features.study_solitude": {
+      "category": "core",
+      "ko": {
+        "title": "배움의 복이 있으면 인간관계도 편하다는 뜻일까?",
+        "description": "배움에 관한 좋은 뜻과 사람 사이의 거리감은 왜 별개일까?",
+        "answer": "**배움에 관한 복과 인간관계의 편안함은 다른 뜻이야.** 네 사주에서 배움·글에 좋은 뜻을 가진 특징은 익히고 기록하는 분야를 가리켜. 함께 확인된 고독의 특징은 사람 사이의 거리감을 가리켜.\n\n서로 다른 부분을 설명하는 특징이어서, 배움에 좋은 뜻이 있다고 관계의 거리감까지 없어지는 것은 아니야. 두 표시가 취소되거나 강화된다고 계산하지 않았어.\n\n현재 연인이 있는지, 실제로 외로운지, 앞으로 누구와 만날지는 이 풀이로 확인한 내용이 아니야.",
+        "detail_title": "배움의 복, 어디까지 읽을 수 있어?",
+        "detail": "배움·글에 유리한 전통적인 뜻까지 읽었어. 합격·취업·높은 자리로 이어질지는 현재 자료와 규칙으로 판단하지 못해."
+      },
+      "en": {
+        "title": "Does a learning blessing also mean easy relationships?",
+        "description": "Why are learning and distance from others separate themes?",
+        "answer": "**A learning blessing and ease in relationships are different meanings.** The favorable learning/writing theme concerns study and recorded work. The separate solitude theme concerns distance from others.\n\nThey describe different areas; neither has been calculated to cancel or amplify the other. This does not establish a current partner, actual loneliness or a future meeting.",
+        "detail_title": "How far does the learning theme go?",
+        "detail": "It stays within the traditional learning/writing theme. Examination success, hiring or a high position would require additional supported rules and period analysis."
+      }
+    },
+    "features.dohwa": {
+      "category": "love",
+      "ko": {
+        "title": "같은 도화라도 풀이가 달라질 수 있을까?",
+        "description": "내 사주에서 확인한 방식과, 다른 도화를 합쳐 세면 안 되는 이유를 볼게.",
+        "answer": "**달라질 수 있어. 네 사주의 도화는 특정 글자가 사주에 있는지를 보는 방식으로 확인한 종류야.** 태어난 해나 날을 기준으로 다른 자리와의 조합을 찾는 도화와는 확인 방법이 달라.\n\n그래서 이름이 같아도 여러 방식의 결과를 합쳐서 도화가 강하다거나 만남이 많다고 읽지 않아. 정확히 어떤 기준과 위치에서 확인됐는지는 풀이 메모에서 볼 수 있어.\n\n본문에서 함께 읽은 관계의 엇갈림도 이 도화의 개수에 더하는 요소가 아니야. 관심·호감의 뜻과 가까운 관계의 부담은 별개의 특징으로 남겨 둬.",
+        "detail_title": "이 도화는 어디까지 읽을까?",
+        "detail": "현재 확인한 것은 왕지도화라는 보조 기준이야. 이것을 다른 종류의 도화와 합쳐 강한 연애운으로 계산하지 않았어. 만남 횟수·매력 순위·연인을 만날 날짜도 이 표시로 정하지 않아."
+      },
+      "en": {
+        "title": "Can different Peach Blossom methods give different readings?",
+        "description": "See the method matched here and why different variants are not added together.",
+        "answer": "**Yes. The variant in your chart is matched by the presence of particular visible branch characters.** It differs from methods that use a year/day reference branch to find a matching position.\n\nResults from different methods are not added to declare stronger attraction or more meetings. The notes retain the exact matched method and positions.\n\nThe separate relationship-friction theme in the main reading is not another count of Peach Blossom; the themes remain distinct.",
+        "detail_title": "How far does this Peach Blossom reading go?",
+        "detail": "This is the Wangji variant under the project's common-KR method. It is not merged with other variants to declare strong love luck, meeting counts, attractiveness ranks or relationship dates."
+      }
+    }
+  }
+}

@@ -35,6 +35,31 @@ def payload_with_analysis(locale="ko"):
 
 
 class ReadingKnowledgeTests(unittest.TestCase):
+    def test_responsibility_burden_is_direct_but_remains_conditional(self):
+        for locale in ("ko", "en"):
+            payload = payload_with_analysis(locale)
+            payload.career_facts.month_stem_ten_god = "정관" if locale == "ko" else "Direct Officer"
+            section = build_reading_plan(payload).sections["work_money"]
+            burden = next(block for block in section.blocks if block.role == "tradeoff")
+            self.assertTrue(burden.text.startswith("일만 늘고 대우는 그대로라면" if locale == "ko" else "If duties grow"))
+            self.assertIn("불리해" if locale == "ko" else "disadvantage", burden.text)
+            self.assertEqual(burden.fact_ids, ["career.month_stem_ten_god"])
+            self.assertEqual(section.rule_id, "work_money.officer")
+            self.assertEqual(section.rule_version, 1)
+            detail = build_fallback_interpretation_report(payload)
+            self.assertIn(burden.text, detail.career.body)
+            self.assertEqual(_validate_report(detail, payload), [])
+
+    def test_internal_favorability_cannot_turn_same_cycle_into_good_or_bad_verdict(self):
+        payload = payload_with_analysis()
+        original = build_reading_plan(payload).sections["luck_flow"]
+        for tone, favorability, rank in (("supportive", "high", 1), ("challenging", "low", 9)):
+            varied = deepcopy(payload)
+            varied.luck_cycle_analysis[0].overall_tone = tone
+            varied.luck_cycle_analysis[0].overall_favorability = favorability
+            varied.luck_cycle_analysis[0].cycle_rank = rank
+            self.assertEqual(build_reading_plan(varied).sections["luck_flow"], original)
+
     def test_catalog_resolves_each_rule_with_locale_and_provenance(self):
         bundle = load_reading_knowledge()
         self.assertEqual(len(bundle.rules), 21)

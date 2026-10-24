@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { SajuPreviewResponse } from "../../shared/api/contracts";
+import type { SajuPreviewRequest, SajuPreviewResponse } from "../../shared/api/contracts";
 import type { Locale } from "../../shared/copy";
 import { useSajuInputForm } from "../shared/useSajuInputForm";
 import type { DokkaebiExpression } from "../character/dokkaebiCatalog";
@@ -7,6 +7,8 @@ import { DokkaebiSticker } from "../character/DokkaebiSticker";
 import { DokkaebiBirthForm } from "./experience/DokkaebiBirthForm";
 import { DokkaebiLanding } from "./experience/DokkaebiLanding";
 import { DokkaebiReading } from "./experience/DokkaebiReading";
+import { DokkaebiQuestions } from "./experience/DokkaebiQuestions";
+import { hasQuestionFlow } from "./experience/questionModel";
 import { DokkaebiWaiting } from "./experience/DokkaebiWaiting";
 import {
   experienceCopy,
@@ -22,6 +24,7 @@ type ServicePageProps = {
   expression: DokkaebiExpression;
   onExpressionChange: (expression: DokkaebiExpression) => void;
   onChooseExpression: () => void;
+  restoredInput?: SajuPreviewRequest;
 };
 
 export function ServicePage({
@@ -32,15 +35,19 @@ export function ServicePage({
   expression,
   onExpressionChange,
   onChooseExpression,
+  restoredInput,
 }: ServicePageProps) {
   const copy = experienceCopy[locale];
   const [stage, setStage] = useState<"welcome" | "birth" | "time">("welcome");
   const [topicKey, setTopicKey] = useState<ReadingTopicKey>("today");
+  const [questionId, setQuestionId] = useState<string | null>(null);
   const mainRef = useRef<HTMLElement>(null);
   const form = useSajuInputForm({
     locale,
     debug: false,
-    onSuccess: onResultChange,
+    readingFirst: true,
+    progressive: true,
+    onSuccess: (next) => { setQuestionId(null); onResultChange(next); },
     onErrorResult: () => onResultChange(null),
   });
   const screen = form.loading ? "waiting" : result ? "reading" : stage;
@@ -54,14 +61,17 @@ export function ServicePage({
   function goHome() {
     if (form.loading) return;
     onResultChange(null);
+    setQuestionId(null);
     setStage("welcome");
   }
   function editInformation() {
     onResultChange(null);
+    setQuestionId(null);
     setStage("birth");
   }
   function goBack() {
-    if (result) editInformation();
+    if (result && questionId) setQuestionId(null);
+    else if (result) editInformation();
     else setStage(stage === "time" ? "birth" : "welcome");
   }
 
@@ -74,7 +84,7 @@ export function ServicePage({
               className="dk-icon-button dk-back-button"
               disabled={form.loading}
               onClick={goBack}
-              aria-label={result ? copy.edit : copy.back}
+              aria-label={result && questionId ? copy.back : result ? copy.edit : copy.back}
             >
               ←
             </button>
@@ -128,13 +138,25 @@ export function ServicePage({
       </header>
       <main className="dk-main" ref={mainRef} tabIndex={-1}>
         {screen === "waiting" ? (
-          <DokkaebiWaiting locale={locale} topicKey={topicKey} />
+          <DokkaebiWaiting locale={locale} progress={form.progress} />
+        ) : result && hasQuestionFlow(result) ? (
+          <DokkaebiQuestions
+            key={result.trace_id}
+            locale={locale}
+            result={result}
+            input={form.lastSubmittedPayload ?? restoredInput ?? null}
+            expression={expression}
+            onExpressionChange={onExpressionChange}
+            onEdit={editInformation}
+            questionId={questionId}
+            onQuestionChange={setQuestionId}
+          />
         ) : result ? (
           <DokkaebiReading
             key={result.trace_id}
             locale={locale}
             result={result}
-            detailPayload={form.lastSubmittedPayload}
+            detailPayload={form.lastSubmittedPayload ?? restoredInput ?? null}
             expression={expression}
             onExpressionChange={onExpressionChange}
             onEdit={editInformation}
@@ -145,8 +167,8 @@ export function ServicePage({
           <DokkaebiLanding
             locale={locale}
             expression={expression}
-            onStart={(topic) => {
-              setTopicKey(topic);
+            onStart={() => {
+              setTopicKey("today");
               setStage("birth");
             }}
           />
@@ -156,7 +178,6 @@ export function ServicePage({
             locale={locale}
             step={stage}
             form={form}
-            topicKey={topicKey}
             onNext={() => setStage("time")}
           />
         )}

@@ -5,8 +5,6 @@ import { DokkaebiSticker } from "../../character/DokkaebiSticker";
 import {
   experienceCopy,
   experienceExpressions,
-  readingTopics,
-  type ReadingTopicKey,
 } from "./experienceCopy";
 import { isValidBirthDate } from "./validateBirthDate";
 
@@ -16,17 +14,14 @@ export function DokkaebiBirthForm({
   locale,
   step,
   form,
-  topicKey,
   onNext,
 }: {
   locale: Locale;
   step: "birth" | "time";
   form: InputController;
-  topicKey: ReadingTopicKey;
   onNext: () => void;
 }) {
   const copy = experienceCopy[locale];
-  const topic = readingTopics.find((item) => item.key === topicKey)!;
   const [stepError, setStepError] = useState<string | null>(null);
   const dateRef = useRef<HTMLInputElement>(null);
   const timeRef = useRef<HTMLInputElement>(null);
@@ -80,7 +75,6 @@ export function DokkaebiBirthForm({
       </div>
       <div className="dk-form-heading">
         <div>
-          <span className="dk-selected-topic">{topic.label[locale]}</span>
           <h1>{step === "birth" ? copy.birthTitle : copy.timeTitle}</h1>
         </div>
         <DokkaebiSticker
@@ -280,11 +274,7 @@ export function DokkaebiBirthForm({
           </div>
         ) : null}
         <button className="dk-primary" type="submit" disabled={form.loading}>
-          {step === "birth"
-            ? copy.next
-            : locale === "ko"
-              ? `${topic.label[locale]} 보기`
-              : `${copy.submit} · ${topic.label[locale]}`}
+          {step === "birth" ? copy.next : copy.submit}
           <span aria-hidden="true">→</span>
         </button>
       </form>

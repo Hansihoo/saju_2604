@@ -1,0 +1,269 @@
+{
+  "knowledge_version": "natal-structure-knowledge-2026-10-10.1",
+  "rules_version": "natal-structure-rules-2026-10-10.1",
+  "copy_version": "natal-structure-copy-2026-10-23.1",
+  "selection_version": "natal-conclusion-selection-2026-10-11.1",
+  "scope": "Project interpretations of explicit natal relations; not final strength, useful-element, formation or event judgments.",
+  "sources": [
+    {
+      "id": "canonical_relations",
+      "reference": "lunar_python.util.LunarUtil.SHI_SHEN + build_manse.HIDDEN_STEMS_BY_BRANCH",
+      "scope": "Relationship and actual hidden-stem derivation only."
+    },
+    {
+      "id": "roots_and_season",
+      "url": "https://zh.wikisource.org/zh-hant/滴天髓闡微",
+      "scope": "Season and roots/support must be distinguished; not a numerical or final strength evaluator."
+    },
+    {
+      "id": "winter_metal",
+      "url": "https://zh.wikisource.org/zh-hant/窮通寶鑑",
+      "scope": "Winter metal has a cold/warm seasonal consideration. Memo only; no final useful element, rank or event prediction."
+    }
+  ],
+  "rules": {
+    "month_context": {
+      "when": "Use the canonical relationship between the day stem and the month's main hidden stem. Visible repetition is a location fact, not strength.",
+      "sources": [
+        "canonical_relations",
+        "roots_and_season"
+      ]
+    },
+    "roots_and_support": {
+      "when": "Distinguish same-element hidden roots from resource-group support across all four pillars. Presence/absence is not final strength.",
+      "sources": [
+        "canonical_relations",
+        "roots_and_season"
+      ]
+    },
+    "wealth_layer": {
+      "when": "Distinguish visible wealth, hidden-only wealth and no matched wealth. Never derive income, money ability or suitable employment.",
+      "sources": [
+        "canonical_relations"
+      ]
+    },
+    "output_resource": {
+      "when": "Month main is output and resource is visible. Read coexistence as preparation/support alongside production, not proven transformation.",
+      "sources": [
+        "canonical_relations"
+      ]
+    },
+    "output_officer": {
+      "when": "Both output and officer occur in non-day visible stems. Read coexistence of production and duties, not a clash, official harm or favorable formation.",
+      "sources": [
+        "canonical_relations"
+      ]
+    },
+    "winter_metal_note": {
+      "when": "Day element metal and month branch Hai/Zi/Chou. Record actual fire presence and both warming/control perspectives in memo only.",
+      "sources": [
+        "canonical_relations",
+        "winter_metal"
+      ]
+    }
+  },
+  "one_line": {
+    "output": {
+      "ko": "당신의 사주는 생각의 씨앗을 말과 작품으로 펼쳐내는 나무를 닮았습니다.",
+      "en": "Your chart resembles a tree whose seeds of thought unfold into words and creations."
+    },
+    "resource": {
+      "ko": "당신의 사주는 배움과 도움을 양분 삼아 자라는 나무를 닮았습니다.",
+      "en": "Your chart resembles a tree nourished by learning and support."
+    },
+    "wealth": {
+      "ko": "당신의 사주는 돈과 보상이 오가는 물길을 닮았습니다.",
+      "en": "Your chart resembles a waterway carrying the exchange of resources and rewards."
+    },
+    "officer": {
+      "ko": "당신의 사주는 맡은 자리의 무게를 품고 서 있는 기둥을 닮았습니다.",
+      "en": "Your chart resembles a pillar bearing the weight of its assigned role."
+    },
+    "peer": {
+      "ko": "당신의 사주는 여러 나무 사이에서 제 자리를 잡는 한 그루를 닮았습니다.",
+      "en": "Your chart resembles a tree finding its own space among neighboring trees."
+    }
+  },
+  "month": {
+    "output": {
+      "ko": {
+        "title": "만들고 표현하는 일이 중심이야",
+        "text": "**네 사주는 무언가를 만들고, 생각을 표현하고, 결과로 내놓는 일을 중심으로 읽어.** 배우거나 준비하는 과정과 비교하면, 밖으로 보여주는 결과에 초점이 놓이는 구조야.\n\n이것은 생산과 표현에 관한 풀이야. 결과물을 많이 만드는지, 그 일이 돈으로 얼마나 이어지는지는 별도로 판단해야 해."
+      },
+      "en": {
+        "title": "Making and expressing are central",
+        "text": "**Your chart is read around making things, expressing ideas and presenting results.** The seasonal relationship concerns output rather than preparation alone.\n\nThis is a production and expression theme; it does not establish actual productivity or the income a result brings."
+      }
+    },
+    "resource": {
+      "ko": {
+        "title": "배움과 준비, 도움을 받는 조건이 중심이야",
+        "text": "**네 사주는 배우고 준비하는 과정, 그리고 도움을 받는 조건을 중심으로 읽어.** 일을 시작하기 전에 지식이나 지원을 갖추는 주제가 드러나.\n\n준비를 갖추는 것과 실제 성과를 얻는 것은 다른 문제야. 이 조건만으로 성과나 수입을 정하지는 않아."
+      },
+      "en": {
+        "title": "Learning, preparation and support are central",
+        "text": "**Your chart is read around learning, preparation and conditions for receiving support.** Its seasonal theme concerns knowledge and backing before an undertaking.\n\nPreparation and actual results are separate; this relationship does not establish achievement or income."
+      }
+    },
+    "wealth": {
+      "ko": {
+        "title": "돈과 보상을 다루는 일이 중심이야",
+        "text": "**네 사주는 돈·거래·보상을 다루는 일을 중심으로 읽어.** 무엇을 만들었는지뿐 아니라, 그 가치와 대가를 어떻게 주고받는지가 주요 주제야.\n\n돈에 관한 관계가 중심에 있다는 뜻이지, 실제로 돈이 많다거나 쉽게 번다는 판정은 아니야."
+      },
+      "en": {
+        "title": "Money, exchange and rewards are central",
+        "text": "**Your chart is read around money, exchange and rewards.** Its seasonal theme concerns value and what is received in exchange.\n\nA central money relationship does not establish actual wealth or easy earnings."
+      }
+    },
+    "officer": {
+      "ko": {
+        "title": "맡은 역할과 지켜야 할 기준이 중심이야",
+        "text": "**네 사주는 맡은 역할, 책임, 평가 기준을 중심으로 읽어.** 어떤 일을 하는지와 함께 그 일에서 무엇을 요구받는지가 중요한 주제야.\n\n인정이나 지위를 얻는 일과 책임을 감당하는 일은 같지 않아. 책임의 관계가 있다는 사실만으로 승진이나 좋은 대우를 뜻하지는 않아."
+      },
+      "en": {
+        "title": "Roles and standards are central",
+        "text": "**Your chart is read around roles, responsibilities and evaluation standards.** Its seasonal theme concerns what a role requires.\n\nRecognition and carrying responsibilities are separate. The relationship does not establish promotion or favorable treatment."
+      }
+    },
+    "peer": {
+      "ko": {
+        "title": "자신의 입장과 동료·경쟁의 관계가 중심이야",
+        "text": "**네 사주는 자신의 입장을 세우는 일과 동료·경쟁자와의 관계를 함께 읽어.** 혼자 하는 일뿐 아니라 다른 사람과 역할이나 자원을 나누는 일도 주요 주제야.\n\n협력과 경쟁을 모두 살펴야 하는 구조이지, 실제로 경쟁이 많다거나 사람 때문에 손해를 본다는 뜻은 아니야."
+      },
+      "en": {
+        "title": "Your position alongside peers and competition",
+        "text": "**Your chart is read around your own position alongside peers and competitors.** Its seasonal theme includes shared roles and resources.\n\nBoth cooperation and competing claims belong to this theme; it does not establish actual competition or losses caused by others."
+      }
+    }
+  },
+  "support": {
+    "root_resource": {
+      "ko": {
+        "title": "자신을 지탱하는 조건과 지원이 함께 있어",
+        "text": "**이 사주에는 스스로를 지탱하는 요소와, 배움·도움으로 보충하는 요소가 함께 있어.** 받쳐주는 조건이 한 종류만 있는 구조는 아니라는 뜻이야.\n\n다만 이것만으로 어떤 일이든 넉넉히 감당한다고 정할 수는 없어. 앞서 본 주제와 함께 읽어야 할 조건이야."
+      },
+      "en": {
+        "title": "Roots and support are both present",
+        "text": "**Your chart contains both same-element roots and a separate learning/support relationship.** More than one form of structural backing is present.\n\nThese conditions do not establish that every demand is easy to carry."
+      }
+    },
+    "no_root_resource": {
+      "ko": {
+        "title": "도움이 있는 것과 혼자 감당하는 힘은 달라",
+        "text": "**배움이나 도움으로 보충하는 조건은 있어. 다만 그것만으로 혼자서 넉넉히 감당한다고 볼 수는 없어.** 지원을 받는 조건과 스스로를 지탱하는 조건이 서로 다르게 나타나는 사주야.\n\n따라서 도움의 표시가 있다는 이유로 일을 해내는 부담까지 사라진다고 읽지는 않아."
+      },
+      "en": {
+        "title": "Support and roots are different conditions",
+        "text": "**A learning/support relationship is present, but same-element roots are not matched.** Support must not be counted as a root.\n\nIts presence does not establish that production or responsibilities are easy to carry."
+      }
+    },
+    "root_no_resource": {
+      "ko": {
+        "title": "자신을 지탱하는 요소와 추가 지원을 구별해",
+        "text": "**자신을 지탱하는 요소는 확인돼. 반면 배움·지원에 해당하는 관계는 이번 사주에서 확인되지 않았어.** 두 종류의 받침 중 하나만 나타난다는 차이가 있어.\n\n사주에서 확인되는 지원의 종류를 구별한 것이지, 실제로 도와줄 사람이 없다는 뜻은 아니야."
+      },
+      "en": {
+        "title": "Roots are present; additional support is separate",
+        "text": "**Same-element roots are present, while a separate learning/support relationship is not matched.** These are two distinct forms of backing.\n\nThis chart distinction does not establish the absence of actual helpers."
+      }
+    },
+    "no_root_no_resource": {
+      "ko": {
+        "title": "받쳐주는 조건을 넉넉하게 가정하기 어려워",
+        "text": "**자신을 지탱하는 요소와 배움·지원에 해당하는 관계가 모두 확인되지 않았어.** 그래서 현재 사주에서는 지원이 충분하다고 가정하기 어려워.\n\n이것을 의지가 약하다거나 평생 불리하다는 판단으로 바꾸지는 않아. 다른 구조가 성립하는지는 별도 판단이 필요해."
+      },
+      "en": {
+        "title": "Ample backing cannot be assumed",
+        "text": "**Neither same-element roots nor a separate learning/support relationship is matched.** Ample backing cannot be assumed from these two conditions.\n\nThis does not establish weak willpower or lifelong misfortune; special formations require separate judgment."
+      }
+    }
+  },
+  "wealth": {
+    "hidden_only": {
+      "ko": {
+        "title": "돈과 보상에 관한 관계는 세부 구성에 있어",
+        "text": "**돈·보상에 해당하는 관계는 대표 글자에는 없고, 그 안의 세부 구성에서 확인돼.** 눈에 바로 보이지 않아도 사주 전체에 없는 것은 아니야.\n\n확인된 것은 이 관계가 놓인 위치야. 수입의 크기나 돈을 모으는 능력까지 판단한 결과는 아니야."
+      },
+      "en": {
+        "title": "Money relationships occur in the inner composition",
+        "text": "**Money/reward relationships are absent from the visible stems but present in the inner composition.** Absence at the surface is not absence from the whole chart.\n\nThis establishes location, not income or an ability to retain money."
+      }
+    },
+    "visible": {
+      "ko": {
+        "title": "돈과 보상에 관한 관계가 대표 글자에 있어",
+        "text": "**돈·거래·보상에 해당하는 관계가 대표 글자에 드러나 있어.** 세부 구성을 살펴야만 확인되는 사주와는 이 점이 달라.\n\n위치가 드러나 있다는 뜻이지, 실제 돈을 잘 벌거나 잘 지킨다는 뜻은 아니야. 그 판단에는 별도의 근거가 필요해."
+      },
+      "en": {
+        "title": "Money relationships have a visible position",
+        "text": "**Money, exchange and reward relationships have a visible position.** They are not limited to the inner composition.\n\nVisibility does not establish earning or retaining money; those require separate supported judgments."
+      }
+    },
+    "absent": {
+      "ko": {
+        "title": "이번 사주에서는 돈에 해당하는 관계가 확인되지 않아",
+        "text": "**대표 글자와 세부 구성을 함께 봐도 돈·보상에 해당하는 관계는 확인되지 않았어.** 이 관계가 나타나는 사주와는 다른 점이야.\n\n이것만으로 가난하거나 돈을 못 번다고 판단할 수는 없어. 실제 재물운의 결론은 현재 자료로 정하지 않았어."
+      },
+      "en": {
+        "title": "No money relationship is matched in this chart",
+        "text": "**No money/reward relationship is matched in either the visible or inner composition.** That differs from charts where it is present.\n\nIts absence alone does not establish poverty or inability to earn; no actual wealth verdict is supplied."
+      }
+    }
+  },
+  "combinations": {
+    "output_resource": {
+      "ko": "여기에 **배움·지원과 만들고 표현하는 주제가 함께 나타나.** 준비하는 과정과 결과를 내놓는 과정이 모두 있는 구조야. 다만 둘이 함께 있다는 것만으로 배운 것을 언제나 성과로 바꾸는 능력을 뜻하지는 않아.",
+      "en": "**Learning/support and production/expression occur together.** Preparation and presenting results are distinct themes here; coexistence does not establish an ability to turn learning into achievement."
+    },
+    "output_officer": {
+      "ko": {
+        "title": "결과를 내놓는 일과 평가받는 일을 함께 읽어",
+        "text": "**만들고 표현하는 주제와 책임·평가의 주제가 함께 나타나.** 결과를 내놓는 일과 정해진 기준을 충족하는 일을 나눠 봐야 하는 구조야.\n\n둘이 함께 있다는 사실만으로 갈등이 생긴다거나 높은 평가를 받는다고 판단하지는 않아."
+      },
+      "en": {
+        "title": "Production and evaluation are separate themes",
+        "text": "**Production/expression and responsibility/evaluation occur together.** Presenting results and meeting standards are distinct parts of the reading.\n\nTheir coexistence does not establish conflict or favorable evaluation."
+      }
+    }
+  },
+  "wealth_explanation": {
+    "direct": {
+      "ko": "**네 사주에서 확인된 돈의 주제는 재산과 일의 대가야.** 돈을 뜻하는 분류 중에서도 거래나 자원 운용과 구별해, 보유한 재산과 받은 보상에 연결해서 읽는 종류가 나타나.\n\n여기서 일의 대가는 일을 하고 받는 급여나 보수를 뜻하고, 재산은 이미 가지고 관리하는 것을 뜻해. 돈을 벌어들이는 과정과 손에 남겨 두는 것은 구별해서 봐야 해. 이번에 확인된 분류만으로 어느 쪽이 더 유리한지는 정하지 않았어.",
+      "en": "**The money theme matched in your chart concerns assets and compensation.** This traditional category refers to what you hold and what you receive in return for work, distinguished from trade and resource management.\n\nCompensation can mean payment for work; assets mean what is already held and managed. Receiving money and retaining it are separate questions. The matched category does not establish which is more favorable."
+    },
+    "indirect": {
+      "ko": "**네 사주에서 확인된 돈의 주제는 거래와 자원 운용이야.** 돈을 뜻하는 분류 중에서도 보유한 재산이나 일의 대가와 구별해, 무엇을 주고받고 자원을 어떻게 쓰는지에 연결해서 읽는 종류가 나타나.\n\n거래에는 교환하는 가치가 있고, 자원 운용에는 이미 가진 돈이나 자원을 사용하는 과정이 있어. 거래가 성립하는 것과 이익이 남는 것은 다른 문제야. 이 분류가 있다는 이유로 사업이나 투자에 유리하다고 정하지 않았어.",
+      "en": "**The money theme matched in your chart concerns trade and resource management.** This traditional category is distinguished from held assets and compensation for work.\n\nTrade concerns exchanged value; resource management concerns how existing money or resources are used. An exchange taking place and a profit remaining are separate questions. This category does not establish favorable business or investment outcomes."
+    },
+    "both": {
+      "ko": "**네 사주에는 재산·보상과 거래·자원 운용, 두 가지 돈의 주제가 함께 있어.** 하나는 보유한 재산과 일의 대가를, 다른 하나는 주고받는 거래와 자원을 사용하는 과정을 뜻해.\n\n그래서 금전 부분을 읽을 때도 받은 대가와 보유한 재산, 거래에 쓰는 자원을 구분해 살펴야 해. 두 분류가 함께 있다는 사실을 돈 버는 통로가 많다거나 실제 수입이 크다는 뜻으로 세지는 않아.",
+      "en": "**Both assets/compensation and trade/resource management are matched in your chart.** One category concerns what is held and received for work; the other concerns exchanges and the use of resources.\n\nThese distinguish payment and existing assets from resources used in transactions. Having both categories does not establish multiple income sources or high actual income."
+    },
+    "absent": {
+      "ko": "**이번 명식에서는 돈을 직접 뜻하는 두 분류가 확인되지 않았어.** 재산·보상이나 거래·자원 운용을 직접 가리키는 글자가 있는 사주와는 이 점이 달라.\n\n돈과 관련된 이 분류가 없다는 것과 현실에서 소득이나 재산이 없다는 것은 같은 말이 아니야. 다른 조건까지 종합하기 전에는 가난하다거나 돈을 못 모은다는 결론을 낼 수 없어.",
+      "en": "**Neither of the two direct money categories is matched in this chart.** That differs from a chart containing the assets/compensation or trade/resource-management relationships.\n\nAn absent chart category is not absent real-world income or assets. It does not establish poverty or inability to retain money."
+    }
+  },
+  "work_explanation": {
+    "work_money.peer": {
+      "ko": "여기서 나누는 것은 단순한 업무량만이 아니야. 각자 결정할 수 있는 범위와 함께 책임질 범위를 구분해서 읽는다는 뜻이야. 혼자 맡은 일과 공동으로 맡은 일을 같은 기준으로 평가하지 않는 풀이야.",
+      "en": "This concerns more than the amount of work. It separates decisions you own from responsibilities shared with others. Individual and shared work are distinct parts of the reading."
+    },
+    "work_money.output": {
+      "ko": "이 풀이에서 결과물은 생각이나 의견이 밖으로 드러난 것을 뜻해. 아이디어를 내는 과정과 다른 사람이 확인하거나 사용할 수 있는 완성본을 남기는 과정을 구분해 읽어. 표현의 주제가 있다는 사실만으로 실제 실력이나 평가가 정해지지는 않아.",
+      "en": "Output means an idea or expression made available outside yourself. Developing an idea and leaving work another person can inspect or use are distinct stages. This theme does not establish actual ability or evaluation."
+    },
+    "work_money.wealth": {
+      "ko": "여기서 보상은 일을 하고 받는 대가를 뜻해. 얼마나 바쁘게 일했는지와 어떤 대가를 받는지는 다른 문제이므로, 투입한 시간·자원과 돌아오는 보상을 함께 읽는 거야. 이 주제가 있다는 이유로 높은 급여나 취업 성공을 정하지는 않아.",
+      "en": "Reward here means what is received in return for work. Being busy and being compensated are different questions, so the reading considers time and resources alongside what comes back. This theme does not establish high pay or hiring success."
+    },
+    "work_money.officer": {
+      "ko": "역할은 맡은 일의 범위, 기준은 그 일을 어떻게 평가하는지를 뜻해. 일을 해내는 것과 정해진 기준을 충족해 평가받는 것을 함께 살피는 풀이야. 책임이 있다는 사실과 그에 맞는 권한이나 대우를 받는 것은 구별해야 해.",
+      "en": "A role concerns what you are responsible for; standards concern how that work is evaluated. Completing work and meeting the terms of evaluation are considered together. Responsibility differs from having matching authority or recognition."
+    },
+    "work_money.resource": {
+      "ko": "준비는 필요한 것을 배우고 이해하는 과정이고, 실제 일은 그 준비를 사용해 결과를 내는 과정이야. 배우는 데 쓴 시간과 일을 시작한 뒤 얻는 경험을 같은 것으로 보지 않는 풀이야. 배움의 주제가 있다고 특정 자격이나 직업에 유리하다고 정하지는 않아.",
+      "en": "Preparation concerns learning and understanding; work concerns using that preparation to produce a result. Time spent learning and experience gained through doing are separate parts of the reading. This theme does not establish an advantage in a particular qualification or occupation."
+    }
+  }
+}

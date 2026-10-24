@@ -2,9 +2,8 @@ import type { Locale } from "../../../shared/copy";
 import { DokkaebiSticker } from "../../character/DokkaebiSticker";
 import type { DokkaebiExpression } from "../../character/dokkaebiCatalog";
 import {
-  entryTopics,
+  includedReadingTopics,
   experienceCopy,
-  type ReadingTopicKey,
 } from "./experienceCopy";
 
 export function DokkaebiLanding({
@@ -14,7 +13,7 @@ export function DokkaebiLanding({
 }: {
   locale: Locale;
   expression: DokkaebiExpression;
-  onStart: (topic: ReadingTopicKey) => void;
+  onStart: () => void;
 }) {
   const copy = experienceCopy[locale];
   return (
@@ -27,26 +26,14 @@ export function DokkaebiLanding({
         <br />
         <span>{copy.heroTitle[1]}</span>
       </h1>
-      <div
-        className="dk-entry-topics"
-        role="group"
-        aria-label={copy.chooseTopic}
-      >
-        {entryTopics.map((topic) => (
-          <button
-            key={topic.key}
-            className={`dk-entry-topic dk-entry-topic-${topic.key}`}
-            onClick={() => onStart(topic.key)}
-          >
-            <DokkaebiSticker
-              expression={topic.expression}
-              decorative
-              size={64}
-            />
-            <strong>{topic.label[locale]}</strong>
-            <b aria-hidden="true">↗</b>
-          </button>
-        ))}
+      <div className="dk-landing-action">
+        <button className="dk-primary" type="button" onClick={onStart}>
+          {copy.submit}
+          <span aria-hidden="true">→</span>
+        </button>
+        <p className="dk-included-readings" aria-label={copy.includedReadings}>
+          {includedReadingTopics.map((topic) => topic.label[locale]).join(" · ")}
+        </p>
       </div>
     </section>
   );

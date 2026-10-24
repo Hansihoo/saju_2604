@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 
 import { StickerPage } from "./features/character/StickerPage";
 import { useDokkaebiPreference } from "./features/character/useDokkaebiPreference";
@@ -9,6 +9,8 @@ import { ApiHealth, SajuPreviewResponse } from "./shared/api/contracts";
 import { getApiHealth } from "./shared/api/saju";
 import { Locale } from "./shared/copy";
 import { Mode, getMode, getModePath } from "./shared/navigation";
+
+const LocalResultPage = import.meta.env.DEV ? lazy(() => import("./features/dev/LocalResultPage")) : null;
 
 export default function App() {
   const [locale, setLocale] = useState<Locale>("ko");
@@ -42,6 +44,17 @@ export default function App() {
   ]
     .filter(Boolean)
     .join(" ");
+
+  const localResultId = import.meta.env.DEV
+    ? /^\/local-result\/([a-f0-9]{32})\/?$/.exec(window.location.pathname)?.[1]
+    : undefined;
+  if (localResultId && LocalResultPage) return (
+    <div className="page-shell dokkaebi-page-shell">
+      <Suspense fallback={<main className="dk-main"><p role="status">저장한 결과를 열고 있어.</p></main>}>
+        <LocalResultPage id={localResultId} expression={expression} onExpressionChange={setExpression} />
+      </Suspense>
+    </div>
+  );
 
   return (
     <div className={pageShellClassName}>

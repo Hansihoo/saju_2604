@@ -4,19 +4,26 @@
 
 `suju-insight` is an AI-assisted saju reading web service.
 
-The service calculates the saju/manse result from user input first, then uses an LLM only to turn verified facts into readable language. The live mobile experience starts with a character and four reading topics, followed by compact input, the selected reading, and a share card.
+The service calculates the saju/manse result from user input first, then uses an LLM only to turn verified facts into readable language. The live mobile experience starts with a character and one reading button, with the included topics listed below, followed by compact input, result topic navigation, and a share card.
 
 ## Current Product Direction
 
-- User selects today, love, work/money, or current luck cycle, then enters birth date, birth time, gender, and birth region. Personality remains supporting result content.
+- User taps `운세 보기`, then enters birth date, birth time, gender, and birth region. Today, love, work/money and luck-cycle topics are informational on entry; selection happens in the result. Personality remains supporting result content.
 - Backend corrects time and region information before interpretation.
 - Code owns calculation, analysis signals, and judgment.
 - LLM owns phrasing only.
-- The live UI opens the selected topic first; today's reading uses existing period-flow calculations and shows the applicable date. Birthplace is required; current residence is not collected.
+- A new reading opens today first; topic navigation uses the same received result. Today's reading uses existing period-flow calculations and shows the applicable date. Birthplace is required; current residence is not collected.
 - The full reading remains available through an explicit button.
 - `/design-lab` compares document-style layouts using a fixed saved result.
 
 ## Provider Policy
+
+Local explicit commands: `pnpm dev:openai` (GPT-5.4/low) or
+`pnpm dev:codex` (gpt-6.1-sol/xhigh). Use `pnpm check:llm:openai` /
+`pnpm check:llm:codex` for a credential-safe readiness check without inference.
+The launchers check readiness before replacing services and restore caller settings.
+Both paths use the same validated reading/publication contract; stored-output replay
+does not constitute a live API test. See [071](planning/071-dual-provider-execution.md).
 
 Production default:
 
@@ -46,6 +53,11 @@ Codex mode is for personal local testing only. It is not the production default.
 
 ## Where To Read Next
 
+- `docs/planning/042-context-aware-love-readings.md`: direct feedback about single users receiving couple advice; situation/intent contracts, timing-data requirements and release gates. Design only; current generic love output is not yet replaced.
+
+- `docs/planning/039-fortune-index-design.md`: proposed period/topic fortune index; current static-score limitations, rule/scale requirements and verification. Design only; numeric output is not enabled.
+- `docs/planning/040-mobile-reading-design-review.md`: quiet Reading memo disclosure, design sources, next visual priorities, and current verification gaps.
+- `docs/planning/041-honest-waiting-progress.md`: request-scoped actual stages, heartbeats and elapsed time for long readings; no extra generation or estimated percentages.
 - `docs/ai/PRODUCT_CONTENT_KNOWLEDGE.md` and JSON: required direct-user-feedback policy; rejected personality hooks, future-question priorities and regression gates.
 - `docs/ai/API_COST_REVIEW.md`: pre-deployment call/pricing/input review; actual production configuration and token usage remain unconfirmed, with cost-reduction recommendations.
 

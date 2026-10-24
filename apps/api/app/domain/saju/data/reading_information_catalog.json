@@ -1,0 +1,240 @@
+{
+  "knowledge_version": "present-signals-knowledge-2026-10-09.2",
+  "source": "Project glossary aligned with calculate_special_stars.py metadata; traditional meanings, not expert-approved personal judgments or validated predictions.",
+  "entries": [
+    {
+      "id": "hamji",
+      "family": "dohwa",
+      "category": "love",
+      "ko": "함지도화",
+      "en": "Peach Blossom (triad method)",
+      "meaning_ko": "전통적으로 사람의 시선과 호감에 연결해 읽는 표시야. 쉽게 말하면 ‘눈길이 머무는 쪽’의 상징이지.",
+      "meaning_en": "Traditionally a symbol of attention and attraction: the idea of catching someone’s eye."
+    },
+    {
+      "id": "wangji",
+      "key": "wangji-dohwa",
+      "category": "love",
+      "ko": "왕지도화",
+      "en": "Peach Blossom (cardinal branches)",
+      "meaning_ko": "자·오·묘·유 네 글자 가운데 하나가 있어 붙는 도화 이름이야. 사람의 관심과 호감에 연결해 읽는 넓은 기준이며, 태어난 해나 날의 글자끼리 묶어서 찾는 함지도화와는 구별해.",
+      "meaning_en": "Marks any of four specific lower characters: Zi, Wu, Mao or You. It is a broad attraction-related convention, distinct from a method based on the year or day branch group."
+    },
+    {
+      "id": "mokyok",
+      "key": "mokyok-dohwa",
+      "category": "love",
+      "ko": "목욕도화",
+      "en": "Peach Blossom (Bath stage)",
+      "meaning_ko": "나를 나타내는 글자의 ‘목욕’ 단계에 해당해 붙는 이름이야. 전통적으로 감정 표현과 사람의 관심을 함께 살펴볼 때 쓰는 보조 표시야.",
+      "meaning_en": "Marks the Bath stage of the day stem, traditionally used as a supporting symbol for emotional expression and attention."
+    },
+    {
+      "id": "hongyeom",
+      "key": "hongyeom",
+      "category": "love",
+      "ko": "홍염",
+      "en": "Red Beauty",
+      "meaning_ko": "전통적으로 이성의 관심과 매력에 연결해 읽는 표시야. 도화와는 찾는 기준이 달라서 따로 읽어.",
+      "meaning_en": "Traditionally a symbol of romantic attention and attraction. Its lookup differs from Peach Blossom, so it is kept separate."
+    },
+    {
+      "id": "cheoneul",
+      "key": "cheoneul-gwiin",
+      "category": "core",
+      "ko": "천을귀인",
+      "en": "Heavenly Nobleman",
+      "meaning_ko": "전통적으로 사람의 도움과 난관을 풀어가는 일을 이야기할 때 참고하는 귀인이야.",
+      "meaning_en": "A traditional supporting symbol for help and overcoming difficulties."
+    },
+    {
+      "id": "woldeok",
+      "key": "woldeok-gwiin",
+      "category": "core",
+      "ko": "월덕귀인",
+      "en": "Monthly Virtue",
+      "meaning_ko": "전통적으로 어려움의 완화와 회복을 함께 보는 귀인이야. 태어난 달을 기준으로 찾는다는 점에서 일간 기준 귀인과 달라.",
+      "meaning_en": "Traditionally used for relief and recovery. Its lookup is based on the birth month rather than the day stem."
+    },
+    {
+      "id": "cheondeok",
+      "key": "cheondeok-gwiin",
+      "category": "core",
+      "ko": "천덕귀인",
+      "en": "Heavenly Virtue",
+      "meaning_ko": "전통적으로 난관의 완화와 보호를 이야기할 때 참고해. 월덕귀인과 이름은 비슷하지만 찾는 글자와 계산표가 달라.",
+      "meaning_en": "Traditionally associated with relief and protection. Its lookup table differs from Monthly Virtue."
+    },
+    {
+      "id": "munchang",
+      "key": "munchang-gwiin",
+      "category": "career",
+      "ko": "문창귀인",
+      "en": "Literary Nobleman",
+      "meaning_ko": "전통적으로 글·공부·연구와 연결하는 표시야.",
+      "meaning_en": "Traditionally linked to writing, study and research."
+    },
+    {
+      "id": "munguok",
+      "key": "munguok-gwiin",
+      "category": "career",
+      "ko": "문곡귀인",
+      "en": "Literary Arts Nobleman",
+      "meaning_ko": "전통적으로 문학·예술·표현과 연결해 읽어. 문창귀인과 계산표가 달라 별도 항목으로 표시했어.",
+      "meaning_en": "Traditionally associated with literary and artistic expression. Its lookup table is distinct from Literary Nobleman."
+    },
+    {
+      "id": "taegeuk",
+      "key": "taegeuk-gwiin",
+      "category": "core",
+      "ko": "태극귀인",
+      "en": "Supreme Ultimate Nobleman",
+      "meaning_ko": "전통적으로 학문·정신적 탐구와 연결해 읽는 귀인이야.",
+      "meaning_en": "Traditionally linked to scholarship and contemplation."
+    },
+    {
+      "id": "yeokma",
+      "family": "yeokma",
+      "category": "career",
+      "ko": "역마",
+      "en": "Travel Horse",
+      "meaning_ko": "이동·출장·해외·변화와 연결해 읽는 표시야. 태어난 사주에서 찾은 역마이고, 올해 이직할 시기를 계산한 결과는 아니야.",
+      "meaning_en": "Traditionally linked to travel, movement and change. A natal match does not identify a year for changing jobs."
+    },
+    {
+      "id": "hwagae",
+      "family": "hwagae",
+      "category": "core",
+      "ko": "화개",
+      "en": "Canopy",
+      "meaning_ko": "전통적으로 예술·철학·종교·몰입과 고독을 함께 읽는 표시야. ‘한 우물을 깊게 파는’ 뜻과 혼자 깊이 들어가는 고독의 뜻이 함께 있어.",
+      "meaning_en": "Traditionally linked to art, philosophy, religion, focused pursuits and solitude. It combines the idea of digging deeply into one subject with being alone."
+    },
+    {
+      "id": "jangseong",
+      "family": "jangseong",
+      "category": "career",
+      "ko": "장성",
+      "en": "General Star",
+      "meaning_ko": "리더십·권한·조직 안의 존재감과 연결해 읽는 표시야.",
+      "meaning_en": "Traditionally associated with authority and leadership."
+    },
+    {
+      "id": "hakdang",
+      "key": "hakdang",
+      "category": "career",
+      "ko": "학당",
+      "en": "Study Hall",
+      "meaning_ko": "전통적으로 공부와 문서 활동을 살펴볼 때 쓰는 표시야. 문창귀인과 같은 개념은 아니므로 따로 읽어.",
+      "meaning_en": "A traditional supporting symbol for study and written work, distinct from Literary Nobleman."
+    },
+    {
+      "id": "sagwan",
+      "key": "sagwan",
+      "category": "career",
+      "ko": "사관",
+      "en": "Official Hall",
+      "meaning_ko": "전통적으로 관직과 문서 활동에 연결하는 표시야. 관직에 오른다거나 채용된다는 결과를 뜻하지는 않아.",
+      "meaning_en": "Traditionally associated with official service and documents. It does not establish appointment or employment."
+    },
+    {
+      "id": "yangin",
+      "key": "yangin",
+      "category": "core",
+      "ko": "양인",
+      "en": "Blade Star",
+      "meaning_ko": "전통적으로 강한 추진력과 압박을 함께 읽는 표시야. ‘힘이 세니까 다 좋다’고 끝낼 항목은 아니고, 압박이라는 뜻도 함께 담고 있어.",
+      "meaning_en": "Traditionally linked to forceful initiative and pressure. Its force is not simply a positive label; the pressure-related meaning also matters."
+    },
+    {
+      "id": "gwaegang",
+      "key": "gwaegang",
+      "category": "core",
+      "ko": "괴강",
+      "en": "Commanding Star",
+      "meaning_ko": "특정한 일주에 붙는 이름으로, 전통적으로 단단함과 결단을 함께 읽어.",
+      "meaning_en": "A name assigned to particular day pillars, traditionally linked to firmness and decisiveness."
+    },
+    {
+      "id": "gongmang",
+      "key": "gongmang",
+      "category": "core",
+      "ko": "공망",
+      "en": "Void branches",
+      "meaning_ko": "태어난 날의 글자 묶음에서 빠지는 두 글자가 네 사주에도 있는지를 찾은 표시야. 전통적으로 공백·지연·기대와 체감의 차이·효력 약화에 연결해 읽어. 이 자리의 돈이나 인연이 실제로 사라진다는 뜻은 아니야.",
+      "meaning_en": "Marks whether the two branches omitted from the birth-day group appear in the chart. Traditionally linked to gaps, delays, a mismatch between expectations and experience, and weakened effect. It does not mean money or relationships actually disappear."
+    },
+    {
+      "id": "wonjin",
+      "key": "wonjin",
+      "category": "love",
+      "ko": "원진",
+      "en": "Resentment pair",
+      "meaning_ko": "전통적으로 감정이 꼬이거나 긴장이 생기는 쪽의 표시야. 쉬운 비유로는 ‘마음에 생기는 매듭’이지. 이 이름을 실제 연인과의 갈등이나 이별로 단정하지는 않아.",
+      "meaning_en": "Traditionally a symbol of emotional friction or tension, like a knot in a relationship. It does not establish actual conflict or separation."
+    },
+    {
+      "id": "gwimungwan",
+      "key": "gwimungwan",
+      "category": "core",
+      "ko": "귀문관",
+      "en": "Introspection pair",
+      "meaning_ko": "전통적으로 직관·몰입·민감함과 집착을 함께 읽는 표시야. 쉬운 비유로는 한 생각에 깊이 들어갔다가 쉽게 못 빠져나오는 쪽의 상징이지. 실제 성격이나 정신 건강을 진단한 결과는 아니야.",
+      "meaning_en": "Traditionally linked to intuition, intense focus, sensitivity and fixation. Think of getting deeply absorbed in a thought and finding it hard to leave. This symbolism is not a personality or mental-health diagnosis."
+    },
+    {
+      "id": "hyeonchim",
+      "key": "hyeonchim",
+      "category": "core",
+      "ko": "현침살",
+      "en": "Needle pattern",
+      "meaning_ko": "뾰족한 형상으로 분류하는 글자가 맞아 붙은 이름이야. 계산된 문자 패턴을 표시하며, 실제 상해나 질병을 뜻한다고 풀이하지 않아.",
+      "meaning_en": "Marks characters classified by a pointed-symbol pattern. It is a calculated text pattern, not an injury or illness prediction."
+    },
+    {
+      "id": "baekho_classic",
+      "key": "baekho-daesal-classic",
+      "category": "core",
+      "ko": "백호대살 · 고전형 기준",
+      "en": "White Tiger (classic table)",
+      "meaning_ko": "고전형 백호 일주 표에 네 일주가 들어가 있어. 현대형 표와 별도 기준으로 표시했으며, 이름을 근거로 상해·수술·사고를 예측하지 않아.",
+      "meaning_en": "Your day pillar matches the classic White Tiger table, distinct from the modern table. This label is not used to predict injuries, surgery or accidents."
+    },
+    {
+      "id": "baekho_modern",
+      "key": "baekho-daesal-modern-kr",
+      "category": "core",
+      "ko": "백호대살 · 현대형 기준",
+      "en": "White Tiger (modern table)",
+      "meaning_ko": "현대 한국형 백호 일주 표에 네 일주가 들어가 있어. 고전형 표와 별도 기준으로 표시했으며, 이름을 근거로 상해·수술·사고를 예측하지 않아.",
+      "meaning_en": "Your day pillar matches the modern Korean White Tiger table, distinct from the classic table. This label is not used to predict injuries, surgery or accidents."
+    },
+    {
+      "id": "gojin",
+      "family": "gojin",
+      "category": "love",
+      "ko": "고진",
+      "en": "Solitude star",
+      "meaning_ko": "전통적으로 고독과 혼자 떨어져 있는 쪽에 연결해 읽는 표시야. 이 불편한 뜻을 매력이나 연애의 장점으로 바꿔 말하지 않아. 현재 혼자인지, 앞으로 결혼할지는 이 이름으로 판단하지 않아.",
+      "meaning_en": "Traditionally linked to solitude. That uneasy meaning is not rewritten as charm or an advantage in love. The symbol does not establish single status or future marriage."
+    },
+    {
+      "id": "guasuk",
+      "family": "guasuk",
+      "category": "love",
+      "ko": "과숙",
+      "en": "Distance star",
+      "meaning_ko": "전통적으로 관계의 거리감과 쓸쓸함에 연결해 읽는 표시야. 연애운의 장점으로 포장할 항목은 아니야. 실제 이별이나 결혼 여부를 확인한 뜻은 아니고.",
+      "meaning_en": "Traditionally linked to relational distance and solitude. This is not a positive romantic label, nor does it establish an actual separation or marriage outcome."
+    },
+    {
+      "id": "cheonmun",
+      "key": "cheonmun-seong",
+      "category": "career",
+      "ko": "천문성",
+      "en": "Inquiry star",
+      "meaning_ko": "태어난 달의 지지를 기준으로 찾는 표시야. 전통적으로 연구·분석·철학에 연결해 읽어.",
+      "meaning_en": "A symbol found from the month branch, traditionally linked to inquiry, analysis and philosophy."
+    }
+  ]
+}

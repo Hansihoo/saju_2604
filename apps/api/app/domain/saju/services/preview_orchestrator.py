@@ -1,7 +1,7 @@
 """이 파일은 사주 미리보기 파이프라인 전체 순서를 지휘한다."""
 
 from datetime import datetime
-from typing import Optional
+from typing import Callable, Optional
 
 from app.config import settings
 from app.diagnostics import log_stage
@@ -33,8 +33,11 @@ def create_saju_preview_response(
     service_name: str,
     report_mode: ReportRenderMode = "all",
     as_of: Optional[datetime] = None,
+    on_progress: Optional[Callable[[str], None]] = None,
 ) -> SajuPreviewResponse:
     """사주 미리보기 파이프라인 전단계를 실행하고 최종 응답을 만든다."""
+    if on_progress is not None:
+        on_progress("calculating")
     birth_time_policy = resolve_birth_time_policy(payload)
     region = find_region_by_id(payload.region_id)
     log_stage(
@@ -235,6 +238,7 @@ def create_saju_preview_response(
         },
     )
 
+    progress_options = {"on_progress": on_progress} if on_progress is not None else {}
     return build_preview_response(
         payload=payload,
         region=region,
@@ -251,4 +255,5 @@ def create_saju_preview_response(
         birth_time_context=birth_time_context,
         report_mode=report_mode,
         as_of=as_of,
+        **progress_options,
     )

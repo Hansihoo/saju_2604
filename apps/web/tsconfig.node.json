@@ -5,5 +5,5 @@
     "module": "ESNext",
     "noEmit": false
   },
-  "include": ["vite.config.ts"]
+  "include": ["vite.config.ts", "localResultPlugin.ts"]
 }

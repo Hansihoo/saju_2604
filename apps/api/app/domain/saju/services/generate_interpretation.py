@@ -25,6 +25,7 @@ from app.domain.saju.llm_payload import InterpretationLuckCycle, InterpretationP
 from app.domain.saju.localization import contains_hangul, contains_hanja
 from app.domain.saju.prompts.interpretation_report import get_interpretation_report_prompt
 from app.domain.saju.services.codex_provider import CodexProviderError, call_codex_json
+from app.domain.saju.services.structured_output_schema import make_openai_json_schema_strict as _make_openai_json_schema_strict
 from app.domain.saju.services.build_reading_plan import unsupported_claim_issues
 from app.domain.saju.services.generate_free_preview import build_fallback_free_preview_report
 
@@ -63,19 +64,6 @@ MIN_SUMMARY_LENGTH = 220
 MIN_SECTION_LENGTH = 120
 OUTPUT_EXCERPT_LIMIT = 280
 ERROR_MESSAGE_LIMIT = 280
-SCHEMA_NOISE_KEYS = {
-    "default",
-    "examples",
-    "minLength",
-    "maxLength",
-    "pattern",
-    "format",
-    "minimum",
-    "maximum",
-    "multipleOf",
-    "minItems",
-    "maxItems",
-}
 ELEMENT_LABELS = {
     "ko": {"wood": "목", "fire": "화", "earth": "토", "metal": "금", "water": "수"},
     "en": {
@@ -1274,6 +1262,7 @@ def _call_openai_repair_interpretation(
 ) -> Tuple[InterpretationReport | None, InterpretationAttemptDiagnostic, str | None]:
     response = None
     output_text = ""
+    source_payload = _model_validate(InterpretationPayload, json.loads(payload_json))
     try:
         response = client.responses.create(
             model=settings.openai_model,
@@ -1281,7 +1270,7 @@ def _call_openai_repair_interpretation(
             store=settings.llm_store,
             max_output_tokens=token_budget,
             input=[
-                {"role": "developer", "content": PROMPT_SPEC.repair_prompt},
+                {"role": "developer", "content": PROMPT_SPEC.repair_prompt + "\n\n" + _writer_contract(source_payload)},
                 {
                     "role": "user",
                     "content": json.dumps(
@@ -1296,7 +1285,7 @@ def _call_openai_repair_interpretation(
             text={
                 "format": _make_openai_json_schema_strict(
                     "saju_interpretation_repair",
-                    _model_json_schema(InterpretationLLMOutput),
+                    _writer_schema(source_payload),
                 )
             },
         )
@@ -1385,10 +1374,9 @@ def _call_openai_structured_interpretation(
         timeout=settings.llm_timeout_seconds,
         max_retries=0,
     )
-    token_budgets = [
-        max(settings.llm_max_output_tokens, 3200),
-        max(settings.llm_max_output_tokens * 2, 5200),
-    ]
+    minimum_budget = 12000 if payload.publication_writing else 3200
+    token_budgets = [max(settings.llm_max_output_tokens, minimum_budget),
+                     max(settings.llm_max_output_tokens * 2, minimum_budget)]
     attempts: List[InterpretationAttemptDiagnostic] = []
     started = time.perf_counter()
     last_output_text = ""
@@ -1408,13 +1396,13 @@ def _call_openai_structured_interpretation(
                 store=settings.llm_store,
                 max_output_tokens=token_budget,
                 input=[
-                    {"role": "developer", "content": PROMPT_SPEC.developer_prompt},
+                    {"role": "developer", "content": PROMPT_SPEC.developer_prompt + "\n\n" + _writer_contract(payload)},
                     {"role": "user", "content": payload_json},
                 ],
                 text={
                     "format": _make_openai_json_schema_strict(
                         "saju_interpretation",
-                        _model_json_schema(InterpretationLLMOutput),
+                        _writer_schema(payload),
                     )
                 },
             )
@@ -1539,9 +1527,9 @@ def _call_codex_structured_interpretation(
     started = time.perf_counter()
     try:
         result = call_codex_json(
-            developer_prompt=PROMPT_SPEC.developer_prompt,
+            developer_prompt=PROMPT_SPEC.developer_prompt + "\n\n" + _writer_contract(payload),
             user_payload=_model_dump_json(payload),
-            output_schema=_model_json_schema(InterpretationLLMOutput),
+            output_schema=_writer_schema(payload),
             schema_name="saju_interpretation",
             extra_instructions=(
                 "Use only the supplied saju payload. Do not calculate new pillars, scores, or events.",
@@ -1633,29 +1621,6 @@ def _normalize_llm_output(data: Dict[str, Any]) -> Dict[str, Any]:
             if isinstance(evidence_ids, list):
                 block["evidence_ids"] = evidence_ids[:6]
     return data
-
-
-def _make_openai_json_schema_strict(name: str, schema: Dict[str, Any]) -> Dict[str, Any]:
-    cleaned = deepcopy(schema)
-
-    def visit(node: Any) -> None:
-        if isinstance(node, dict):
-            for key in list(node.keys()):
-                if key in SCHEMA_NOISE_KEYS:
-                    node.pop(key, None)
-                    continue
-                visit(node[key])
-            if node.get("type") == "object":
-                properties = node.get("properties", {})
-                if properties:
-                    node.setdefault("required", list(properties.keys()))
-                node["additionalProperties"] = False
-        elif isinstance(node, list):
-            for item in node:
-                visit(item)
-
-    visit(cleaned)
-    return {"type": "json_schema", "name": name, "strict": True, "schema": cleaned}
 
 
 def _collect_report_texts(report: InterpretationReport) -> List[str]:
@@ -1790,9 +1755,76 @@ def _validate_section(key: str, section: InterpretationNarrativeSection, locale:
     return issues
 
 
-def _validate_evidence_ids(report: InterpretationReport, payload: InterpretationPayload) -> List[str]:
+def _valid_evidence_ids(payload: InterpretationPayload):
     valid_ids = {item.key for item in payload.evidence}
     valid_ids.update(star.evidence_id for star in payload.special_stars)
+    if payload.reading_plan:
+        for section in payload.reading_plan.sections.values():
+            valid_ids.update(f.id for f in section.facts)
+    if payload.reading_information:
+        valid_ids.update(f.id for f in payload.reading_information.facts)
+    if payload.publication_writing:
+        valid_ids.update(f["id"] for f in payload.publication_writing["facts"])
+    return valid_ids
+
+
+def _section_evidence_ids(payload, key):
+    valid_ids = _valid_evidence_ids(payload)
+    if payload.publication_writing and key != "summary":
+        return sorted(valid_ids.intersection(payload.publication_writing["chapters"][key]["fact_ids"]))
+    return sorted(valid_ids)
+
+
+def _writer_contract(payload):
+    contract = {
+        "exact_section_titles": SECTION_TITLES[_locale(payload)],
+        "allowed_evidence_ids": {key: _section_evidence_ids(payload, key)
+                                 for key in ("summary", "core_analysis", "love", "career", "wealth", "luck_flow")},
+        "summary_overview": "At least 220 characters and at least five complete sentences; maximum 900 characters.",
+        "evidence_ids": "Use 1 to 6 IDs from this exact section's supplied allowlist. Do not invent aliases.",
+    }
+    text = "Exact transport contract (use titles verbatim):\n" + json.dumps(contract, ensure_ascii=False)
+    if payload.publication_writing:
+        text += """\nInitial published reading contract:
+- publication_writing.chapters is the exclusive judgment source for each chapter.
+  The older reading_plan/core personality inference must not replace its natal conclusions.
+- Explain every supplied basis and its conditions in connected, ordinary language.
+  Separate coexisting findings; do not claim that one cancels or increases the other.
+- Main text across the five chapters must exceed 4412 non-whitespace characters;
+  aim for 5200-6000. Folded notes, headings, notices and repeated definitions do not count.
+  Develop the actual answer, the reason, the distinction and limits specific to its supplied basis.
+- Avoid cryptic literal substitutes such as '몫', '흐름이 열려', '밑바탕', '돈을 쥔다'.
+  Say what happens or what the supplied relationship means, with an explicit subject.
+- Do not pad with generic advice, repeated disclaimers, invented scenarios or a glossary.
+- Wealth is symbols-and-meaning only: no supplied earning/saving/loss verdict exists.
+- Current/next period labels support a theme comparison, not favorable dates or events.
+- Use the five required transport headings, but keep technical positions in the last two.
+  Do not put technical terms or positions in main paragraphs; they will be folded.
+- Keep all chapter answers within the supplied scopes. If information cannot support
+  enough meaningful content, do not fabricate conclusions to satisfy length.
+"""
+    return text
+
+
+def _writer_schema(payload):
+    schema = _model_json_schema(InterpretationLLMOutput)
+    schema = deepcopy(schema)
+    for key, prop in list(schema["properties"].items()):
+        if "$ref" in prop:
+            target = schema
+            for part in prop["$ref"][2:].split("/"):
+                target = target[part]
+            prop = deepcopy(target)
+            schema["properties"][key] = prop
+        if key != "summary":
+            prop["properties"]["title"]["enum"] = [SECTION_TITLES[_locale(payload)][key]]
+        allowed = _section_evidence_ids(payload, key)
+        if allowed:
+            prop["properties"]["evidence_ids"]["items"]["enum"] = allowed
+    return schema
+
+
+def _validate_evidence_ids(report: InterpretationReport, payload: InterpretationPayload) -> List[str]:
     blocks = {
         "summary": report.summary,
         "core_analysis": report.core_analysis,
@@ -1803,6 +1835,7 @@ def _validate_evidence_ids(report: InterpretationReport, payload: Interpretation
     }
     issues: List[str] = []
     for key, block in blocks.items():
+        valid_ids = set(_section_evidence_ids(payload, key))
         for evidence_id in block.evidence_ids:
             if evidence_id not in valid_ids:
                 issues.append(f"{key}.evidence_ids:unknown:{evidence_id}")
@@ -1868,6 +1901,11 @@ def _validate_report(report: InterpretationReport, payload: InterpretationPayloa
                 issues.append(f"banned_phrase:{phrase}")
     issues.extend(_validate_evidence_ids(report, payload))
     issues.extend(_validate_language(report, payload))
+    if payload.publication_writing and report.provider != "fallback":
+        from app.domain.saju.publication_writing import MIN_MAIN_CHARS, visible_main_chars
+        actual = sum(visible_main_chars(getattr(report, key).body, locale) for key in SECTION_TITLES[locale])
+        if actual < MIN_MAIN_CHARS:
+            issues.append("publication.main:too_short:" + str(actual))
     return issues
 
 
@@ -1986,6 +2024,8 @@ def generate_interpretation_report(
 
         final_provider = diagnostics.final_provider
         report = _attach_diagnostics(report, diagnostics, provider=final_provider)
+        if payload.publication_writing:
+            report = _model_copy(report, update={"publication_writing_version": payload.publication_writing["version"]})
         log_stage(
             service=service_name,
             trace_id=trace_id,

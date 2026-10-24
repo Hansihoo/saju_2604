@@ -1,0 +1,55 @@
+{
+  "source": {
+    "id": "project-characteristics-policy",
+    "kind": "project_editorial_policy",
+    "expert_review": "not_completed",
+    "empirical_validation": "not_completed",
+    "scope": "Conditional modern readings of two-group structural patterns; not classical pattern establishment or measured strengths.",
+    "background_only": [
+      {"title": "三命通會 卷五", "url": "https://zh.wikisource.org/wiki/三命通會_(四庫全書本)/卷05", "scope": "Traditional relations and conditional combinations; not this modern copy or scale."},
+      {"title": "子平真詮 論用神成敗救應", "url": "https://donglishuzhai.net/chapter/3722.html", "scope": "Conditions, exceptions and interactions; not proof of this project's two-group interpretations."}
+    ]
+  },
+  "rules": [
+    {"id": "learning_into_output", "version": 1, "source_id": "project-characteristics-policy", "status": "active_project_policy", "direction": "advantage", "focus": "output", "requires": ["output", "resource"], "counter_groups": ["officer"], "wording": {
+      "ko": {"title": "배운 것을 결과물로", "conclusion": "배운 내용을 설명·기획·결과물로 꺼내는 쪽을 장점으로 읽어.", "reason": "배우고 정리하는 흐름에, 직접 만들고 표현하는 흐름이 함께 연결돼. 배운 내용을 실제 작업에 적용할 수 있는 자리에서 이 조합의 의미가 살아나.", "condition": "공부와 준비만 허용하고 직접 써볼 기회가 없다면 이 장점을 살리기 어려워."},
+      "en": {"title": "Putting learning to work", "conclusion": "The reading favors turning knowledge into explanations, plans or tangible output.", "reason": "Learning and organizing appear alongside making and expressing. This combination is most relevant when you can apply what you learn to real work.", "condition": "A setting that allows preparation but no opportunity to apply it limits this potential advantage."}
+    }},
+    {"id": "output_with_reward", "version": 1, "source_id": "project-characteristics-policy", "status": "active_project_policy", "direction": "advantage", "focus": "output", "requires": ["output", "wealth"], "counter_groups": ["peer"], "wording": {
+      "ko": {"title": "결과와 대가를 함께 보는 쪽", "conclusion": "무엇을 만들지와 그 대가를 어떻게 받을지를 함께 연결하는 쪽에서 장점을 읽어.", "reason": "만들고 표현하는 흐름과 자원을 다루는 흐름이 함께 드러나. 완성한 결과물의 가치와 거래 조건을 함께 다루는 상황에 연결되는 조합이야.", "condition": "이 조합만으로 돈을 잘 번다고 보지는 않아. 대가가 불명확하거나 비용이 커지면 장점으로 이어지기 어려워."},
+      "en": {"title": "Connecting output and its return", "conclusion": "The potential advantage is considering what you produce together with how its return is arranged.", "reason": "Making and expressing appear alongside handling resources. The combination is relevant to work where the value of output and its terms are considered together.", "condition": "This does not establish high earnings. Unclear compensation or high costs can prevent that potential advantage from helping."}
+    }},
+    {"id": "learning_with_responsibility", "version": 1, "source_id": "project-characteristics-policy", "status": "active_project_policy", "direction": "advantage", "focus": "resource", "requires": ["resource", "officer"], "counter_groups": ["output"], "wording": {
+      "ko": {"title": "배운 기준을 실무에 연결", "conclusion": "기준을 익히고 책임 있는 역할에 적용하는 환경에서 장점을 읽을 수 있어.", "reason": "배우고 지원받는 쪽과 책임·평가를 다루는 쪽이 함께 나와. 교육과 인수인계를 거쳐 역할을 맡는 상황에 잘 연결되는 풀이야.", "condition": "배울 시간이나 지원 없이 책임부터 넘겨받는다면, 이 장점보다 부담이 먼저 커질 수 있어."},
+      "en": {"title": "Applying learned standards", "conclusion": "The potential advantage is most relevant where you can learn standards before applying them in a responsible role.", "reason": "Learning and support appear alongside responsibility and evaluation. This reading fits a setting with training and a clear handover.", "condition": "Responsibility without time to learn or support can make the burden more important than the potential advantage."}
+    }},
+    {"id": "initiative_into_output", "version": 1, "source_id": "project-characteristics-policy", "status": "active_project_policy", "direction": "advantage", "focus": "peer", "requires": ["peer", "output"], "counter_groups": ["officer"], "wording": {
+      "ko": {"title": "직접 정하고 만들어내는 쪽", "conclusion": "스스로 방향을 정하고 결과물까지 맡는 일에서 장점을 읽을 수 있어.", "reason": "자기주도성을 읽는 흐름과 만들고 표현하는 흐름이 연결돼. 방법을 선택할 재량이 있고 결과로 설명할 수 있는 상황이 이 조합과 맞아.", "condition": "여러 사람이 함께 정해야 하는 일에서는, 혼자 결정하는 속도가 오히려 조율을 어렵게 할 수 있어."},
+      "en": {"title": "Taking initiative through output", "conclusion": "The potential advantage is relevant when you can choose an approach and carry it through to an output.", "reason": "Independence appears alongside making and expressing. This combination fits a setting with discretion over methods and a concrete result to explain.", "condition": "Where decisions must be shared, moving alone can make coordination harder."}
+    }},
+    {"id": "resources_with_standards", "version": 1, "source_id": "project-characteristics-policy", "status": "active_project_policy", "direction": "advantage", "focus": "wealth", "requires": ["wealth", "officer"], "counter_groups": ["peer"], "wording": {
+      "ko": {"title": "조건과 책임을 같이 챙기는 쪽", "conclusion": "돈과 자원의 조건을 책임 범위와 함께 정리하는 쪽에서 장점을 읽어.", "reason": "자원을 다루는 흐름과 기준·역할을 읽는 흐름이 함께 있어. 예산, 계약, 맡은 범위를 함께 다루는 상황에 연결되는 풀이야.", "condition": "계약이나 권한이 불명확하면 장점을 살리기 어려워. 재산이나 직장 지위를 보장하는 조합은 아니야."},
+      "en": {"title": "Resources with clear responsibility", "conclusion": "The potential advantage lies in considering resource terms together with the scope of responsibility.", "reason": "Resources appear alongside standards and roles. This reading is relevant to situations involving budgets, agreements and defined duties.", "condition": "Unclear terms or authority limit the advantage; this combination does not guarantee wealth or status."}
+    }},
+    {"id": "expression_against_rules", "version": 1, "source_id": "project-characteristics-policy", "status": "active_project_policy", "direction": "burden", "focus": "output", "requires": ["output", "officer"], "counter_groups": ["resource"], "wording": {
+      "ko": {"title": "방식은 바꾸고 싶은데, 규칙은 고정", "conclusion": "다른 방법을 내고 싶어도 시키는 방식만 허용되는 환경에서는 답답함과 조율 부담을 읽어.", "reason": "만들고 표현하는 흐름과 정해진 책임·기준의 흐름이 함께 나와. 결과를 내는 방식과 조직이 요구하는 방식이 어긋날 때 불리한 쪽으로 읽는 조합이야.", "condition": "방법을 선택할 재량과 합의된 기준이 있다면 이 부담은 약해져. 실제 직장에서 마찰이 있다는 뜻으로 단정하지는 않아."},
+      "en": {"title": "New approaches, fixed rules", "conclusion": "The potential burden is frustration and coordination effort where only a prescribed method is allowed.", "reason": "Making and expressing appear alongside fixed responsibilities and standards. The reading is unfavorable when your approach and the required method pull in different directions.", "condition": "Discretion over methods and agreed standards can reduce that burden. The chart does not establish an actual workplace conflict."}
+    }},
+    {"id": "preparation_delays_output", "version": 1, "source_id": "project-characteristics-policy", "status": "active_project_policy", "direction": "burden", "focus": "resource", "requires": ["resource", "output"], "minimum_emphasis": "prominent", "counter_groups": ["wealth"], "wording": {
+      "ko": {"title": "준비는 끝이 없고, 마감은 다가오고", "conclusion": "검토와 준비를 계속 늘릴 수 있는 상황에서는 완성이 뒤로 밀리는 부담을 읽어.", "reason": "배우고 확인하는 흐름을 이 풀이에서 크게 다루고, 동시에 결과물을 내야 하는 흐름도 있어. 준비를 어디서 끝낼지 정해지지 않으면 두 요구가 서로 발목을 잡을 수 있지.", "condition": "정확성이 더 중요한 작업에서는 같은 검토가 도움이 될 수 있어. 실제로 일을 미룬다는 성격 판정은 아니야."},
+      "en": {"title": "Preparation keeps moving the finish line", "conclusion": "Open-ended preparation can become a burden when work also needs to be finished.", "reason": "Learning and checking receive prominent attention in this reading, while output is also present. Without a stopping point for preparation, the two demands can compete.", "condition": "The same checking may help in accuracy-sensitive work. This is not a finding that you actually procrastinate."}
+    }},
+    {"id": "shared_money_boundaries", "version": 1, "source_id": "project-characteristics-policy", "status": "active_project_policy", "direction": "burden", "focus": "peer", "requires": ["peer", "wealth"], "counter_groups": ["officer"], "wording": {
+      "ko": {"title": "사람 좋은 것과 돈의 경계는 별개", "conclusion": "공동 지출이나 보상을 나눌 때 내 몫과 상대 몫이 흐리면 부담으로 읽어.", "reason": "동료·자기주도성을 읽는 흐름과 자원을 나누는 흐름이 함께 있어. 친분과 금전 조건이 한꺼번에 얽히는 상황에서 경계를 중요하게 보는 조합이야.", "condition": "분담과 정산이 명확하면 이 부담은 줄어들어. 돈을 잃거나 사람이 배신한다는 예측은 아니야."},
+      "en": {"title": "Friendly ties still need money boundaries", "conclusion": "Shared costs or rewards can become a burden when each person's share is unclear.", "reason": "Peers and independence appear alongside resources. This combination puts attention on boundaries where personal ties and money terms overlap.", "condition": "Clear allocation and settlement can reduce the burden. It does not predict losses or betrayal."}
+    }},
+    {"id": "responsibility_without_support", "version": 1, "source_id": "project-characteristics-policy", "status": "active_project_policy", "direction": "burden", "focus": "officer", "requires": ["officer", "peer"], "minimum_emphasis": "prominent", "exclude_qualifying": ["resource"], "counter_groups": [], "wording": {
+      "ko": {"title": "책임만 커지면 손해인 쪽", "conclusion": "지원과 권한 없이 책임만 늘어나는 상황은 불리하게 읽어.", "reason": "책임·기준을 크게 다루는 구조에 스스로 버티고 결정하는 흐름이 함께 나와. 이 조건에서는 책임을 더 맡는 것과 대우가 좋아지는 것을 따로 봐야 해.", "condition": "실제 지원이 없다고 확인한 것은 아니야. 권한·인력·보상이 함께 주어진다면 판단이 달라져."},
+      "en": {"title": "More duty without more support", "conclusion": "More responsibility without support or authority is read as unfavorable.", "reason": "Responsibility and standards receive prominent attention alongside independence. More duty and better treatment need to be considered separately here.", "condition": "The chart does not establish a real lack of support. Authority, staffing and compensation can change the assessment."}
+    }},
+    {"id": "duties_and_compensation", "version": 1, "source_id": "project-characteristics-policy", "status": "active_project_policy", "direction": "burden", "focus": "officer", "requires": ["officer", "wealth"], "minimum_visible_focus": 2, "counter_groups": ["resource"], "wording": {
+      "ko": {"title": "맡는 일과 받는 대우, 따로 봐야 해", "conclusion": "맡는 일은 늘어나는데 보상 조건이 그대로인 상황을 불리하게 읽어.", "reason": "책임·평가의 흐름이 겉글자 두 자리 이상에 나타나고, 돈·자원의 흐름도 함께 드러나. 이 조합에서는 책임을 맡는 것과 그 대가를 받는 것을 하나로 묶어 좋다고 말하기 어려워.", "condition": "실제로 업무가 늘거나 대우가 나쁘다는 뜻은 아니야. 권한·지원·보상이 함께 늘어나는 상황이라면 이 부담은 줄어들어."},
+      "en": {"title": "More duties and better treatment are separate", "conclusion": "More duties with unchanged compensation terms are read as unfavorable.", "reason": "Responsibility and evaluation appear in at least two visible non-day stems, alongside money and resources. In this combination, taking on duty and receiving its return should not be treated as one positive outcome.", "condition": "This does not establish more work or poor treatment in your actual job. Authority, support and compensation increasing together can reduce this burden."}
+    }}
+  ]
+}

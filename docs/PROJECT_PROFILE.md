@@ -61,7 +61,7 @@
 - OpenAI API provider, 로컬 Codex CLI provider, deterministic fallback provider를 지원한다.
 - 기본 provider는 `openai`이며, Codex provider는 개인 로컬 테스트 옵션이다.
 - `/design-lab`은 저장된 fixture를 사용해 LLM 호출 없이 문서형 결과지 디자인을 비교한다.
-- 실제 서비스는 캐릭터·한 문장과 오늘의 운세/연애운/직장·금전운/대운 흐름의 주제를 먼저 고르고, 출생 정보·출생지의 2단계 입력 후 고른 풀이와 공유 카드를 제공한다. 성격은 보조 결과에 남기고 첫 진입에서 제외했다. 오늘은 기존 `period_flows.today`의 계산값과 적용 날짜를 보여준다. 기존 동선은 `docs/planning/035-topic-first-reading.md`, 최신 진입 문구와 보강 순서는 `docs/planning/038-interest-led-reading-experience.md`를 따른다.
+- 실제 서비스는 캐릭터·한 문장과 `운세 보기` 한 개 버튼으로 시작한다. 아래에 오늘의 운세/연애운/직장·금전운/대운 흐름을 일반 텍스트로 안내하고, 출생 정보·출생지의 2단계 입력 후 결과에서 주제를 이동하고 공유 카드를 만든다. 성격은 보조 결과에 남기고 첫 진입에서 제외했다. 오늘은 기존 `period_flows.today`의 계산값과 적용 날짜를 보여준다. 최신 동선은 `docs/planning/034-dokkaebi-mobile-reading-experience.md`, 진입 기준은 `docs/ai/PRODUCT_CONTENT_KNOWLEDGE.json`, 미래 질문 보강 순서는 `docs/planning/038-interest-led-reading-experience.md`를 따른다.
 - 지역은 현재 거주지가 아닌 태어난 곳이다. 출생지로 출생 당시 시간대/DST와 기존 경도 보정을 처리한다. 현재 거주지·상세 주소·위치 권한은 받지 않는다.
 - 서비스 화면의 이름·가입 안내·홍보 문구를 제거하고, 아이콘 메뉴와 기능 중심의 짧은 문구를 사용한다. 개인별 풀이와 필요한 오류·제한 안내는 유지한다.
 

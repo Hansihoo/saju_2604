@@ -1,9 +1,13 @@
 """이 파일은 HTTP endpoint를 정의하고 service 계층으로 요청을 전달한다."""
 
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, Optional
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, HTTPException, Query, Request, Response
+from fastapi.responses import StreamingResponse
+
+from app.api.preview_stream import preview_events
+from app.api.question_routes import router as question_router
 
 from app.config import settings
 from app.diagnostics import capture_saju_request_event, to_json_safe
@@ -28,8 +32,11 @@ from app.domain.saju.services.generate_detail_insights import (
 )
 from app.domain.saju.services.preview_orchestrator import create_saju_preview_response
 from app.domain.saju.services.region_catalog import search_regions
+from app.domain.saju.category_reading import create_category_reading
+from app.domain.saju.question_schemas import SajuCategoryResponse
 
 router = APIRouter()
+router.include_router(question_router)
 
 
 def _model_for_provider(provider: str) -> Optional[str]:
@@ -90,6 +97,35 @@ def _guard_verification_provider(request: Request) -> None:
         raise HTTPException(status_code=409, detail={"error_code": "VERIFICATION_PROVIDER_MISMATCH", "message": "Fallback verification requires the fallback provider."})
 
 
+def _create_category_reading(payload, request, on_progress=None):
+    request.state.saju_preview_payload = to_json_safe(payload)
+    result = create_category_reading(payload=payload, trace_id=request.state.trace_id, service_name=settings.app_name,
+                                     calculate=create_saju_preview_response, on_progress=on_progress)
+    capture_saju_request_event(enabled=settings.request_log_enabled, log_path=settings.request_log_path,
+        max_bytes=settings.request_log_max_bytes, backup_count=settings.request_log_backup_count,
+        service=settings.app_name, trace_id=request.state.trace_id, method=request.method, path=request.url.path,
+        status_code=200, payload=request.state.saju_preview_payload, debug_requested=False,
+        include_input=settings.request_log_include_input, stage="completed",
+        meta={"provider": result.category_reading.provider, "response_mode": "category_reading"})
+    return result
+
+
+@router.post("/saju/reading", response_model=SajuCategoryResponse, response_model_exclude_none=True)
+def create_saju_reading(payload: SajuPreviewRequest, request: Request, response: Response):
+    _guard_verification_provider(request)
+    response.headers["Cache-Control"] = "private, no-store"
+    response.headers["Pragma"] = "no-cache"
+    return _create_category_reading(payload, request)
+
+
+@router.post("/saju/reading-stream", response_class=StreamingResponse)
+async def create_saju_reading_stream(payload: SajuPreviewRequest, request: Request):
+    _guard_verification_provider(request)
+    return StreamingResponse(preview_events(lambda progress: _create_category_reading(payload, request, progress)),
+                             media_type="application/x-ndjson", headers={"Cache-Control": "private, no-store",
+                             "Pragma": "no-cache", "X-Accel-Buffering": "no"})
+
+
 @router.get("/regions/search", response_model=RegionSearchResponse)
 def search_regions_endpoint(
     request: Request,
@@ -116,14 +152,24 @@ def create_saju_preview(
 ) -> SajuPreviewResponse:
     """사주 미리보기 요청을 받아 파이프라인을 실행한다."""
     _guard_verification_provider(request)
+    return _create_preview(payload, request)
+
+
+def _create_preview(
+    payload: SajuPreviewRequest,
+    request: Request,
+    on_progress: Optional[Callable[[str], None]] = None,
+) -> SajuPreviewResponse:
     payload_snapshot = to_json_safe(payload)
     request.state.saju_preview_payload = payload_snapshot
+    progress_options = {"on_progress": on_progress} if on_progress is not None else {}
     response = create_saju_preview_response(
         payload=payload,
         trace_id=request.state.trace_id,
         debug_requested=request.state.debug_requested,
         service_name=settings.app_name,
         report_mode="free_preview",
+        **progress_options,
     )
     if _is_http_request(request):
         capture_saju_request_event(
@@ -143,6 +189,17 @@ def create_saju_preview(
             meta={"pipeline_status": response.pipeline_status},
         )
     return response
+
+
+@router.post("/saju/preview-stream", response_class=StreamingResponse)
+async def create_saju_preview_stream(payload: SajuPreviewRequest, request: Request) -> StreamingResponse:
+    """One existing preview generation plus actual milestones and heartbeats."""
+    _guard_verification_provider(request)
+    return StreamingResponse(
+        preview_events(lambda progress: _create_preview(payload, request, progress)),
+        media_type="application/x-ndjson",
+        headers={"Cache-Control": "private, no-store", "Pragma": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 @router.post(

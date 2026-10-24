@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 import re
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
@@ -1050,4 +1050,9 @@ def build_interpretation_payload(
     )
     from app.domain.saju.services.build_reading_plan import build_reading_plan
     payload.reading_plan = build_reading_plan(payload)
+    from app.domain.saju.reading_information import build_reading_information
+    payload.reading_information = build_reading_information(
+        base=response, locale=locale, gender=request.gender,
+        as_of=as_of or datetime.now(timezone.utc),
+    )
     return payload

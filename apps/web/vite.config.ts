@@ -1,8 +1,9 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { localResultPlugin } from "./localResultPlugin";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), localResultPlugin()],
   server: {
     port: 5173,
     proxy: {
@@ -14,4 +15,3 @@ export default defineConfig({
     }
   }
 });
-

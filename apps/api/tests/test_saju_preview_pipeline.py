@@ -500,7 +500,7 @@ class SajuPreviewPipelineTests(unittest.TestCase):
         self.assertEqual(response.pipeline_status.saju_calculation, "passed")
         self.assertEqual(response.detail_report, response.interpretation)
         self.assertEqual(response.interpretation.schema_version, "m2-llm-v5")
-        self.assertEqual(response.interpretation.prompt_version, "saju-report-v16")
+        self.assertEqual(response.interpretation.prompt_version, "saju-report-v20")
         self.assertEqual(response.interpretation.provider, "fallback")
         self.assertEqual(response.interpretation.core_analysis.title, "내 사주 특징")
         self.assertEqual(response.interpretation.luck_flow.title, "현재 운과 대운 흐름")

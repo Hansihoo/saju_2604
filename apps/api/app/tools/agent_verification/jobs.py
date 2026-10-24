@@ -42,12 +42,15 @@ Give bounded wording repair requests only, and reply in the requested locale."""
 }
 
 # Frozen editorial policy, not a calculation rule or a runtime catalog dependency.
-CONTENT_POLICY_VERSION = "product-interest-2026-10-05.1"
-CONTENT_POLICY = """Editorial policy product-interest-2026-10-05.1:
+CONTENT_POLICY_VERSION = "product-interest-2026-10-09.1"
+CONTENT_POLICY = """Editorial policy product-interest-2026-10-09.1:
 QF-001: Future relationships, employment and changes in fortune are primary interests.
 Do not promote personality/type questions as entry or follow-up curiosity hooks.
 QF-002: Keep the requested question; do not replace an unsupported future answer with personality.
 QF-003: New timing information needs period facts and reviewed rules; a new title/voice is not support.
+QF-004: Readability and matching calculation facts do not establish reader usefulness.
+Methods, category names, counts, limitations and generic advice alone are not a personal reading.
+Keep fact-answer support separate from useful interpretation; never invent missing rules or events to fill the gap.
 This is project user feedback, not a universal reader preference or evidence of prediction accuracy."""
 PROMPTS = {role: prompt + "\n" + CONTENT_POLICY for role, prompt in PROMPTS.items()}
 

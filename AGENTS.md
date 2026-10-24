@@ -2,6 +2,11 @@
 
 Read `docs/PROJECT_STATUS.md`, `docs/CODEX_RUNBOOK.md`, and the relevant planning document before changes.
 
+For runtime reading verification requests such as “런타임 검증해줘” or “사주 결과와 추가 질문 검증해줘”,
+use the project-local skill [saju-runtime-verification](.agents/skills/saju-runtime-verification/SKILL.md).
+Review actual prose, folded evidence, displayed follow-up questions and their actual selected answers.
+Use independent reader/evidence agents as specified by the skill; server-health-only requests are separate.
+
 For any calculation, interpretation, prompt, result, or sharing change, also read
 [`docs/ai/SAJU_READING_AGENT.md`](docs/ai/SAJU_READING_AGENT.md).
 That document defines the fact/rule/claim boundary and required output roles.

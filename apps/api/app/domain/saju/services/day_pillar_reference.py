@@ -47,6 +47,7 @@ def resolve_day_pillar_reference(
             reference_date="",
             source="lunar_python_fallback",
             matched_lunar_python="",
+            rule="sect1_23_changes_day" if sect == 1 else "sect2_00_changes_day",
         )
 
     return DayPillarReference(
@@ -59,4 +60,5 @@ def resolve_day_pillar_reference(
         reference_date=record.solar_date,
         source="kasi_lunar_reference",
         matched_lunar_python=str(lunar_python_gan_zhi == record.day_ganzhi_hanja).lower(),
+        rule="sect1_23_changes_day" if sect == 1 else "sect2_00_changes_day",
     )

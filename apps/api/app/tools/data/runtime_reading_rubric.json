@@ -1,0 +1,136 @@
+{
+  "version": "runtime-reading-rubric-2026-10-10.2",
+  "scope": "Project content review; not expert approval, prediction accuracy or real-user interest validation.",
+  "criteria": [
+    {
+      "id": "question_fit",
+      "role": "reader",
+      "applies_to": "all",
+      "label": "질문에 직접 답하는가",
+      "pass": "요청한 정보에 직접 답하거나 답할 수 없는 부분을 명확하게 구별한다. 실제 궁금증 충족 여부는 question_fulfillment에 별도로 기록한다.",
+      "fail": "취업·만남 시기 질문을 성격·업무 스타일·일반 조언으로 바꾼다.",
+      "owner": "C02/C05"
+    },
+    {
+      "id": "clarity",
+      "role": "reader",
+      "applies_to": "all",
+      "label": "제대로, 쉽게 이해할 수 있는 문구인가",
+      "pass": "본문만 읽고 결론을 쉬운 말로 다시 설명할 수 있다. 문장의 대상과 문단 관계가 명확하다.",
+      "fail": "몫·흐름·밑바탕의 뜻을 추측해야 하거나 갑자기 돈·평가로 넘어간다. 메모를 읽어야 본문 뜻을 알 수 있다.",
+      "owner": "C03"
+    },
+    {
+      "id": "curiosity_satisfaction",
+      "role": "reader",
+      "applies_to": "all",
+      "label": "궁금증을 채울 수 있는 내용인가",
+      "pass": "개인별 결론과 의미·조건을 얻거나 선택한 사실 질문의 직접 답을 얻는다. 배운 새 정보를 구체적으로 적을 수 있다.",
+      "fail": "분류·개수·방법·한계·일반 조언만 있고 알고 싶었던 정보는 없다. 책임은 부담이라는 일반론으로 끝난다.",
+      "owner": "C02/C03"
+    },
+    {
+      "id": "followup_interest",
+      "role": "reader",
+      "applies_to": "menu",
+      "label": "흥미를 유발하며 추가 질문으로 이어지는가",
+      "pass": "본문의 풀이 또는 실제 확인된 특징을 명확히 알리는 메뉴에서 자연스러운 다음 궁금증이 생긴다. 실제 메뉴에서 고른 질문과 눌러서 새로 알 기대 내용을 적을 수 있다. 본문의 핵심 답은 이미 제공한다. C05에 따라 태극·도화 등의 이름은 실제 확인된 특징의 개인별 의미 질문에 사용할 수 있으며, 본문에 신살별 소개를 강제하지 않는다. 확인된 존재 여부는 근거 역할이 검사하고 독자 역할은 자신에게 제공된 화면 문구의 연결과 새 정보 기대를 판단한다.",
+      "fail": "더 알아보기 같은 빈 제목, 이미 답한 내용 반복, 없는 특징·과장·불안·미지원 예측을 약속하거나 핵심 답을 숨겨 클릭하게 한다.",
+      "owner": "C05"
+    },
+    {
+      "id": "fact_fidelity",
+      "role": "evidence",
+      "applies_to": "all",
+      "label": "입력·계산 사실과 범위가 맞는가",
+      "pass": "주장마다 실제 계산 사실과 일치하며 날짜 관례·시간 미상·critical 보류와 지원 범위를 지킨다.",
+      "fail": "겉 오행 부재를 전체 부재로 바꾸거나 책임을 승진·보상으로 바꾼다. 없는 날짜·확률·순위·개인사를 만든다.",
+      "owner": "C01"
+    },
+    {
+      "id": "reasoning",
+      "role": "evidence",
+      "applies_to": "all",
+      "label": "풀이 판단이 성립하는가",
+      "pass": "선택한 관점의 적용 조건·전체 맥락·반대 단서와 우선순위를 확인한다. 단순 공존과 실제 작용을 구별한다. 여러 관법의 이름이나 개수로 점수를 주지 않는다.",
+      "fail": "배움과 표현의 공존만으로 성과 전환 능력을 확정한다. 한 요소만으로 전체 좋고 나쁨을 정하거나 관점별 상충 결론을 그대로 붙인다.",
+      "owner": "C01"
+    },
+    {
+      "id": "note_consistency",
+      "role": "evidence",
+      "applies_to": "all",
+      "label": "본문과 접힌 근거가 일치하는가",
+      "pass": "전문용어·위치·출처·판단 이유는 근거에 있으며 본문의 결론·조건과 같다. 근거 참조 ID만으로 자연어를 승인하지 않는다.",
+      "fail": "본문은 확정하고 메모는 판단 불가라고 하거나, 핵심 결론이 메모에만 있다.",
+      "owner": "C04"
+    },
+    {
+      "id": "followup_delivery",
+      "role": "evidence",
+      "applies_to": "menu",
+      "label": "추가 질문이 약속한 답을 실제 제공하는가",
+      "pass": "공개한 질문마다 실제 선택 응답을 확인한다. 존재/선택 조건이 맞고 제목이 약속한 의미를 새 정보로 답하며 같은 사실·판정 범위를 유지한다.",
+      "fail": "의미 질문을 위치 확인 답으로 재명명하거나 메뉴에 없는 질문을 추천한다. 응답이 없거나 같은 답의 제목만 바꾸고 미지원 시기를 약속한다.",
+      "owner": "C05"
+    }
+  ],
+  "calibration_examples": [
+    {
+      "question": "언제 취업 기회를 주목하면 돼?",
+      "answer": "너는 꼼꼼하고 책임감이 있어. 꾸준히 준비해 봐.",
+      "expected_failures": [
+        "question_fit",
+        "curiosity_satisfaction"
+      ],
+      "reason": "시기 답 대신 성격과 숙제를 제공했다."
+    },
+    {
+      "question": "내 사주를 풀어줘",
+      "answer": "맡은 역할에 따르는 책임은 부담이야.",
+      "expected_failures": [
+        "curiosity_satisfaction"
+      ],
+      "reason": "문장은 이해되지만 개인을 구별하는 풀이 정보가 없다."
+    },
+    {
+      "question": "배움과 표현이 같이 있다는 뜻은?",
+      "answer": "그러니 배운 것을 언제나 돈으로 잘 바꾸는 사람이야.",
+      "expected_failures": [
+        "reasoning",
+        "fact_fidelity"
+      ],
+      "reason": "관계의 공존을 능력과 수입으로 확대했다."
+    },
+    {
+      "question": "내 사주의 도화는 연애에서 어떤 의미야?",
+      "answer": "도화는 일지에 있어.",
+      "expected_failures": [
+        "curiosity_satisfaction",
+        "followup_delivery"
+      ],
+      "reason": "개인별 의미를 약속하고 위치만 답했다."
+    },
+    {
+      "question": "도화가 어느 위치에 있어?",
+      "answer": "이번 계산에서는 일지에 있어.",
+      "expected_passes": [
+        "question_fit",
+        "clarity",
+        "curiosity_satisfaction"
+      ],
+      "condition": "고정 사실에 해당 위치가 있을 때만 선택한 사실 질문의 직접 답으로 통과한다."
+    },
+    {
+      "question": "올해 취업 날짜를 알려줘",
+      "answer": "현재 자료로 취업 날짜를 정할 수 없어.",
+      "expected": {
+        "question_fit": "PASS",
+        "clarity": "PASS",
+        "curiosity_satisfaction": "FAIL",
+        "question_fulfillment": "unmet"
+      },
+      "reason": "정직한 한계 안내와 요청 정보 충족은 다르다. 새 예측을 꾸며서 수정하지 않는다."
+    }
+  ]
+}

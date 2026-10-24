@@ -47,6 +47,7 @@ function drawFittedText(
   maxFont: number,
   minFont: number,
   weight: number,
+  allowTruncation = true,
 ) {
   let fontSize = maxFont;
   let lines: string[] = [];
@@ -59,6 +60,7 @@ function drawFittedText(
   // Very long provider text gets an explicit ellipsis; the full reading stays on screen.
   const visibleLines = Math.max(1, Math.floor(height / (fontSize * 1.45)));
   if (lines.length > visibleLines) {
+    if (!allowTruncation) throw new Error("Share limitation text does not fit");
     lines = lines.slice(0, visibleLines);
     let last = lines[visibleLines - 1];
     while (last && context.measureText(`${last}…`).width > width)
@@ -111,7 +113,8 @@ export async function createReadingShareCard(
   drawFittedText(ctx, content.takeaway, 106, 900, 868, 258, 36, 22, 500);
   if (content.limitation) {
     ctx.fillStyle = "#51485d";
-    drawFittedText(ctx, content.limitation, 88, 1222, 904, 72, 24, 18, 500);
+    // Calculation/scope limits must remain complete in the exported image.
+    drawFittedText(ctx, content.limitation, 88, 1204, 904, 108, 24, 18, 500, false);
   }
   return new Promise((resolve, reject) =>
     canvas.toBlob(

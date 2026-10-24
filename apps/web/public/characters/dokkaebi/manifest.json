@@ -1,10 +1,18 @@
 {
   "schemaVersion": 1,
+  "assetVersion": "dokkaebi-assets-2026-10-08.1",
   "character": "dokkaebi",
   "background": "transparent",
   "generatedWith": "built-in image_gen",
   "reference": "source-sheet.png",
   "expressions": [
+    {
+      "id": "shrug",
+      "label": "으쓱",
+      "file": "shrug.png",
+      "reference": "smirk.png",
+      "prompt": "Use case: identity-preserve. Asset type: one transparent PNG emoticon for the saju chart heading. Input image is the approved dokkaebi smirk.png, the identity and drawing-style reference. Create the SAME pale lilac squishy rounded one-horn dokkaebi, with its thick very dark purple outline, little half-lidded eyes and tiny crooked confident smile. Change the pose to a playful self-satisfied shrug: add two very small simple matching lilac arms at its sides, elbows bent and both open palms facing upward, shoulders raised a little as if saying 'I know a thing or two'. This is cute and cheeky, never hostile or insulting. Keep its original squat blob body, single rounded horn, face proportions, colors and minimal clean sticker style; hands and arms are the only new body parts. One centered isolated character, full horn and both hands visible, generous transparent margin all around, square canvas. No text, captions, props, symbols, stars, accessories, background, grid or watermark. Genuinely transparent background."
+    },
     {
       "id": "smile",
       "label": "방긋",

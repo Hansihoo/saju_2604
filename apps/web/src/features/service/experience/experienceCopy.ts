@@ -12,11 +12,11 @@ export const experienceCopy = {
     faces: "표정 고르기",
     resultLanguageNote: "풀이 언어는 출생 정보를 입력할 때 선택할 수 있어요.",
     heroTitle: ["사주에 있는", "그대로 말해줄게."],
-    chooseTopic: "궁금한 사주 선택",
+    includedReadings: "볼 수 있는 운세",
     birthTitle: "출생 정보",
     timeTitle: "태어난 시간과 장소",
     next: "다음",
-    submit: "풀이 보기",
+    submit: "운세 보기",
     birthDate: "생년월일",
     calendar: "달력 기준",
     solar: "양력",
@@ -39,10 +39,9 @@ export const experienceCopy = {
     timeError: "시간을 00:00부터 23:59 사이로 입력해 주세요.",
     retry: "입력을 확인하고 다시 해볼까요?",
     loadingTitle: "사주 읽는 중",
-    loadingTopic: "읽는 중",
     todayTakeaway: "오늘의 한마디",
     topicNav: "궁금한 풀이",
-    analysisNote: "분석 노트",
+    readingMemo: "풀이 메모",
     basisFacts: "명식 근거",
     basisReportedFacts: "제공된 해석 근거",
     basisReading: "해석 기준",
@@ -72,7 +71,7 @@ export const experienceCopy = {
     resultLanguageNote:
       "Choose the reading language when entering birth information.",
     heroTitle: ["Your chart.", "Your story."],
-    chooseTopic: "Choose a reading",
+    includedReadings: "Included readings",
     birthTitle: "Birth details",
     timeTitle: "Birth time & place",
     next: "Next",
@@ -100,10 +99,9 @@ export const experienceCopy = {
     timeError: "Enter a time between 00:00 and 23:59.",
     retry: "Let's check your information and try again.",
     loadingTitle: "Reading your chart",
-    loadingTopic: "Reading",
     todayTakeaway: "Today's takeaway",
     topicNav: "Reading topics",
-    analysisNote: "Analysis note",
+    readingMemo: "Reading memo",
     basisFacts: "Chart basis",
     basisReportedFacts: "Basis supplied with the reading",
     basisReading: "Interpretive rationale",
@@ -164,12 +162,21 @@ export const readingTopics: Array<{
 
 // Self-description is supporting result content, not an entry hook.
 // Concrete future-event questions require their own reviewed reading rules.
-export const entryTopics = readingTopics.filter((topic) => topic.key !== "core");
+// The basic chart comes first. Only supported fact questions are offered after it.
+// These labels describe available information, without promising event prediction.
+export const entryPresentationVersion = "entry-presentation-2026-10-09.1";
+export const includedReadingTopics = [
+  { key: "basic_chart", label: { ko: "사주팔자", en: "Four pillars" } },
+  { key: "love_reading", label: { ko: "연애·결혼", en: "Love and marriage" } },
+  { key: "wealth_reading", label: { ko: "금전", en: "Money" } },
+  { key: "career_reading", label: { ko: "직장·직업", en: "Work and career" } },
+  { key: "luck_cycles", label: { ko: "대운", en: "Luck cycles" } },
+];
 
 export const experienceExpressions = {
   welcome: "smirk",
   birth: "smile",
   time: "surprised",
   error: "cry",
-  waiting: ["sleepy", "surprised", "smile"],
+  waiting: ["smirk", "surprised", "smile"],
 } as const;

@@ -73,6 +73,13 @@ class DayPillarReferenceTests(unittest.TestCase):
         self.assertEqual(reference.iljin_query_date, "1988-11-20")
         self.assertEqual(reference.gan_zhi, "\u5df1\u536f")
         self.assertEqual(reference.matched_lunar_python, "true")
+        self.assertEqual(reference.rule, "sect2_00_changes_day")
+
+    def test_sect2_fallback_preserves_its_rule_metadata(self) -> None:
+        with patch("app.domain.saju.services.day_pillar_reference.lookup_lunar_reference_by_solar_date", return_value=None):
+            reference = resolve_day_pillar_reference(input_dt=datetime(2024, 2, 10, 23, 30), sect=2, lunar_python_gan_zhi="甲辰")
+        self.assertEqual(reference.rule, "sect2_00_changes_day")
+        self.assertEqual(reference.iljin_query_date, "2024-02-10")
 
     def test_falls_back_to_lunar_python_when_reference_is_missing(self) -> None:
         with patch(
