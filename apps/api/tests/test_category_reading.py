@@ -99,13 +99,16 @@ class CategoryReadingHttpTests(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(any(d["rule"] == "cycle_theme_comparison_v1" and d["current_god"] == "비견" and d["next_god"] == "겁재" for d in information["derivations"]))
 
     async def test_critical_and_unknown_do_not_generate_interpretations(self):
-        for payload in (BOUNDARY, {**NORMAL, "is_birth_time_estimated": True}):
+        for payload in (BOUNDARY, {**BOUNDARY, "locale": "en"}, {**NORMAL, "is_birth_time_estimated": True}, {**NORMAL, "is_birth_time_estimated": True, "locale": "en"}):
             with patch("app.domain.saju.services.build_preview_response.generate_interpretation_report") as full:
                 response = await self.client.post("/saju/reading", json=payload)
             self.assertEqual(response.status_code, 200, response.text)
             full.assert_not_called()
             data = response.json()
             self.assertTrue(data["category_reading"]["source_context"]["critical_hold"])
+            self.assertEqual([s["id"] for s in data["category_reading"]["sections"] if s["visible"]],
+                             ["core", "love", "wealth", "career", "luck_flow"])
+            self.assertTrue(all(s["publication"]["blocks"] for s in data["category_reading"]["sections"]))
             self.assertTrue(all(s["status"] == "blocked_calculation" for s in data["category_reading"]["sections"]))
             for section in data["category_reading"]["sections"]:
                 expected = ("conditional_natal_structure" if section["id"] == "core" else "conditional_traditional_themes") if not payload.get("is_birth_time_estimated") and section["id"] in {"core", "love"} else "provisional_information"
@@ -114,11 +117,10 @@ class CategoryReadingHttpTests(unittest.IsolatedAsyncioTestCase):
                 self.assertFalse(any(b["kind"] == "interpretation" for b in section["publication"]["blocks"]))
             self.assertTrue(data["question_flow"]["notices"])
             if payload.get("is_birth_time_estimated"):
-                self.assertIn("해석은 보류", data["category_reading"]["calculation_notices"][0])
+                self.assertIn("해석은 보류" if payload.get("locale", "ko") == "ko" else "interpretations are withheld", data["category_reading"]["calculation_notices"][0])
             else:
-                self.assertIn("가정한 풀이", data["category_reading"]["calculation_notices"][0])
-                self.assertTrue(any("종합 풀이는 보류" in notice for notice in data["category_reading"]["calculation_notices"]))
-                self.assertEqual([s["id"] for s in data["category_reading"]["sections"] if s["visible"]], ["core", "love"])
+                self.assertIn("가정한 풀이" if payload.get("locale", "ko") == "ko" else "assumes the selected calculation convention", data["category_reading"]["calculation_notices"][0])
+                self.assertTrue(any(("종합 풀이는 보류" if payload.get("locale", "ko") == "ko" else "full reading on hold") in notice for notice in data["category_reading"]["calculation_notices"]))
             self.assertNotIn("읽었어", " ".join(data["category_reading"]["calculation_notices"]))
             if payload.get("is_birth_time_estimated"):
                 self.assertNotIn("luck.current_next", {q["id"] for q in data["question_flow"]["questions"]})
@@ -130,6 +132,7 @@ class CategoryReadingHttpTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual([frame["stage"] for frame in frames if frame["type"] == "stage"], ["accepted", "calculating", "writing"])
         self.assertEqual(frames[-1]["type"], "result")
         self.assertEqual(len(frames[-1]["data"]["category_reading"]["sections"]), 5)
+        self.assertTrue(all(section["visible"] for section in frames[-1]["data"]["category_reading"]["sections"]))
 
     async def test_verifier_guard_prevents_calls_to_paid_provider(self):
         with patch.object(settings, "llm_provider", "openai"), patch("app.api.routes.create_saju_preview_response") as calculate:

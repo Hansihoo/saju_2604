@@ -1,5 +1,12 @@
 {
   "schema_version": "product-content-knowledge-v1",
+  "five_category_visibility": {
+    "version": "five-category-visibility-2026-10-24.1",
+    "source": "이전과 다르게 사주의 특징과 연애 결혼운만 나오고 있잖아",
+    "rule": "결과의 특징·연애/결혼·금전·직장/직업·운의 흐름 다섯 항목을 모두 표시한다. 해석 보류는 항목 안에서 기존 범위대로 알리며 보조 특징이 없다는 이유로 항목 자체를 숨기지 않는다.",
+    "compatibility": "기존 저장 응답의 visible=false도 공개된 다섯 항목의 누락 근거로 사용하지 않는다.",
+    "boundary": "보류된 실제 해석을 채우거나 완성된 운세로 승인하는 변경이 아니다. 기존 본문·메모·계산 보류·생성 미호출을 유지한다."
+  },
   "manse_sheet_presentation": {
     "version": "manse-sheet-2026-10-24.1",
     "source": "만세력 버튼 시안 중 하단 시트 선택 및 원격 반영·Codex 테스트 요청",

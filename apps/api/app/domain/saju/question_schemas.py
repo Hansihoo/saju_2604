@@ -128,7 +128,7 @@ class CategoryReading(BaseModel):
     sections: List[CategoryReadingSection]
     provider: Literal["openai", "codex", "fallback", "deterministic"]
     format: str = "category-reading-v1"
-    copy_version: str = "category-reading-copy-2026-10-11.1"
+    copy_version: str = "category-reading-copy-2026-10-24.1"
     reading_information: ReadingInformation = Field(default_factory=ReadingInformation)
     characteristics: Optional[ChartCharacteristics] = None
     distinctive_reading: Optional[DistinctiveReading] = None

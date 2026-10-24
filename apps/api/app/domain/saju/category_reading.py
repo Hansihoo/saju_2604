@@ -146,10 +146,12 @@ def create_category_reading(*, payload, trace_id: str, service_name: str, calcul
             category_information.sort(key=lambda item: item.kind != "traditional_term_definition")
         information_memo = "\n\n".join(f"### {item.title}\n{item.memo_body}" for item in category_information)
         memo = "\n\n".join(part for part in (memo, information_memo) if part)
+        # Availability belongs in the supplied chapter, never in a filter that
+        # silently removes a public category from the reading.
         section = CategoryReadingSection(id=category, title=ko_title if payload.locale == "ko" else en_title,
                                               body=body, memo_body=memo,
                                               status=status, information=category_information,
-                                              visible=bool(not critical or category_information or any(q.category == category for q in basic.question_flow.questions)))
+                                              visible=True)
         comparison_memo = ""
         if category == "core" and characteristics.comparisons:
             comparison_memo = "\n\n".join("### " + comparison.label + "\n" +
@@ -162,10 +164,6 @@ def create_category_reading(*, payload, trace_id: str, service_name: str, calcul
             section.body = "\n\n".join(("### " + b.title + "\n\n" if b.title else "") + b.text
                                         for b in section.publication.blocks)
             section.memo_body = section.publication.memo_body
-        if critical and distinctive.status == "conditional":
-            section.visible = any(t.category == category for t in distinctive.themes)
-        if category == "core" and natal.status in {"available", "conditional"}:
-            section.visible = True
         sections.append(section)
     return SajuCategoryResponse(**model_to_dict(basic), category_reading=CategoryReading(
         sections=sections, reading_information=information, characteristics=characteristics, distinctive_reading=distinctive,

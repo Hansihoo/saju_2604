@@ -36,7 +36,9 @@ export function DokkaebiCategoryReading({ result, locale, notices = [], onSelect
   const reading = result.category_reading;
   const characteristics = reading.characteristics;
   const hasCharacteristics = Boolean(characteristics?.items.length);
-  const sections = reading.sections.filter((section) => section.visible !== false);
+  // All supplied public chapters stay visible, including saved responses with
+  // legacy visibility flags. Each chapter already supplies its scope and hold.
+  const sections = reading.sections;
   return <div className="dk-category-reading" data-category-reading>
     <nav className="dk-reading-contents" aria-label={locale === "ko" ? "풀이 목차" : "Reading contents"}>
       {sections.map((section, index) => <a href={`#reading-${section.id}`} key={section.id}><span>{String(index + 1).padStart(2, "0")}</span>{section.title}</a>)}
